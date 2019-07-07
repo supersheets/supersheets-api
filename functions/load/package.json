@@ -16,11 +16,14 @@
     "url": "https://github.com/danieljyoo/supersheets-api-v3.git"
   },
   "dependencies": {
+    "@funcmaticjs/auth0-plugin": "~0.0.1",
+    "@funcmaticjs/contextlogger-plugin": "0.0.2",
     "@funcmaticjs/correlation-plugin": "~0.0.2",
     "@funcmaticjs/event-plugin": "0.0.2",
-    "@funcmaticjs/funcmatic": "~0.0.5",
+    "@funcmaticjs/forcecoldstart": "0.0.1",
+    "@funcmaticjs/funcmatic": "0.0.6",
     "@funcmaticjs/loglevel-plugin": "~0.0.4",
-    "@funcmaticjs/mongodb-plugin": "0.0.2",
+    "@funcmaticjs/mongodb-plugin": "0.0.3",
     "@funcmaticjs/parameterstore-plugin": "0.0.3",
     "@funcmaticjs/response-plugin": "~1.1.1",
     "@funcmaticjs/stagevars-plugin": "~0.0.1",
@@ -30,7 +33,7 @@
   "devDependencies": {
     "@funcmaticjs/package": "0.0.2",
     "@funcmaticjs/pretty-logs": "0.0.3",
-    "aws-sdk": "^2.480.0",
+    "aws-sdk": "^2.488.0",
     "dotenv": "^8.0.0",
     "jest": "^24.8.0"
   },
