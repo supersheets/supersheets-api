@@ -73,6 +73,16 @@ async function updateMetadata(db, metadata, user) {
     metadata.updated_by_email = user.email
     metadata.updated_by_org = user.org
   }
+  // Old metadata will not have created_* fields
+  // So we add them
+  if (!metadata.created_at) {
+    metadata.created_at = metadata.updated_at
+  }
+  if (user && !metadata.created_by) {
+    metadata.created_by = metadata.updated_by
+    metadata.created_by_email = metadata.updated_by_email
+    metadata.created_by_org = metadata.updated_by_org
+  }
   await saveMetadata(db, metadata)
   return await findMetadata(db, metadata.id)
 }

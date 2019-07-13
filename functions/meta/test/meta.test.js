@@ -65,6 +65,21 @@ describe('updateMetadata', () => {
       foo: "bar"
     })
   })
+  it ("should add missing created fields if updating metadata", async () => {
+    let meta = { id: TESTID, hello: "world", foo: "bar" }
+    let user = { userid: "USER-ID", email: "user@email.com", org: "myorg.org" }
+    let res = await updateMetadata(db, meta, user)
+    expect(res).toMatchObject({
+      created_at: expect.anything(),
+      created_by: "USER-ID",
+      created_by_email: "user@email.com",
+      created_by_org: "myorg.org",
+      updated_at: expect.anything(),
+      updated_by: "USER-ID",
+      updated_by_email: "user@email.com",
+      updated_by_org: "myorg.org",
+    })
+  })
 })
 
 describe('Error Handling', () => {
