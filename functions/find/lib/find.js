@@ -3,6 +3,7 @@ async function findHandler(ctx) {
   let body = ctx.event.body
   let db = ctx.state.mongodb
   let { one, query, options } = prepareMongoFindQuery(body)
+  ctx.logger.debug(`find ${id} ${JSON.stringify({ one, query, options }, null, 2)}`)
   let result = await findMongo(db, id, one, query, options)
   ctx.response.json(result) 
   return

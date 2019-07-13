@@ -1,4 +1,5 @@
 const func = require('@funcmaticjs/funcmatic')
+const ContextLoggerPlugin = require('@funcmaticjs/contextlogger-plugin')
 const EventPlugin = require('@funcmaticjs/event-plugin')
 const StageVarsPlugin = require('@funcmaticjs/stagevars-plugin')
 const ParameterStorePlugin = require('@funcmaticjs/parameterstore-plugin')
@@ -7,8 +8,10 @@ const LogLevelPlugin = require('@funcmaticjs/loglevel-plugin')
 const ResponsePlugin = require('@funcmaticjs/response-plugin')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const BodyParserPlugin = require('@funcmaticjs/bodyparser-plugin')
+const coldHandler = require('@funcmaticjs/forcecoldstart')
 const { findHandler } = require('./lib/find')
 
+func.use(new ContextLoggerPlugin())
 func.use(new EventPlugin())
 func.use(new StageVarsPlugin())
 func.use(new ParameterStorePlugin())
@@ -31,7 +34,7 @@ func.error(async (ctx) => {
 })
 
 module.exports = {
-  handler: func.handler(),
+  handler: coldHandler(func),
   func
 }
 
