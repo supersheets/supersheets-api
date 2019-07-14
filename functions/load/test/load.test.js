@@ -1,5 +1,6 @@
 require('dotenv').config()
 const prettify = require('@funcmaticjs/pretty-logs')
+const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
@@ -8,13 +9,21 @@ const TOKEN = process.env.AUTH0_TOKEN
 
 describe('Error Handling', () => {
   let func = null
+  let plugin = new MongoDBPlugin()
+  let client = null
   beforeEach(async () => {
     // Import our main function each time which
     // simulates an AWS "cold start" load
     func = require('../index.js').func
     func.logger.logger.prettify = prettify
+
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    let db = client.db()
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    await initmeta(db, GOOGLESPREADSHEET_ID)
   })
   afterEach(async () => {
+    await client.close()
     // We invoke any teardown handlers so that
     // middleware can clean up after themselves
     await func.invokeTeardown()
@@ -65,6 +74,7 @@ describe('Error Handling', () => {
       throw new Error("Error fetching from Google Sheets")
     })
     await func.invoke(ctx)
+    console.log(ctx.response.body)
     expect(ctx.response).toMatchObject({
       statusCode: 500
     })
@@ -75,15 +85,23 @@ describe('Error Handling', () => {
   })
 })
 
-describe('Function', () => {
+describe('Function First Load', () => {
   let func = null
+  let plugin = new MongoDBPlugin()
+  let client = null
   beforeEach(async () => {
     // Import our main function each time which
     // simulates an AWS "cold start" load
     func = require('../index.js').func
     func.logger.logger.prettify = prettify
+
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    let db = client.db()
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    await initmeta(db, GOOGLESPREADSHEET_ID)
   })
   afterEach(async () => {
+    await client.close()
     // We invoke any teardown handlers so that
     // middleware can clean up after themselves
     await func.invokeTeardown()
@@ -105,6 +123,43 @@ describe('Function', () => {
   }, 60 * 1000)
 })
 
+describe('Function Reload', () => {
+  let func = null
+  let plugin = new MongoDBPlugin()
+  let client = null
+  beforeEach(async () => {
+    // Import our main function each time which
+    // simulates an AWS "cold start" load
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    let db = client.db()
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    await initmeta(db, GOOGLESPREADSHEET_ID)
+  })
+  afterEach(async () => {
+    await client.close()
+    // We invoke any teardown handlers so that
+    // middleware can clean up after themselves
+    await func.invokeTeardown()
+  })
+  it ('should return statusCode of 200 OK', async () => {
+    let ctx = createCtx()
+    await func.invoke(ctx)
+    expect(ctx.response).toMatchObject({
+      statusCode: 200
+    })
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toMatchObject({
+      id: GOOGLESPREADSHEET_ID,
+      title: "Goalbook Fist to Five Backend",
+      nrows: 6,
+      ncols: 7,
+      ncells: 22
+    })
+  }, 60 * 1000)
+})
 
 function createCtx() {
   return { 
@@ -143,4 +198,43 @@ function mockaxios(callback) {
   return {
     get: callback
   }
+}
+
+async function deleteSupersheet(db, id) {
+  let metadata = null
+  try {
+    metadata = await db.collection('spreadsheets').findOne({ id })
+    if (metadata) {
+      await db.collection('spreadsheets').deleteOne({ id })
+    }
+  } catch (err) {
+    console.log(`Could not delete metadata ${id}`)
+  }
+  try {
+    await db.collection(id).drop()
+  } catch (err) {
+    console.log(`Could not drop collection ${id}`)
+  }
+  if (metadata && metadata.datauuid) {
+    try {
+      await db.collection(metadata.datauuid).drop()
+    } catch (err) {
+      console.log(`Could not drop collection ${metadata.datauuid}`)
+    }
+  }
+}
+
+async function initmeta(db, id) {
+  let metadata = {
+    id,
+    uuid: 'UUID',
+    title: "Goalbook Fist to Five Backend",
+    sheets: [ {
+        title: "questions"
+      }, {
+        title: "answers"
+      }
+    ]
+  }
+  await db.collection('spreadsheets').updateOne({ id }, { "$set": metadata }, { upsert: true })
 }

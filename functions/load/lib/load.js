@@ -1,3 +1,4 @@
+let uuidV4 = require('uuid/v4')
 let sheetutil = require('./sheetutil')
 
 async function loadHandler(ctx) {
@@ -12,6 +13,7 @@ async function loadHandler(ctx) {
   try {
     metadata = await db.collection('spreadsheets').findOne({ id })
   } catch (err) {
+    ctx.logger.error(err)
     ctx.response.httperror(500, `Error looking up metadata for ${id}`, { expose: true })
     return
   }
@@ -19,46 +21,70 @@ async function loadHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
+  let datauuid = uuidV4()
   let sheet = null
+  let sheets = [ ]
   try {
-    for (sheet of metadata.sheets) {
-      await sheetHandler(ctx, db, id, sheet)
+    if (metadata.sheets) {
+      for (sheet of metadata.sheets) {
+        sheets.push(await sheetHandler(ctx, db, id, sheet, datauuid))
+      }
     }
+    metadata.sheets = sheets
   } catch (err) {
+    ctx.logger.error(err)
     ctx.response.httperror(500, `Error loading sheet ${sheet.title}: ${err.message}`, { expose: true })
     return
   }
+  let olddatauuid = metadata.datauuid || metadata.id
   try {
-    var values = sheetutil.updateSpreadsheetCountsFromSheets(metadata)
-    await updateSpreadsheetMeta(db, id, values)
+    sheetutil.updateSpreadsheetCountsFromSheets(metadata)
+    metadata.datauuid = datauuid
+    await updateSpreadsheetMeta(db, id, metadata)
+    if (olddatauuid) {
+      try {
+        await db.collection(olddatauuid).drop()
+      } catch (err) {
+        // Will throw if collection olddatauuid does not exist
+        ctx.logger.warn(`Could not drop collection ${olddatauuid} ${err.message}`)
+      }
+    }
     metadata = await db.collection('spreadsheets').findOne({ id })
     ctx.response.json(metadata)
     return
   } catch (err) {
+    ctx.logger.error(err)
     ctx.response.httperror(500, `Failed to save metadata for ${metadata.id}`, { expose: true })
     return
   }
 }
 
-async function sheetHandler(ctx, db, id, sheet) {
+async function sheetHandler(ctx, db, id, sheet, datauuid) {
   ctx.logger.info(`Loading ${sheet.title}`)
   let sheetdata = await fetchSheetData(ctx.state.axios, id, sheet.title)
   let docs = sheetutil.constructDocs(sheet, sheetdata.values)
   sheetutil.updateSheetDoc(sheet, docs)
 
-  await reloadSheetDocs(db, id, sheet.title, docs)
-  await updateSheetMeta(db, id, sheet)
-  
-  return docs
+  // We don't replace the collection 
+  // await reloadSheetDocs(db, id, sheet.title, docs)
+  // We insert into a new one 
+  await insertSheetDocs(db, datauuid, docs)
+  //await updateSheetMeta(db, id, sheet, datauuid)
+  // return docs
+  return sheet
 }
 
 async function fetchSheetData(axios, id, title) {
-  return (await axios.get(`${id}/values/${title.trim()}`)).data
+  return (await axios.get(`${id}/values/${encodeURI(`'${title}'`)}`)).data
 }
 
 async function reloadSheetDocs(db, id, title, docs) {
   await db.collection(id).deleteMany({ "_sheet": title})
   return await db.collection(id).insertMany(docs.docs, { w: 1 })
+}
+
+async function insertSheetDocs(db, datauuid, docs) {
+  return await db.collection(datauuid).insertMany(docs.docs, { w: 1 })
 }
 
 async function updateSheetMeta(db, id, sheet) {
@@ -70,9 +96,9 @@ async function updateSheetMeta(db, id, sheet) {
   return await db.collection('spreadsheets').updateOne(query, update, { w: 1 })
 }
 
-async function updateSpreadsheetMeta(db, id, values) {
+async function updateSpreadsheetMeta(db, id, metadata) {
   var query = { id }
-  var update = { "$set": values }
+  var update = { "$set": metadata }
   var options = { w: 1 }
   await db.collection('spreadsheets').updateOne(query, update, options)
 }

@@ -2,9 +2,10 @@ async function findHandler(ctx) {
   let id = ctx.event.pathParameters['spreadsheetid']
   let body = ctx.event.body
   let db = ctx.state.mongodb
+  let metadata = await findMetadata(db, id)
   let { one, query, options } = prepareMongoFindQuery(body)
-  ctx.logger.debug(`find ${id} ${JSON.stringify({ one, query, options }, null, 2)}`)
-  let result = await findMongo(db, id, one, query, options)
+  ctx.logger.debug(`find id=${id} datauuid=${metadata.datauuid} ${JSON.stringify({ one, query, options }, null, 2)}`)
+  let result = await findMongo(db, (metadata.datauuid || id), one, query, options)
   ctx.response.json(result) 
   return
 }
@@ -37,6 +38,13 @@ function prepareMongoFindQuery(body) {
     options.fields = fields
   }
   return { one, query, options }
+}
+
+async function findMetadata(db, id) {
+  let options = {
+    projection: { id: 1, uuid: 1, datauuid: 1 }
+  }
+  return await db.collection('spreadsheets').findOne({ id }, options)
 }
 
 module.exports = {

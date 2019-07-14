@@ -94,7 +94,7 @@ function createCtx(body) {
       },
       body: JSON.stringify(body),
       stageVariables: {
-        FUNC_PARAMETERSTORE_PATH: '/supersheetsio/dev'
+        FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI
       }
     }
   }

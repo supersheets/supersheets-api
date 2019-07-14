@@ -11,12 +11,8 @@ describe('Error Handling', () => {
   beforeEach(async () => {
     func = require('../index.js').func
     func.logger.logger.prettify = prettify
-    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    let db = client.db()
-    await createTestData(db)
   })
   afterEach(async () => {
-    await client.close()
     await func.invokeTeardown()
   })
   it ("Should 401 Unauthorized if user is unauthenticated", async () => {
@@ -120,6 +116,13 @@ describe('Function', () => {
   })
   it ("should delete sheet metadata and data", async () => {
     let ctx = createCtx() 
+    ctx.state.auth = {
+      success: true,
+      decoded: {
+        sub: "userid",
+        email: "daniel@myorg.org"
+      }
+    }
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
       statusCode: 200

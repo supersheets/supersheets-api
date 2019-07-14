@@ -10,6 +10,7 @@ async function deleteHandler(ctx) {
   try {
     metadata = await findMetadata(db, id)
   } catch (err) {
+    ctx.logger.error(err)
     ctx.response.httperror(500, `Error looking up metadata for ${id}`, { expose: true })
     return
   }
@@ -22,11 +23,12 @@ async function deleteHandler(ctx) {
     return
   }
   try {
-    await deleteData(db, id)
+    await deleteData(db, (metadata.datauuid || id))
     let res = await deleteMetadata(db, id)
     ctx.response.json(res.result)
     return
   } catch (err) {
+    ctx.logger.error(err)
     ctx.response.httperror(500, `Failed to delete Supersheet ${id}`, { expose: true })
     return
   }
