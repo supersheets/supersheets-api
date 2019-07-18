@@ -120,7 +120,22 @@ describe('Function First Load', () => {
       ncols: 7,
       ncells: 22
     })
-  }, 60 * 1000)
+    expect(body.schema.columns.map(col => col.name)).toEqual([ 
+      "question_id", 
+      "question_text", 
+      "created_at", 
+      "student_name", 
+      "student_response" 
+    ])
+    expect(body.schema.columns.map(col => col.sample)).toEqual([ 
+      "Q1", 
+      "How ready do you feel for our quiz tomorrow?", 
+      "2017-04-24T23:39:16.718Z", 
+      "Johnny Doe", 
+      "2" 
+    ])
+    console.log(JSON.stringify(body.schema.columns, null, 2))
+  })
 })
 
 describe('Function Reload', () => {
@@ -158,7 +173,7 @@ describe('Function Reload', () => {
       ncols: 7,
       ncells: 22
     })
-  }, 60 * 1000)
+  })
 })
 
 function createCtx() {

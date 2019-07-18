@@ -36,23 +36,64 @@ function updateSpreadsheetCountsFromSheets(metadata) {
 }
 
 function updateSheetDoc(sheet, docs) {
-  var preview = {}
+  let preview = {}
   if (docs.docs.length > 0) {
     preview = docs.docs[0]
   } 
-  sheet.preview = preview;
-  sheet.columns = docs.cols;
-  sheet.nrows = docs.docs.length;
-  sheet.ncols = docs.cols.length;
-  sheet.ncells = (docs.docs.length * docs.cols.length);
-  sheet.updated_at = new Date();
+  sheet.preview = preview
+  sheet.columns = docs.cols
+  sheet.samples = getSampleColumnValues(sheet.columns, docs.docs)
+  sheet.nrows = docs.docs.length
+  sheet.ncols = docs.cols.length
+  sheet.ncells = (docs.docs.length * docs.cols.length)
+  sheet.updated_at = new Date()
   return sheet
+}
+
+function getSampleColumnValues(cols, docs) {
+  let samples = { }
+  for (let name of cols) {
+    samples[name] = null
+    for (let doc of docs) {
+      if (doc[name]) {
+        samples[name] = doc[name]
+        break
+      }
+    }
+  }
+  return samples
+}
+
+function updateSchema(metadata) {
+  let schema = { columns: [ ] }
+  let cols = { }
+  for (let sheet of metadata.sheets) {
+    for (let column of sheet.columns) {
+      if (!cols[column]) {
+        schema.columns.push({
+          name: column,
+          datatype: "String",
+          sample: sheet.samples[column],
+        })
+        cols[column] = [ sheet.title ]
+      } else {
+        cols[column].push(sheet.title)
+      }
+    }
+  }
+  for (col of schema.columns) {
+    col.sheets = cols[col.name]
+  }
+  metadata.schema = schema
+  return metadata 
 }
 
 module.exports = {
   updateSpreadsheetCountsFromSheets,
   constructDocs,
-  updateSheetDoc
+  updateSheetDoc,
+  getSampleColumnValues,
+  updateSchema,
 }
 
 // function detectNewColumns(dataObject, sheetDoc) {

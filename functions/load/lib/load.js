@@ -39,8 +39,10 @@ async function loadHandler(ctx) {
   let olddatauuid = metadata.datauuid || metadata.id
   try {
     sheetutil.updateSpreadsheetCountsFromSheets(metadata)
+    sheetutil.updateSchema(metadata)
     metadata.datauuid = datauuid
     await updateSpreadsheetMeta(db, id, metadata)
+    
     if (olddatauuid) {
       try {
         await db.collection(olddatauuid).drop()
