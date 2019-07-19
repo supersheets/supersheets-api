@@ -1,5 +1,6 @@
 require('dotenv').config()
 const sheetutil = require('../lib/sheetutil')
+const moment = require('moment-timezone')
 
 describe('Schema', () => {
   beforeEach(async () => {
@@ -23,6 +24,19 @@ describe('Schema', () => {
     expect(metadata.schema.columns[1].sheets).toEqual([ "Sheet1", "Sheet2" ])
     expect(metadata.schema.columns[2].sheets).toEqual([ "Sheet1" ])
     expect(metadata.schema.columns[3].sheets).toEqual([ "Sheet2" ])
+  })
+})
+
+describe('Datatypes', () => {
+  it ('should initialize time string', async () => {
+    
+    let s = "4/5/2018 12:30:04"
+    let tz = "America/Los_Angeles"
+    let locale = "en_US"
+    moment.locale(locale)
+    let m = moment.tz(s, tz)
+    console.log(m.format())
+    console.log(m.toISOString())
   })
 })
 
