@@ -27,7 +27,7 @@ async function loadHandler(ctx) {
   try {
     if (metadata.sheets) {
       for (sheet of metadata.sheets) {
-        sheets.push(await sheetHandler(ctx, db, id, sheet, datauuid))
+        sheets.push(await sheetHandler(ctx, db, metadata, sheet, datauuid))
       }
     }
     metadata.sheets = sheets
@@ -61,10 +61,18 @@ async function loadHandler(ctx) {
   }
 }
 
-async function sheetHandler(ctx, db, id, sheet, datauuid) {
-  ctx.logger.info(`Loading ${sheet.title}`)
-  let sheetdata = await fetchSheetData(ctx.state.axios, id, sheet.title)
+async function sheetHandler(ctx, db, metadata, sheet, datauuid) {
+  let id = metadata.id
+  let mode = sheetutil.getLoadMode(metadata)
+  ctx.logger.info(`Loading ${sheet.title}, mode=${mode}`)
+  let sheetdata = await fetchSheetData(ctx.state.axios, id, sheet.title, mode)
   let docs = sheetutil.constructDocs(sheet, sheetdata.values)
+  if (mode == "UNFORMATTED" && metadata.config && metadata.config.datatypes) {
+    sheetutil.convertValues(docs.cols, docs.docs, metadata.config.datatypes, {
+      tz: metadata.tz,
+      locale: metadata.locale
+    })
+  }
   sheetutil.updateSheetDoc(sheet, docs)
 
   // We don't replace the collection 
@@ -76,8 +84,16 @@ async function sheetHandler(ctx, db, id, sheet, datauuid) {
   return sheet
 }
 
-async function fetchSheetData(axios, id, title) {
-  return (await axios.get(`${id}/values/${encodeURI(`'${title}'`)}`)).data
+async function fetchSheetData(axios, id, title, mode) {
+  mode = mode || "FORMATTED"
+  let params = { valueRenderOption: 'FORMATTED_VALUE' }
+  if (mode == 'UNFORMATTED') {
+    params = {
+      valueRenderOption: 'UNFORMATTED_VALUE',
+      dateTimeRenderOption: 'SERIAL_NUMBER',
+    }
+  }
+  return (await axios.get(`${id}/values/${encodeURIComponent(title)}`, { params })).data
 }
 
 async function reloadSheetDocs(db, id, title, docs) {
@@ -123,5 +139,6 @@ function getOrgFromEmail(email) {
 }
 
 module.exports = {
-  loadHandler
+  loadHandler,
+  fetchSheetData
 }

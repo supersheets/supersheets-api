@@ -21,4 +21,17 @@ describe('Fetch Google Sheet Formatting', () => {
     let data = await fetchSheetData(axios, GOOGLESPREADSHEET_ID, " Leading Space")
     expect(data.range).toEqual("' Leading Space'!A1:Z1000")
   })
+  it ('should fetch default with formatted values', async () => {
+    let data = await fetchSheetData(axios, GOOGLESPREADSHEET_ID, "Datatypes")
+    expect(data.values[1]).toEqual([ "Hello", "3", "2018-04-05" ])
+  })
+  it ('should fetch with unformatted and serialized dates if specified', async () => {
+    let mode = "UNFORMATTED"
+    let data = await fetchSheetData(axios, GOOGLESPREADSHEET_ID, "Datatypes", mode)
+    expect(data.values[1]).toEqual([ "Hello", 3, 43195 ])
+  })
 })
+
+
+
+

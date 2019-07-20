@@ -132,9 +132,8 @@ describe('Function First Load', () => {
       "How ready do you feel for our quiz tomorrow?", 
       "2017-04-24T23:39:16.718Z", 
       "Johnny Doe", 
-      "2" 
+      "2"  // by default mode is 'FORMATTED' so everything is a string
     ])
-    console.log(JSON.stringify(body.schema.columns, null, 2))
   })
 })
 
@@ -173,6 +172,67 @@ describe('Function Reload', () => {
       ncols: 7,
       ncells: 22
     })
+  })
+})
+
+describe('Function Reload with User Config', () => {
+  let func = null
+  let plugin = new MongoDBPlugin()
+  let client = null
+  beforeEach(async () => {
+    // Import our main function each time which
+    // simulates an AWS "cold start" load
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    let db = client.db()
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    await initmeta(db, GOOGLESPREADSHEET_ID, {
+      mode: "UNFORMATTED",
+      datatypes: {
+        "question_id": "String",
+        // "question_text": "String", // should default to "String"
+        "created_at": "Datetime",
+        "student_name": "String",
+        "student_response": "Number",
+      }
+    })
+  })
+  afterEach(async () => {
+    await client.close()
+    // We invoke any teardown handlers so that
+    // middleware can clean up after themselves
+    await func.invokeTeardown()
+  })
+  it ('should return statusCode of 200 OK', async () => {
+    let ctx = createCtx()
+    await func.invoke(ctx)
+    expect(ctx.response).toMatchObject({
+      statusCode: 200
+    })
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toMatchObject({
+      id: GOOGLESPREADSHEET_ID,
+      title: "Goalbook Fist to Five Backend",
+      nrows: 6,
+      ncols: 7,
+      ncells: 22
+    })
+    expect(body.schema.columns.map(col => col.sample)).toEqual([ 
+      "Q1", 
+      "How ready do you feel for our quiz tomorrow?", 
+      "2017-04-24T23:39:16.718Z", 
+      "Johnny Doe", 
+      2
+    ])
+    expect(body.schema.columns.map(col => col.datatype)).toEqual([ 
+      "String", 
+      "String", 
+      "Datetime", 
+      "String", 
+      "Number"
+    ])
   })
 })
 
@@ -239,7 +299,7 @@ async function deleteSupersheet(db, id) {
   }
 }
 
-async function initmeta(db, id) {
+async function initmeta(db, id, config) {
   let metadata = {
     id,
     uuid: 'UUID',
@@ -249,7 +309,8 @@ async function initmeta(db, id) {
       }, {
         title: "answers"
       }
-    ]
+    ],
+    config: config || { }
   }
   await db.collection('spreadsheets').updateOne({ id }, { "$set": metadata }, { upsert: true })
 }
