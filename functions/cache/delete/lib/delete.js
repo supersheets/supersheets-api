@@ -1,9 +1,18 @@
 const { createHash } = require('crypto')
 
 async function deleteHandler(ctx) {
-  let cache = ctx.state.cache
   let id = ctx.event.pathParameters.spreadsheetid
-  let body = ctx.event.body
+  try {
+    await ctx.state.supersheets.get(`${id}`)
+  } catch (err) {
+    if (err.response) {
+      ctx.response.httperror(err.response.status, err.response.data.errorMessage)
+    } else {
+      ctx.response.httperror(500, `Internal Server Error: ${err.message}`)
+    }   
+    return
+  }
+  let cache = ctx.state.cache
   let key = cachekey(id)
   try {
     let status = await cache.del(key)

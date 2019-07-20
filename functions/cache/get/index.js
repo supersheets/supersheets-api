@@ -1,3 +1,4 @@
+const axios = require('axios')
 const func = require('@funcmaticjs/funcmatic')
 const ContextLoggerPlugin = require('@funcmaticjs/contextlogger-plugin')
 const EventPlugin = require('@funcmaticjs/event-plugin')
@@ -20,6 +21,19 @@ func.use(new LogLevelPlugin())
 func.use(new ResponsePlugin())
 func.use(new RedisPlugin())
 
+func.request(async (ctx, next) => {
+  let headers = Object.assign({ }, ctx.state.correlation)
+  if (ctx.event.headers['Authorization']) {
+    headers['Authorization'] = ctx.event.headers['Authorization']
+  }
+  if (!ctx.state.supersheets) {
+    ctx.state.supersheets = axios.create({
+      baseURL: ctx.env.SUPERSHEETS_BASE_URL,
+      headers
+    })
+  }
+  await next()
+})
 func.request(async (ctx, next) => {
   ctx.state.cache = new RedisObjectCache(ctx.state.redis)
   await next()
