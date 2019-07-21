@@ -84,6 +84,19 @@ describe('updateMetadata', () => {
 
 describe('Error Handling', () => {
   let func = null
+  let client = null
+  let db = null
+  beforeAll(async () => {
+    let plugin = new MongoDBPlugin()
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    db = client.db()
+    await deleteMetadata(db, GOOGLESPREADSHEET_ID)
+  })
+  afterAll(async () => {
+    if (client) {
+      await client.close()
+    }
+  })
   beforeEach(async () => {
     func = require('../index.js').func
     func.logger.logger.prettify = prettify
@@ -94,6 +107,22 @@ describe('Error Handling', () => {
   it ("should return 401 Unauthorized if user not authed", async () => {
     let ctx = createCtx() 
     delete ctx.event.headers['Authorization']
+    await func.invoke(ctx)
+    expect(ctx.response).toMatchObject({
+      statusCode: 401
+    })
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toMatchObject({
+      errorMessage: "Unauthorized"
+    })
+  })
+  it ("should return 401 Unauthorized if user is updating meta loaded by another org", async () => {
+    await deleteMetadata(db, GOOGLESPREADSHEET_ID)
+    await saveMetadata(db, GOOGLESPREADSHEET_ID, {
+      id: GOOGLESPREADSHEET_ID,
+      created_by_org: "someother.org"
+    })
+    let ctx = createCtx() 
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
       statusCode: 401
@@ -214,4 +243,8 @@ function createCtx() {
 
 async function deleteMetadata(db, id) {
   return await db.collection('spreadsheets').deleteOne({ id })
+}
+
+async function saveMetadata(db, id, metadata) {
+  return await db.collection('spreadsheets').updateOne({ id }, { "$set": metadata }, { upsert: true })
 }

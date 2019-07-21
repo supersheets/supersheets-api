@@ -9,7 +9,18 @@ async function metaHandler(ctx) {
   }
   let id = ctx.event.pathParameters.spreadsheetid
   let db = ctx.state.mongodb
-  let current = await findMetadata(db, id)
+  let current = null
+  try {
+    current = await findMetadata(db, id)
+  } catch (err) {
+    ctx.response.httperror(500, `Failed finding metadata for ${id}`, { expose: true })
+    return
+  }
+  if (current && current.created_by_org && current.created_by_org != user.org) {
+    // Some other org has already loaded this id
+    ctx.response.httperror(401, 'Unauthorized')
+    return
+  }
   let metadata = null
   try {
     metadata = await fetchMetadata(ctx.state.axios, ctx.event.pathParameters.spreadsheetid, ctx.env) 
