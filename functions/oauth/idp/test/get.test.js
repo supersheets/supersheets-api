@@ -111,15 +111,17 @@ describe('Function', () => {
       isSocial: true
     })
   })
-  it ("should return all identity provider tokens for the user", async () => {
+  it ("should return all Auth0 user info", async () => {
     let ctx = createCtx() 
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
       statusCode: 200
     })
     let body = JSON.parse(ctx.response.body)
-    expect(body.length).toBe(1)
-    expect(body[0]).toMatchObject({
+    expect(body).toMatchObject({
+      email: "danieljyoo@goalbookapp.com"
+    })
+    expect(body.identities[0]).toMatchObject({
       provider: 'google-oauth2',
       access_token: expect.anything(),
     })

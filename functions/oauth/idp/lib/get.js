@@ -38,7 +38,7 @@ async function getHandler(ctx) {
   if (provider) {
     response = userinfo.identities.find(id => id.provider == provider)
   } else {
-    response = userinfo.identities
+    response = userinfo
   }
   ctx.response.json(response)
   return
