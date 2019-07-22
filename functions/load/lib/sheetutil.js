@@ -5,6 +5,10 @@ function getLoadMode(metadata) {
   return metadata.config && metadata.config.mode || 'FORMATTED'
 }
 
+function getAccess(metadata) {
+  return metadata.config && metadata.config.access || 'public'
+}
+
 function constructDocs(sheetDoc, data) {
   var cols = [ ]
   var docs = [ ]
@@ -19,11 +23,16 @@ function constructDocs(sheetDoc, data) {
         "_errors": [ ]
       };
       for (var j = 0; j < cols.length; j++) {
-        doc[cols[j]] = data[i][j]
+        let column = cols[j]
+        if (!column.startsWith("$")) {
+          doc[cols[j]] = data[i][j]
+        }
       }
       docs.push(doc)
     }
   }
+  // We have to do this at the end so it doesn't throw off indexing (i, j)
+  cols = cols.filter(name => !name.startsWith("$"))
   return { cols, docs }
 }
 
@@ -139,6 +148,7 @@ function updateSpreadsheetCountsFromSheets(metadata) {
   metadata.ncols = 0
   metadata.ncells = 0
   for (var i=0; i<metadata.sheets.length; i++) {
+    if (metadata.sheets[i].skip) continue
     metadata.nrows += metadata.sheets[i].nrows
     metadata.ncols += metadata.sheets[i].ncols
     metadata.ncells += metadata.sheets[i].ncells
@@ -205,6 +215,7 @@ function updateSchema(metadata) {
 
 module.exports = {
   getLoadMode,
+  getAccess,
   updateSpreadsheetCountsFromSheets,
   constructDocs,
   convertValues,

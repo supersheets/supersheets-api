@@ -21,9 +21,12 @@ async function metaHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
+  let access = current && getAccess(current) || ctx.event.queryStringParameters.access || 'public'
+  let idptoken = ctx.event.queryStringParameters.idptoken
   let metadata = null
   try {
-    metadata = await fetchMetadata(ctx.state.axios, ctx.event.pathParameters.spreadsheetid, ctx.env) 
+    let options = Object.assign({ }, ctx.env, { idptoken, access })
+    metadata = await fetchMetadata(ctx.state.axios, ctx.event.pathParameters.spreadsheetid, options) 
   } catch (err) {
     ctx.response.httperror(404, `Google Spreadsheet ${id} could not be found.`) 
     return
@@ -63,7 +66,11 @@ function getOrgFromEmail(email) {
 
 async function fetchMetadata(axios, id, options) {
   let url = `${options.GOOGLESHEETS_BASE_URL}/${id}?key=${options.GOOGLESHEETS_API_KEY}`
-  let doc = (await axios.get(url)).data
+  let headers = { }
+  if (options.access == 'private' && options.idptoken) {
+    headers['Authorization'] = `Bearer ${options.idptoken}`
+  }
+  let doc = (await axios.get(url, { headers })).data
   return createMetadataFromGoogleSpreadsheet(doc)
 }
 
@@ -118,18 +125,23 @@ function createMetadataFromGoogleSpreadsheet(doc) {
   let sheets = [ ];
   
   for (var i=0; i<doc.sheets.length; i++) {
-    let sheetDoc = doc.sheets[i].properties; 
-    sheets.push({
-      id: sheetDoc.sheetId,
-      title: sheetDoc.title,
-      index: sheetDoc.index,
-      sheetType: sheetDoc.sheetType
-    })
+    let sheetDoc = doc.sheets[i].properties
+    if (!sheetDoc.title.startsWith("$")) {
+      sheets.push({
+        id: sheetDoc.sheetId,
+        title: sheetDoc.title,
+        index: sheetDoc.index,
+        sheetType: sheetDoc.sheetType
+      })
+    }
   }
   metadataDoc.sheets = sheets;
   return metadataDoc;
 }
 
+function getAccess(metadata) {
+  return metadata.config && metadata.config.access || null
+}
 
 module.exports = {
   metaHandler,

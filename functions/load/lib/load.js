@@ -64,8 +64,10 @@ async function loadHandler(ctx) {
 async function sheetHandler(ctx, db, metadata, sheet, datauuid) {
   let id = metadata.id
   let mode = sheetutil.getLoadMode(metadata)
+  let access = sheetutil.getAccess(metadata)
+  let authorization = getIDPAuthorizationToken(ctx)
   ctx.logger.info(`Loading ${sheet.title}, mode=${mode}`)
-  let sheetdata = await fetchSheetData(ctx.state.axios, id, sheet.title, mode)
+  let sheetdata = await fetchSheetData(ctx.state.axios, id, sheet.title, { mode, access, authorization })
   let docs = sheetutil.constructDocs(sheet, sheetdata.values)
   if (mode == "UNFORMATTED" && metadata.config && metadata.config.datatypes) {
     sheetutil.convertValues(docs.cols, docs.docs, metadata.config.datatypes, {
@@ -84,8 +86,10 @@ async function sheetHandler(ctx, db, metadata, sheet, datauuid) {
   return sheet
 }
 
-async function fetchSheetData(axios, id, title, mode) {
-  mode = mode || "FORMATTED"
+async function fetchSheetData(axios, id, title, options) {
+  options = options || { }
+  mode = options.mode || "FORMATTED"
+  access = options.access || 'public'
   let params = { valueRenderOption: 'FORMATTED_VALUE' }
   if (mode == 'UNFORMATTED') {
     params = {
@@ -93,25 +97,15 @@ async function fetchSheetData(axios, id, title, mode) {
       dateTimeRenderOption: 'SERIAL_NUMBER',
     }
   }
-  return (await axios.get(`${id}/values/${encodeURIComponent(title)}`, { params })).data
-}
-
-async function reloadSheetDocs(db, id, title, docs) {
-  await db.collection(id).deleteMany({ "_sheet": title})
-  return await db.collection(id).insertMany(docs.docs, { w: 1 })
+  let headers = { }
+  if (access == 'private' && options.authorization) {
+    headers['Authorization'] = `Bearer ${options.authorization}`
+  }
+  return (await axios.get(`${id}/values/${encodeURIComponent(title)}`, { params, headers })).data
 }
 
 async function insertSheetDocs(db, datauuid, docs) {
   return await db.collection(datauuid).insertMany(docs.docs, { w: 1 })
-}
-
-async function updateSheetMeta(db, id, sheet) {
-  let query = {
-    id: id,
-    "sheets.title": sheet.title
-  }
-  let update = { "$set": { "sheets.$": sheet } }
-  return await db.collection('spreadsheets').updateOne(query, update, { w: 1 })
 }
 
 async function updateSpreadsheetMeta(db, id, metadata) {
@@ -138,7 +132,25 @@ function getOrgFromEmail(email) {
   return email.split('@')[1]
 }
 
+function getIDPAuthorizationToken(ctx) {
+  return ctx.event.queryStringParameters && ctx.event.queryStringParameters['idptoken'] || null
+}
+
 module.exports = {
   loadHandler,
   fetchSheetData
 }
+
+// async function reloadSheetDocs(db, id, title, docs) {
+//   await db.collection(id).deleteMany({ "_sheet": title})
+//   return await db.collection(id).insertMany(docs.docs, { w: 1 })
+// }
+
+// async function updateSheetMeta(db, id, sheet) {
+//   let query = {
+//     id: id,
+//     "sheets.title": sheet.title
+//   }
+//   let update = { "$set": { "sheets.$": sheet } }
+//   return await db.collection('spreadsheets').updateOne(query, update, { w: 1 })
+// }
