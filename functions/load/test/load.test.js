@@ -1,6 +1,7 @@
 require('dotenv').config()
 const prettify = require('@funcmaticjs/pretty-logs')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
+const status = require('../lib/status')
 
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
@@ -11,6 +12,7 @@ describe('Error Handling', () => {
   let func = null
   let plugin = new MongoDBPlugin()
   let client = null
+  let db = null
   beforeEach(async () => {
     // Import our main function each time which
     // simulates an AWS "cold start" load
@@ -18,11 +20,11 @@ describe('Error Handling', () => {
     func.logger.logger.prettify = prettify
 
     client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    let db = client.db()
-    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    db = client.db()
     await initmeta(db, GOOGLESPREADSHEET_ID)
   })
   afterEach(async () => {
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
     await client.close()
     // We invoke any teardown handlers so that
     // middleware can clean up after themselves
@@ -70,6 +72,7 @@ describe('Error Handling', () => {
   })
   it ('should return 500 Internal Server Error if error fetching a sheet from Google Sheets API', async () => {
     let ctx = createCtx()
+    //ctx.state.mongodb = mockstatsdb({ ok: true })
     ctx.state.axios = mockaxios(async () => {
       throw new Error("Error fetching from Google Sheets")
     })
@@ -89,6 +92,7 @@ describe('Function First Load', () => {
   let func = null
   let plugin = new MongoDBPlugin()
   let client = null
+  let db = null
   beforeEach(async () => {
     // Import our main function each time which
     // simulates an AWS "cold start" load
@@ -96,11 +100,11 @@ describe('Function First Load', () => {
     func.logger.logger.prettify = prettify
 
     client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    let db = client.db()
-    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    db = client.db()
     await initmeta(db, GOOGLESPREADSHEET_ID)
   })
   afterEach(async () => {
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
     await client.close()
     // We invoke any teardown handlers so that
     // middleware can clean up after themselves
@@ -134,6 +138,19 @@ describe('Function First Load', () => {
       "Johnny Doe", 
       "2"  // by default mode is 'FORMATTED' so everything is a string
     ])
+    // Load Status Checks
+    // TODO: probably need more status specific testing than this
+    let stat = await status.getStatus(ctx.state.mongodb, { sheet_id: body.id })
+    expect(stat).toMatchObject({
+      status: "SUCCESS",
+      sheet_id: body.id,
+      sheet_uuid: body.uuid,
+      sheet_new_datauuid: body.datauuid,
+      num_sheets_loaded: body.sheets.length,
+      num_sheets_total: body.sheets.length,
+      sheets_loaded: body.sheets.map(s => s.title),
+      error: null
+    })
   })
 })
 
@@ -141,6 +158,7 @@ describe('Function Reload', () => {
   let func = null
   let plugin = new MongoDBPlugin()
   let client = null
+  let db = null
   beforeEach(async () => {
     // Import our main function each time which
     // simulates an AWS "cold start" load
@@ -148,11 +166,11 @@ describe('Function Reload', () => {
     func.logger.logger.prettify = prettify
 
     client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    let db = client.db()
-    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    db = client.db()
     await initmeta(db, GOOGLESPREADSHEET_ID)
   })
   afterEach(async () => {
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
     await client.close()
     // We invoke any teardown handlers so that
     // middleware can clean up after themselves
@@ -179,6 +197,7 @@ describe('Function Reload with User Config', () => {
   let func = null
   let plugin = new MongoDBPlugin()
   let client = null
+  let db = null
   beforeEach(async () => {
     // Import our main function each time which
     // simulates an AWS "cold start" load
@@ -186,8 +205,7 @@ describe('Function Reload with User Config', () => {
     func.logger.logger.prettify = prettify
 
     client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    let db = client.db()
-    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
+    db = client.db()
     await initmeta(db, GOOGLESPREADSHEET_ID, {
       mode: "UNFORMATTED",
       datatypes: {
@@ -200,6 +218,7 @@ describe('Function Reload with User Config', () => {
     })
   })
   afterEach(async () => {
+    await deleteSupersheet(db, GOOGLESPREADSHEET_ID)
     await client.close()
     // We invoke any teardown handlers so that
     // middleware can clean up after themselves
@@ -269,11 +288,32 @@ function mockdb(callback) {
   }
 }
 
+// function mockstatsdb(response, error) {
+//   return {
+//     collection: () => {
+//       return {
+//         insertOne: async () => {
+//           if (error) throw error
+//           return response
+//         },
+//         updateOne: async () => {
+//           if (error) throw error
+//           return response
+//         },
+//         findOne: async () => {
+
+//         }
+//       }
+//     }
+//   }
+// }
+
 function mockaxios(callback) {
   return {
     get: callback
   }
 }
+
 
 async function deleteSupersheet(db, id) {
   let metadata = null
@@ -296,6 +336,11 @@ async function deleteSupersheet(db, id) {
     } catch (err) {
       console.log(`Could not drop collection ${metadata.datauuid}`)
     }
+  }
+  try {
+    await db.collection('status').deleteOne({ sheet_id: id })
+  } catch (err) {
+    console.log(`Could not drop status ${id}`)
   }
 }
 

@@ -1,5 +1,6 @@
 let uuidV4 = require('uuid/v4')
 let sheetutil = require('./sheetutil')
+let status = require('./status')
 
 async function loadHandler(ctx) {
   let user = userInfo(ctx)
@@ -24,14 +25,21 @@ async function loadHandler(ctx) {
   let datauuid = uuidV4()
   let sheet = null
   let sheets = [ ]
+  let stat = null
   try {
+    stat = await status.startStatus(db, metadata, user, { datauuid })
     if (metadata.sheets) {
       for (sheet of metadata.sheets) {
-        sheets.push(await sheetHandler(ctx, db, metadata, sheet, datauuid))
+        let loaded = await sheetHandler(ctx, db, metadata, sheet, datauuid)
+        sheets.push(loaded)
+        await status.updateStatus(db, metadata, user, loaded, stat.uuid)
       }
     }
     metadata.sheets = sheets
   } catch (err) {
+    if (stat) {
+      await status.errorStatus(db, metadata, user, stat.uuid, err)
+    }
     ctx.logger.error(err)
     ctx.response.httperror(500, `Error loading sheet ${sheet.title}: ${err.message}`, { expose: true })
     return
@@ -42,7 +50,6 @@ async function loadHandler(ctx) {
     sheetutil.updateSchema(metadata)
     metadata.datauuid = datauuid
     await updateSpreadsheetMeta(db, id, metadata)
-    
     if (olddatauuid) {
       try {
         await db.collection(olddatauuid).drop()
@@ -51,10 +58,12 @@ async function loadHandler(ctx) {
         ctx.logger.warn(`Could not drop collection ${olddatauuid} ${err.message}`)
       }
     }
+    await status.completeStatus(db, metadata, user, stat.uuid)
     metadata = await db.collection('spreadsheets').findOne({ id })
     ctx.response.json(metadata)
     return
   } catch (err) {
+    await status.errorStatus(db, metadata, user, stat.uuid, err)
     ctx.logger.error(err)
     ctx.response.httperror(500, `Failed to save metadata for ${metadata.id}`, { expose: true })
     return

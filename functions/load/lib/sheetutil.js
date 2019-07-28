@@ -1,5 +1,6 @@
 const uuidV4 = require('uuid/v4')
 const { DateTime } = require('luxon')
+const IGNORE_PREFIX = "_"
 
 function getLoadMode(metadata) {
   return metadata.config && metadata.config.mode || 'FORMATTED'
@@ -24,7 +25,7 @@ function constructDocs(sheetDoc, data) {
       };
       for (var j = 0; j < cols.length; j++) {
         let column = cols[j]
-        if (!column.startsWith("$")) {
+        if (!column.startsWith(IGNORE_PREFIX)) {
           doc[cols[j]] = data[i][j]
         }
       }
@@ -32,7 +33,7 @@ function constructDocs(sheetDoc, data) {
     }
   }
   // We have to do this at the end so it doesn't throw off indexing (i, j)
-  cols = cols.filter(name => !name.startsWith("$"))
+  cols = cols.filter(name => !name.startsWith(IGNORE_PREFIX))
   return { cols, docs }
 }
 
@@ -68,8 +69,17 @@ function createConverter(datatypes) {
       case "Number":
         conv[col] = convertToNumber
         break
-      case "Datetime":
+      case "Date":
         conv[col] = convertToDate
+        break
+      case "Datetime":
+        conv[col] = convertToDatetime
+        break
+      case "JSON":
+        conv[col] = convertToJSON
+        break
+      case "StringList":
+        conv[col] = convertToStringList
         break
       default:
         throw new Error(`Unknown type ${datatypes[col]}`)
@@ -110,7 +120,7 @@ const convertToBoolean = (v) => {
   return true
 }
 
-const convertToDate = (v, options) => {
+const convertToDatetime = (v, options) => {
   options = options || { }
   let tz = options.tz || "utc"
   if (v === null) return null
@@ -119,9 +129,55 @@ const convertToDate = (v, options) => {
       return getISOStringFromExcel(v, tz)
     case "string": 
       let fmt = options.fmt || 'ISO' 
+      return parseDatetimeFromString(v, fmt, tz)
+    default:
+      throw new Error(`Could not convert value ${v} to type Date`)
+  }
+}
+
+// Will use the month, day, year and store in UTC WITHOUT tz converstion
+// For example, if the the sheet's timezone is
+// the value is the equivalent of '2009-04-01'('America/Los_Angeles') 
+// what will be stored is 'Z' (UTC)
+const convertToDate = (v, options) => {
+  options = options || { }
+  let tz = "utc"
+  if (v === null) return null
+  switch(typeof v) {
+    case "number": 
+      return getISODateStringFromExcel(v, tz)
+    case "string": 
+      let fmt = options.fmt || 'ISO' 
       return parseDateFromString(v, fmt, tz)
     default:
       throw new Error(`Could not convert value ${v} to type Date`)
+  }
+}
+
+const convertToJSON = (v) => {
+  switch (typeof v) {
+    case "string":
+      return JSON.parse(v)
+    case "number": 
+      return JSON.parse(v)
+    case "object":
+      return JSON.parse(JSON.stringify(v))
+    default:
+      throw new Error(`Could not convert value ${v} to JSON`)
+  }
+}
+
+const convertToStringList = (v, options) => {
+  options = options || { }
+  let separator = options.separator || '\n'
+  if (!v) return [ ]
+  switch (typeof v) {
+    case "string":
+      return v.split(separator).map(s => s.trim()).filter(s => s)
+    case "number":
+      return [ v.toString() ]
+    default:
+      throw new Error(`Could not convert value ${v} to StringList`)
   }
 }
 
@@ -131,16 +187,35 @@ function getISOStringFromExcel(excelDate, tz) {
   return DateTime.fromISO(str, { zone: tz })
 }
 
+function getISODateStringFromExcel(excelDate, tz) {
+  let d = getJsDateFromExcel(excelDate)
+  let str = d.toISOString().split('T')[0] // 2018-04-05
+  return DateTime.fromISO(str, { zone: tz })
+}
+
 function getJsDateFromExcel(excelDate) { 
   return new Date(Math.round((excelDate - (25567 + 2))*86400)*1000) 
 }
 
-function parseDateFromString(str, fmt, tz) {
+function parseDatetimeFromString(str, fmt, tz) {
   if (fmt == "ISO") {
     // setZone only sets the zone if str does not include offset
     return DateTime.fromISO(str, { zone: tz, setZone: true })
   }
   return DateTime.fromFormat(str, fmt, { zone: tz })
+}
+
+function parseDateFromString(str, fmt, tz) {
+  if (fmt == "ISO") {
+    // setZone only sets the zone if str does not include offset
+    str = str.split('T')[0]
+    return DateTime.fromISO(str, { zone: tz, setZone: true }).set({
+      hour: 0, minute: 0, seconds: 0, millisecond: 0 
+    })
+  }
+  return DateTime.fromFormat(str, fmt, { zone: tz }).set({
+    hour: 0, minute: 0, seconds: 0, millisecond: 0 
+  })
 }
 
 function updateSpreadsheetCountsFromSheets(metadata) {

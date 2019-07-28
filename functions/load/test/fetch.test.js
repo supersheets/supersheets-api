@@ -73,10 +73,7 @@ describe('Private Sheets', () => {
     expect(data).toMatchObject({
       "majorDimension": "ROWS",
       "range": "Sheet1!A1:Z1000",
-      "values": [ [ "Col1", "Col2" ], [ "v1", "v2" ] ]
+      "values": [ [ "Col1", "Col2", "_ignored" ], [ "v1", "v2", "ignored" ] ]
     })
   })
 })
-
-
-
