@@ -186,7 +186,7 @@ describe('Function', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toMatchObject({
       id: GOOGLESPREADSHEET_ID,
-      uuid: expect.anything(),
+      uuid: expect.stringMatching(/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/),
       created_by: "google-oauth2|107764139004828737326",
       created_by_email: "danieljyoo@goalbookapp.com",
       created_by_org: "goalbookapp.com",

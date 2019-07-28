@@ -1,5 +1,6 @@
 
 const uuidV4 = require('uuid/v4')
+const IGNORE_PREFIX = "_"
 
 async function metaHandler(ctx) {
   let user = userInfo(ctx)
@@ -75,7 +76,7 @@ async function fetchMetadata(axios, id, options) {
 }
 
 async function createMetadata(db, metadata, user) {
-  metadata.uuid = new uuidV4()
+  metadata.uuid = uuidV4()
   metadata.created_at = new Date()
   metadata.created_by = user.userid
   metadata.created_by_email = user.email
@@ -126,7 +127,7 @@ function createMetadataFromGoogleSpreadsheet(doc) {
   
   for (var i=0; i<doc.sheets.length; i++) {
     let sheetDoc = doc.sheets[i].properties
-    if (!sheetDoc.title.startsWith("$")) {
+    if (!sheetDoc.title.startsWith(IGNORE_PREFIX)) {
       sheets.push({
         id: sheetDoc.sheetId,
         title: sheetDoc.title,
