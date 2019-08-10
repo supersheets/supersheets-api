@@ -1,0 +1,72 @@
+"""
+CUSTOM SCHEMA
+These are dependent the contents of the collection
+"""
+
+type Doc {
+  _id: ID!
+}
+
+enum FieldsEnum {
+  _id
+}
+
+input FilterInput {
+  _id: StringQueryOperatorInput
+}
+
+"""
+GENERIC SCHEMA
+These are used as-is regardless of collection contents
+"""
+
+schema {
+  query: Query
+}
+
+type Query {
+  find(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): [Doc!]
+  findOne(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): Doc
+}
+
+input SortInput {
+  fields: [FieldsEnum]
+  order: [SortOrderEnum]
+}
+
+enum SortOrderEnum {
+  ASC
+  DESC
+}
+
+input StringQueryOperatorInput {
+  eq: String
+  glob: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+}
+
+input IntQueryOperatorInput {
+  eq: Int
+  gt: Int
+  gte: Int
+  in: [Int]
+  lt: Int
+  lte: Int
+  ne: Int
+  nin: [Int]
+}
+
+input FloatQueryOperatorInput {
+  eq: Float
+  gt: Float
+  gte: Float
+  in: [Float]
+  lt: Float
+  lte: Float
+  ne: Float
+  nin: [Float]
+}
+

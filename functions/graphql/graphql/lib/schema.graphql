@@ -1,0 +1,105 @@
+"""
+CUSTOM SCHEMA
+These are dependent the contents of the collection
+"""
+
+type Query {
+  find(filter: DocFilterInput, limit: Int, skip: Int, sort: SortInput): [Doc!]
+  findOne(filter: DocFilterInput, limit: Int, skip: Int, sort: SortInput): Doc
+}
+
+# Primary Doc 
+type Doc {
+  _id: ID!
+  doc: EmbeddedDoc
+}
+
+enum DocFieldsEnum {
+  _id
+}
+
+input DocFilterInput {
+  _id: StringQueryOperatorInput
+}
+
+# Embedded Doc
+
+type EmbeddedDoc {
+  title: String
+}
+
+enum EmbeddedFieldsEnum {
+  title
+}
+
+
+"""
+GENERIC SCHEMA
+These are used as-is regardless of collection contents
+"""
+
+schema {
+  query: Query
+}
+
+# https://www.apollographql.com/docs/graphql-tools/scalars/
+scalar Date
+
+input SortInput {
+  fields: [FieldsEnum]
+  order: [SortOrderEnum]
+}
+
+enum SortOrderEnum {
+  ASC
+  DESC
+}
+
+input StringQueryOperatorInput {
+  eq: String
+  glob: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+}
+
+input IntQueryOperatorInput {
+  eq: Int
+  gt: Int
+  gte: Int
+  in: [Int]
+  lt: Int
+  lte: Int
+  ne: Int
+  nin: [Int]
+}
+
+input FloatQueryOperatorInput {
+  eq: Float
+  gt: Float
+  gte: Float
+  in: [Float]
+  lt: Float
+  lte: Float
+  ne: Float
+  nin: [Float]
+}
+
+input BooleanQueryOperatorInput {
+  eq: Boolean
+  ne: Boolean
+  in: [ Boolean ]
+  nin: [ Boolean ]
+}
+
+input DateQueryOperatorInput {
+  eq: Date
+  no: Date
+  gt: Date
+  gte: Date
+  lt: Date
+  lte: Date
+  in: [ Date ]
+  nin: [ Date ]
+}
