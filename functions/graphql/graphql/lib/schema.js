@@ -8,7 +8,15 @@ const axios = require('axios')
 // back the schema definitions 
 // For now we just read it from a local file
 async function fetchSchema(id) {
-  const schemastr = fs.readFileSync(path.join(__dirname, '..', 'schema', `${id}.graphql`))
+  let request = axios.create({
+    baseURL: process.env.SUPERSHEETS_BASE_URL,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  let res = (await request.get(`${id}/graphql/schema`)).data
+  console.log("schema", res.schema)
+  const schemastr = res.schema
   let typeDefs =  gql`${schemastr}`
   return { typeDefs, resolvers }
 }

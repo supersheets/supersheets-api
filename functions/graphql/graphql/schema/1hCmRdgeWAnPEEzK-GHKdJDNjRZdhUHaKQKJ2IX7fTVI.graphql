@@ -34,24 +34,26 @@ input FilterInput {
   value: IntQueryOperatorInput
 }
 
-"""
-GENERIC SCHEMA
-These are used as-is regardless of collection contents
-"""
-
+input SortInput {
+  fields: [FieldsEnum]
+  order: [SortOrderEnum]
+}
 
 type Query {
   find(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): [Doc!]
   findOne(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): Doc
 }
 
+
+
+
+"""
+GENERIC SCHEMA
+These are used as-is regardless of collection contents
+"""
+
 # https://www.apollographql.com/docs/graphql-tools/scalars/
 scalar Date
-
-input SortInput {
-  fields: [FieldsEnum]
-  order: [SortOrderEnum]
-}
 
 enum SortOrderEnum {
   ASC
