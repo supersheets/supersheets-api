@@ -18,10 +18,7 @@
   "dependencies": {
     "apollo-server-lambda": "^2.8.1",
     "axios": "^0.19.0",
-    "graphql": "^14.4.2",
-    "lodash": "^4.17.15",
-    "minimatch": "^3.0.4",
-    "sift": "^8.5.0"
+    "graphql": "^14.4.2"
   },
   "devDependencies": {
     "@funcmaticjs/package": "0.0.2",
