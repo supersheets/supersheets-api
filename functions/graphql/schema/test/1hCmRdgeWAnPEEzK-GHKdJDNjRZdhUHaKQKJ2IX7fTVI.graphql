@@ -1,0 +1,110 @@
+# Based on letters.csv (Gatsby CSV example)
+# https://docs.google.com/spreadsheets/d/1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI/edit#gid=0
+
+schema {
+  query: Query
+}
+
+"""
+CUSTOM SCHEMA
+These are dependent the contents of the collection
+"""
+
+type Doc {
+  _id: ID!
+  _sheet: String!
+  _row: Int!
+  letter: String!
+  value: Int!
+}
+
+enum FieldsEnum {
+  _id
+  _sheet
+  _row
+  letter
+  value
+}
+
+input FilterInput {
+  _id: StringQueryOperatorInput
+  _sheet: StringQueryOperatorInput
+  _row: IntQueryOperatorInput
+  letter: StringQueryOperatorInput
+  value: IntQueryOperatorInput
+}
+
+input SortInput {
+  fields: [FieldsEnum]
+  order: [SortOrderEnum]
+}
+
+type Query {
+  find(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): [Doc!]
+  findOne(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): Doc
+}
+
+
+
+
+"""
+GENERIC SCHEMA
+These are used as-is regardless of collection contents
+"""
+
+# https://www.apollographql.com/docs/graphql-tools/scalars/
+scalar Date
+
+enum SortOrderEnum {
+  ASC
+  DESC
+}
+
+input StringQueryOperatorInput {
+  eq: String
+  glob: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+}
+
+input IntQueryOperatorInput {
+  eq: Int
+  gt: Int
+  gte: Int
+  in: [Int]
+  lt: Int
+  lte: Int
+  ne: Int
+  nin: [Int]
+}
+
+input FloatQueryOperatorInput {
+  eq: Float
+  gt: Float
+  gte: Float
+  in: [Float]
+  lt: Float
+  lte: Float
+  ne: Float
+  nin: [Float]
+}
+
+input BooleanQueryOperatorInput {
+  eq: Boolean
+  ne: Boolean
+  in: [ Boolean ]
+  nin: [ Boolean ]
+}
+
+input DateQueryOperatorInput {
+  eq: Date
+  no: Date
+  gt: Date
+  gte: Date
+  lt: Date
+  lte: Date
+  in: [ Date ]
+  nin: [ Date ]
+}
