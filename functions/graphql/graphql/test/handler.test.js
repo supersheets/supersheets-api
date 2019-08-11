@@ -1,18 +1,24 @@
 require('dotenv').config()
 // https://docs.google.com/spreadsheets/d/1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI/edit#gid=0
 const SPREADSHEETID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
+const prettify = require('@funcmaticjs/pretty-logs')
 
 describe('Handler', () => {
-  let handler = null
+  let func = null
   beforeEach(async () => {
-    handler = require('../index').handler
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  })
+  afterEach(async () => {
+    await func.invokeTeardown()
   })
   it ('should run a graphql find query for a specific schema', async () => {
     let query = `{ find (filter: { letter: { eq: "A" } } ) { letter } }`
-    let { event, context } = createTestEvent(SPREADSHEETID, query)
-    let response = await handler(event, context)
-    expect(response.statusCode).toBe(200)
-    let body = JSON.parse(response.body)
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    console.log("RESPONSE", JSON.stringify(ctx.response))
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
         find: [ 
@@ -23,10 +29,10 @@ describe('Handler', () => {
   })
   it ('should run a graphql findOne query for a specific schema', async () => {
     let query = `{ findOne (filter: { letter: { eq: "A" } } ) { letter } }`
-    let { event, context } = createTestEvent(SPREADSHEETID, query)
-    let response = await handler(event, context)
-    expect(response.statusCode).toBe(200)
-    let body = JSON.parse(response.body)
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
         findOne: { "letter": "A" }
