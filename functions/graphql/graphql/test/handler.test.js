@@ -7,7 +7,7 @@ describe('Handler', () => {
   beforeEach(async () => {
     handler = require('../index').handler
   })
-  it ('should run a graphql query for a specific schema', async () => {
+  it ('should run a graphql find query for a specific schema', async () => {
     let query = `{ find (filter: { letter: { eq: "A" } } ) { letter } }`
     let { event, context } = createTestEvent(SPREADSHEETID, query)
     let response = await handler(event, context)
@@ -18,6 +18,18 @@ describe('Handler', () => {
         find: [ 
           { "letter": "A" }
         ]
+      }
+    })
+  })
+  it ('should run a graphql findOne query for a specific schema', async () => {
+    let query = `{ findOne (filter: { letter: { eq: "A" } } ) { letter } }`
+    let { event, context } = createTestEvent(SPREADSHEETID, query)
+    let response = await handler(event, context)
+    expect(response.statusCode).toBe(200)
+    let body = JSON.parse(response.body)
+    expect(body).toEqual({
+      data: {
+        findOne: { "letter": "A" }
       }
     })
   })

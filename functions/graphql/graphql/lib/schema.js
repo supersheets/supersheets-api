@@ -25,24 +25,41 @@ async function fetchSchema(id) {
 // something we can use to make a http find request 
 const resolvers = {
   Query: {
-    find: async (parent, args, context, info) => {
-      let id = context.event.pathParameters.spreadsheetid
-      let query = { }
-      if (args.filter) {
-        console.log("Filter", JSON.stringify(args.filter, null, 2))
-        query = formatOperators(args.filter)
-      }
-      let request = axios.create({
-        baseURL: process.env.SUPERSHEETS_BASE_URL,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-      let data = (await request.post(`${id}/find`, { query })).data
-      console.log("DATA", JSON.stringify(data))
-      return data.result
-    }
+    find: findResolver,
+    findOne: findOneResolver
   },
+}
+
+function createQuery(args) {
+  let query = { }
+  if (args.filter) {
+    query = formatOperators(args.filter)
+  }
+  return { query }
+}
+
+async function findResolver(parent, args, context, info) {
+  let id = context.event.pathParameters.spreadsheetid
+  let query = createQuery(args)
+  return await makeRequest(id, query)
+}
+
+async function findOneResolver(parent, args, context, info) {
+  let id = context.event.pathParameters.spreadsheetid
+  let query = createQuery(args)
+  query.one = true
+  return await makeRequest(id, query)
+}
+
+async function makeRequest(id, query) {
+  let request = axios.create({
+    baseURL: process.env.SUPERSHEETS_BASE_URL,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  let data = (await request.post(`${id}/find`, query)).data
+  return data.result
 }
 
 // https://docs.mongodb.com/manual/reference/operator/query/
