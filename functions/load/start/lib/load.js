@@ -1,0 +1,128 @@
+let uuidV4 = require('uuid/v4')
+let { startStatus, errorStatus } = require('./status')
+const FUNCTION_LOAD = "supersheets-api-v3-loader"
+//const FUNCTION_LOAD = "external-test-loader"
+
+async function loadHandler(ctx) {
+  let user = userInfo(ctx)
+  if (!user) {
+    ctx.response.httperror(401, 'Unauthorized')
+    return
+  }
+  let id = ctx.event.pathParameters.spreadsheetid
+  let db = ctx.state.mongodb
+  let metadata = null
+  try {
+    metadata = await db.collection('spreadsheets').findOne({ id })
+  } catch (err) {
+    ctx.logger.error(err)
+    ctx.response.httperror(500, `Error looking up metadata for ${id}`, { expose: true })
+    return
+  }
+  if (metadata.created_by_org && metadata.created_by_org != user.org) {
+    ctx.response.httperror(401, 'Unauthorized')
+    return
+  }
+  // END: once all the checks above pass, this kicks off an asynchronous lambda invokcation
+  // which does the actual loading and updates the status table.
+  // then we need to do a startStatus and then return the status back to the front-end
+  // so that it can start polling the statusuuid for changes
+  // We create an event object that will allow the invoked lambda to launch AS IF it was done via API Gateway Lambda Proxy
+  // event = {
+  //   headers: { },
+  //   stageVariables: { 
+  //      we stuff all env in here. this way the launched lambda will have ctx.env set 
+  //      and not need to access parameter store etc. this gauranetees that the invoked lambda will 
+  //      run in the same environment as this lambda
+  //   }
+  // }
+  let statusuuid = uuidV4()
+  let datauuid = uuidV4()
+  let status = null
+  let t = Date.now()
+  try {
+    status = await startStatus(db, metadata, user, { uuid: statusuuid, datauuid })
+  } catch (err) {
+    ctx.logger.error(err)
+    ctx.response.httperror(500, `Error creating load status for sheet ${metadata.id}`, { expose: true })
+    return
+  }
+  let payload = createPayload(ctx.env, metadata, status, user)
+  let params = {
+    InvocationType: invocationType(ctx),
+    FunctionName: FUNCTION_LOAD, 
+    Qualifier: ctx.env.lambdaAlias || "$LATEST",
+    Payload: JSON.stringify(payload)
+  }
+  try {
+    let data = await ctx.state.invokelambda(params)
+    if (!data) {
+      throw new Error("Lambda invocation request failed.")
+    }
+    if (data.FunctionError && data.FunctionError == "Handled") {
+      // Handled - The runtime caught an error thrown by the function and formatted it into a JSON document.
+      throw new Error(`Lambda invocation returned an handled error: ${JSON.stringify(data)}`)
+    }
+    if (data.FunctionError && data.FunctionError == "Unhandled") {
+      // Unhandled - The runtime didn't handle the error. For example, the function ran out of memory or timed out.
+      throw new Error(`Lambda invocation threw an unhandled error: ${JSON.stringify(data)}`)
+    }
+    if (data.StatusCode == 202 || data.StatusCode == 204) {
+      ctx.response.json(status)
+      return
+    }
+  } catch (err) {
+    await errorStatus(db, metadata, user, status.uuid, err, Date.now() - t)
+    ctx.logger.error(err)
+    ctx.response.httperror(500, `Failed to invoke load function: ${err.message}`, { expose: true })
+    return
+  }
+}
+
+function invocationType(ctx) {
+  if (ctx.event.queryStringParameters && ctx.event.queryStringParameters['dryrun']) {
+    let val = ctx.event.queryStringParameters['dryrun']
+    return val == "true" && "DryRun" || "Event"
+  }  
+  return "Event"
+}
+
+function createPayload(env, metadata, status, user) {
+  return { 
+    stageVariables: env,
+    headers: {
+      'Content-Type': "application/json"
+    },
+    body: JSON.stringify({
+      user,
+      spreadsheetid: metadata.id,
+      statusid: status.uuid
+    })
+  }
+}
+
+function userInfo(ctx) {
+  let auth = ctx.state.auth
+  if (!auth || !auth.success) {
+    return null
+  }
+  let decoded = ctx.state.auth.decoded
+  let userid = decoded.sub
+  let email = decoded.email && decoded.email.toLowerCase() || null
+  let org = getOrgFromEmail(email)
+  let idptoken = getIDPAuthorizationToken(ctx)
+  return { userid, email, org, idptoken }
+}
+
+function getOrgFromEmail(email) {
+  if (!email || email.endsWith("@gmail.com")) return null
+  return email.split('@')[1]
+}
+
+function getIDPAuthorizationToken(ctx) {
+  return ctx.event.queryStringParameters && ctx.event.queryStringParameters['idptoken'] || null
+}
+
+module.exports = {
+  loadHandler
+}
