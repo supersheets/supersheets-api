@@ -22,10 +22,25 @@ async function loadHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
+  // END: once all the checks above pass, this kicks off an asynchronous lambda invokcation
+  // which does the actual loading and updates the status table.
+  // then we need to do a startStatus and then return the status back to the front-end
+  // so that it can start polling the statusuuid for changes
+  // We create an event object that will allow the invoked lambda to launch AS IF it was done via API Gateway Lambda Proxy
+  // event = {
+  //   headers: { },
+  //   stageVariables: { 
+  //      we stuff all env in here. this way the launched lambda will have ctx.env set 
+  //      and not need to access parameter store etc. this gauranetees that the invoked lambda will 
+  //      run in the same environment as this lambda
+  //   }
+  // }
+
   let datauuid = uuidV4()
   let sheet = null
   let sheets = [ ]
   let stat = null
+  let t = Date.now()
   try {
     stat = await status.startStatus(db, metadata, user, { datauuid })
     if (metadata.sheets) {
@@ -38,7 +53,7 @@ async function loadHandler(ctx) {
     metadata.sheets = sheets
   } catch (err) {
     if (stat) {
-      await status.errorStatus(db, metadata, user, stat.uuid, err)
+      await status.errorStatus(db, metadata, user, stat.uuid, err, Date.now() - t)
     }
     ctx.logger.error(err)
     ctx.response.httperror(500, `Error loading sheet ${sheet.title}: ${err.message}`, { expose: true })
@@ -58,12 +73,12 @@ async function loadHandler(ctx) {
         ctx.logger.warn(`Could not drop collection ${olddatauuid} ${err.message}`)
       }
     }
-    await status.completeStatus(db, metadata, user, stat.uuid)
+    await status.completeStatus(db, metadata, user, stat.uuid, Date.now() - t)
     metadata = await db.collection('spreadsheets').findOne({ id })
     ctx.response.json(metadata)
     return
   } catch (err) {
-    await status.errorStatus(db, metadata, user, stat.uuid, err)
+    await status.errorStatus(db, metadata, user, stat.uuid, err, Date.now() - t)
     ctx.logger.error(err)
     ctx.response.httperror(500, `Failed to save metadata for ${metadata.id}`, { expose: true })
     return

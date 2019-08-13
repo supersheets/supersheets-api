@@ -149,7 +149,9 @@ describe('Function First Load', () => {
       num_sheets_loaded: body.sheets.length,
       num_sheets_total: body.sheets.length,
       sheets_loaded: body.sheets.map(s => s.title),
-      error: null
+      error: null,
+      completed_at: expect.anything(),
+      duration: expect.anything()
     })
   })
 })

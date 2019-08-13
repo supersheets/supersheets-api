@@ -77,18 +77,22 @@ describe('Status', () => {
   })
   it ('should indicate the status is successful', async () => {
     await status.startStatus(db, metadata, user, { uuid, datauuid: new_datauuid })
-    await status.completeStatus(db, metadata, user, uuid)
+    await status.completeStatus(db, metadata, user, uuid, 1000)
     let stat = await status.getStatus(db, { uuid })
     expect(stat).toMatchObject({
-      status: 'SUCCESS'
+      status: 'SUCCESS',
+      completed_at: expect.anything(),
+      duration: 1000
     })
   })
   it ('should indicate the status failed', async () => {
     await status.startStatus(db, metadata, user, { uuid, datauuid: new_datauuid })
-    await status.errorStatus(db, metadata, user, uuid, new Error("some error message"))
+    await status.errorStatus(db, metadata, user, uuid, new Error("some error message"), 1000)
     let stat = await status.getStatus(db, { uuid })
     expect(stat).toMatchObject({
       status: 'FAILURE',
+      completed_at: expect.anything(),
+      duration: 1000,
       error: {
         errorMessage: "some error message"
       }

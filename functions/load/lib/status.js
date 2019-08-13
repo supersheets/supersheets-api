@@ -14,15 +14,15 @@ async function updateStatus(db, metadata, user, sheet, uuid) {
   return await db.collection(COLLECTION).updateOne(query, update, { w: 1 })
 }
 
-async function completeStatus(db, metadata, user, uuid) {
+async function completeStatus(db, metadata, user, uuid, duration) {
   let query = { uuid }
-  let update = createSuccessStatus(metadata, user)
+  let update = createSuccessStatus(metadata, user, duration)
   return await db.collection(COLLECTION).updateOne(query, update, { w: 1 })
 }
 
-async function errorStatus(db, metadata, user, uuid, err) {
+async function errorStatus(db, metadata, user, uuid, err, duration) {
   let query = { uuid }
-  let update = createFailureStatus(metadata, user, err)
+  let update = createFailureStatus(metadata, user, err, duration)
   return await db.collection(COLLECTION).updateOne(query, update, { w: 1 })
 }
 
@@ -79,7 +79,7 @@ function createSheetUpdateStatus(metadata, user, sheet) {
   }
 }
 
-function createSuccessStatus(metadata, user) {
+function createSuccessStatus(metadata, user, duration) {
   let d = new Date()
   return {
     "$set": {
@@ -87,12 +87,14 @@ function createSuccessStatus(metadata, user) {
       updated_at: d, 
       updated_by: user.userid,
       updated_by_email: user.email,
-      updated_by_org: user.org
+      updated_by_org: user.org,
+      completed_at: d,
+      duration
     }
   }
 }
 
-function createFailureStatus(metadata, user, error) {
+function createFailureStatus(metadata, user, error, duration) {
   let d = new Date()
   return {
     "$set": {
@@ -104,6 +106,8 @@ function createFailureStatus(metadata, user, error) {
       updated_by: user.userid,
       updated_by_email: user.email,
       updated_by_org: user.org,
+      completed_at: d,
+      duration
     }
   }
 }
