@@ -27,15 +27,65 @@ describe('Handler', () => {
       }
     })
   })
+  it ('should run a graphql find query with limit and skip', async () => {
+    let query = `{ find (filter: { value: { gt: 65, lt: 73 } }, limit: 2, skip: 1) { letter } }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    console.log("RESPONSE", JSON.stringify(ctx.response))
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: [ 
+          { "letter": "C" },
+          { "letter": "D" }
+        ]
+      }
+    })
+  })
+  it ('should do a basic sort', async () => {
+    let query = `{ find (filter: { value: { gt: 65, lt: 73 } }, limit: 2, skip: 1, sort: { fields: [ value ], order: [ DESC ] }) { letter } }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    console.log("RESPONSE", JSON.stringify(ctx.response))
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    console.log("SORT", JSON.stringify(body, null, 2))
+    expect(body).toEqual({
+      data: {
+        find: [ 
+          { "letter": "G" },
+          { "letter": "F" }
+        ]
+      }
+    })
+  })
+  it ('should match on an array value', async () => {
+    let query = `{ find (filter: { list: { in: [ "foo", "world" ] } }) { letter } }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    console.log("RESPONSE", JSON.stringify(ctx.response))
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    console.log("SORT", JSON.stringify(body, null, 2))
+    expect(body).toEqual({
+      data: {
+        find: [ 
+          { "letter": "A" },
+          { "letter": "B" }
+        ]
+      }
+    })
+  })
   it ('should run a graphql findOne query for a specific schema', async () => {
-    let query = `{ findOne (filter: { letter: { eq: "A" } } ) { letter } }`
+    let query = `{ find (filter: { letter: { eq: "A" } } ) { letter } }`
     let ctx = createTestEvent(SPREADSHEETID, query)
     await func.invoke(ctx)
     expect(ctx.response.statusCode).toBe(200)
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        findOne: { "letter": "A" }
+        find: [ { "letter": "A" } ]
       }
     })
   })

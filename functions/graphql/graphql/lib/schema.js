@@ -31,11 +31,20 @@ const resolvers = {
 }
 
 function createQuery(args) {
-  let query = { }
+  let find = { query: { } }
   if (args.filter) {
-    query = formatOperators(args.filter)
+    find.query = formatOperators(args.filter)
   }
-  return { query }
+  if (args.skip) {
+    find.skip = args.skip
+  }
+  if (args.limit) {
+    find.limit = args.limit
+  }
+  if (args.sort) {
+    find.sort = formatSort(args.sort)
+  }
+  return find
 }
 
 async function findResolver(parent, args, context, info) {
@@ -94,11 +103,24 @@ function formatOperators(filter) {
   for (let k in filter) {
     switch (typeof filter[k]) {
       case "object": 
-        formatted[addDollarIfOperator(k)] = formatOperators(filter[k])
+        if (Array.isArray(filter[k])) {
+          formatted[addDollarIfOperator(k)] = filter[k]
+        } else {
+          formatted[addDollarIfOperator(k)] = formatOperators(filter[k])
+        }
         break
       default:
         formatted[addDollarIfOperator(k)] = filter[k]
     }
+  }
+  return formatted
+}
+
+// { fields: [ ], order: [ 'ASC', 'DESC' ] } => [ [ field1, asc ], [ field2, desc ] ]
+function formatSort(sort) {
+  let formatted = [ ]
+  for (let i = 0; i<sort.fields.length; i++) {
+    formatted.push([ sort.fields[i], (sort.order[i] || 'ASC') ])
   }
   return formatted
 }

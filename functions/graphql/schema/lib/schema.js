@@ -32,7 +32,7 @@ function generateQuery(metadata, options) {
   let name = options.name || "Doc"
   let s = `type Query {\n`
   s += `  find(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): [${name}!]\n`
-  s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}\n`
+  s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}!\n`
   s += `}\n`
   return s
 }
@@ -67,6 +67,13 @@ function convertToGraphQLType({ name, datatype, sample }) {
       return 'String'
     case "Number": 
       return isInt(sample) && 'Int' || 'Float'
+    case "Boolean":
+      return "Boolean"
+    case "Date":
+    case "Datetime":
+      return "Date"
+    case "StringList":
+      return "[String]"
   }
 }
 
@@ -128,6 +135,13 @@ function convertToQueryOperator({ name, datatype, sample }) {
       return 'StringQueryOperatorInput'
     case "Number": 
       return isInt(sample) && 'IntQueryOperatorInput' || 'FloatQueryOperatorInput'
+    case "Boolean":
+      return "BooleanQueryOperatorInput "
+    case "Date":
+    case "Datetime":
+      return "DateQueryOperatorInput"
+    case "StringList":
+      return "StringArrayQueryOperatorInput"
   }
 }
 
@@ -153,6 +167,16 @@ function generateStaticTypeDefs() {
 enum SortOrderEnum {
   ASC
   DESC
+}
+
+input StringArrayQueryOperatorInput {
+  eq: String
+  ne: String
+  in: [String]
+  nin: [String]
+  all: [String]
+  elemMatch: [StringQueryOperatorInput]
+  size: Int
 }
 
 input StringQueryOperatorInput {

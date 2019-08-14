@@ -61,7 +61,13 @@ describe('Function', () => {
         schema: {
           columns: [
             {"name":"letter","datatype":"String","sample":"A","sheets":["data"]},
-            {"name":"value","datatype":"Number","sample":65,"sheets":["data"]}
+            {"name":"value","datatype":"Number","sample":65,"sheets":["data"]},
+            {"name":"number","datatype":"Number","sample":1,"sheets":["data"]},
+            {"name":"float","datatype":"Number","sample":1,"sheets":["data"]},
+            {"name":"boolean","datatype":"Boolean","sample":true,"sheets":["data"]},
+            {"name":"list","datatype":"StringList","sample":["hello","world"],"sheets":["data"]},
+            {"name":"date","datatype":"Date","sample":"1979-05-16T00:00:00.000Z","sheets":["data"]},
+            {"name":"datetime","datatype":"Datetime","sample":"1979-05-16T21:01:23.000Z","sheets":["data"]}
           ]
         }
       }
@@ -71,7 +77,7 @@ describe('Function', () => {
       statusCode: 200
     })
     let body = JSON.parse(ctx.response.body)
-    console.log("Body", body)
+    console.log("Schema", body.schema)
   })
 })
 
