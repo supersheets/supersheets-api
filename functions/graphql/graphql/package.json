@@ -30,9 +30,14 @@
   "devDependencies": {
     "@funcmaticjs/package": "0.0.2",
     "@funcmaticjs/pretty-logs": "0.0.3",
+    "apollo-cache-inmemory": "^1.6.3",
+    "apollo-client": "^2.6.4",
+    "apollo-link-http": "^1.5.15",
     "aws-sdk": "^2.488.0",
     "dotenv": "^8.0.0",
-    "jest": "^24.8.0"
+    "graphql-tag": "^2.10.1",
+    "jest": "^24.8.0",
+    "node-fetch": "^2.6.0"
   },
   "jest": {
     "testEnvironment": "node"

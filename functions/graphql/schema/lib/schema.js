@@ -67,11 +67,16 @@ function convertToGraphQLType({ name, datatype, sample }) {
       return 'String'
     case "Number": 
       return isInt(sample) && 'Int' || 'Float'
+    case "Int":
+      return 'Int'
+    case "Float":
+      return 'Float'
     case "Boolean":
       return "Boolean"
     case "Date":
-    case "Datetime":
       return "Date"
+    case "Datetime":
+      return "Datetime"
     case "StringList":
       return "[String]"
   }
@@ -135,11 +140,16 @@ function convertToQueryOperator({ name, datatype, sample }) {
       return 'StringQueryOperatorInput'
     case "Number": 
       return isInt(sample) && 'IntQueryOperatorInput' || 'FloatQueryOperatorInput'
+    case "Int":
+      return 'IntQueryOperatorInput'
+    case "Float":
+      return 'FloatQueryOperatorInput'
     case "Boolean":
       return "BooleanQueryOperatorInput "
     case "Date":
-    case "Datetime":
       return "DateQueryOperatorInput"
+    case "Datetime":
+      return "DatetimeQueryOperatorInput"
     case "StringList":
       return "StringArrayQueryOperatorInput"
   }
@@ -163,6 +173,7 @@ function generateSortInput(metadata, options) {
 
 function generateStaticTypeDefs() {
   return `scalar Date
+scalar Datetime
 
 enum SortOrderEnum {
   ASC
@@ -226,7 +237,19 @@ input DateQueryOperatorInput {
   lte: Date
   in: [ Date ]
   nin: [ Date ]
-}\n`
+}
+
+input DatetimeQueryOperatorInput {
+  eq: Datetime
+  no: Datetime
+  gt: Datetime
+  gte: Datetime
+  lt: Datetime
+  lte: Datetime
+  in: [ Datetime ]
+  nin: [ Datetime ]
+}
+`
 }
 
 module.exports = {

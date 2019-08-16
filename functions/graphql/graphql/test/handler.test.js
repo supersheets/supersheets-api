@@ -89,6 +89,22 @@ describe('Handler', () => {
       }
     })
   })
+  it ('should serialize date and datetime correctly', async () => {
+    let query = `{ find (filter: { letter: { eq: "A" } } ) { letter, date, datetime } }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: [ {
+          "letter": "A",
+          "date": "1979-05-16",
+          "datetime": "1979-05-16T21:01:23.000Z"
+        } ]
+      }
+    })
+  })
 })
 
 function createTestEvent(id, query, variables) {

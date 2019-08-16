@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const { gql } = require('apollo-server-lambda')
+const { GraphQLScalarType } = require('graphql') 
 const axios = require('axios')
 
 // in the future this should probably make a request out 
@@ -28,6 +29,7 @@ const resolvers = {
     find: findResolver,
     findOne: findOneResolver
   },
+  Date: dateScalarType()
 }
 
 function createQuery(args) {
@@ -58,6 +60,25 @@ async function findOneResolver(parent, args, context, info) {
   let query = createQuery(args)
   query.one = true
   return await makeRequest(id, query)
+}
+
+function dateScalarType() {
+  return new GraphQLScalarType({
+    name: 'Date',
+    description: 'Date custom scalar type',
+    parseValue(value) {
+      return value // value from the client
+    },
+    serialize(value) {
+      return value.split('T')[0]; // "2019-08-01" 
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING) {
+        return new Date(ast.value) // ast value is always in string format
+      }
+      return null;
+    },
+  })
 }
 
 async function makeRequest(id, query) {
