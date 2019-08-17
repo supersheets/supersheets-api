@@ -23,25 +23,14 @@ async function loadHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
-  // END: once all the checks above pass, this kicks off an asynchronous lambda invokcation
-  // which does the actual loading and updates the status table.
-  // then we need to do a startStatus and then return the status back to the front-end
-  // so that it can start polling the statusuuid for changes
-  // We create an event object that will allow the invoked lambda to launch AS IF it was done via API Gateway Lambda Proxy
-  // event = {
-  //   headers: { },
-  //   stageVariables: { 
-  //      we stuff all env in here. this way the launched lambda will have ctx.env set 
-  //      and not need to access parameter store etc. this gauranetees that the invoked lambda will 
-  //      run in the same environment as this lambda
-  //   }
-  // }
+
   let statusuuid = uuidV4()
   let datauuid = uuidV4()
   let status = null
   let t = Date.now()
+  let dryrun = (invocationType(ctx) == "DryRun")
   try {
-    status = await startStatus(db, metadata, user, { uuid: statusuuid, datauuid })
+    status = await startStatus(db, metadata, user, { uuid: statusuuid, datauuid, dryrun })
   } catch (err) {
     ctx.logger.error(err)
     ctx.response.httperror(500, `Error creating load status for sheet ${metadata.id}`, { expose: true })
@@ -54,6 +43,7 @@ async function loadHandler(ctx) {
     Qualifier: ctx.env.lambdaAlias || "$LATEST",
     Payload: JSON.stringify(payload)
   }
+  ctx.logger.info(`Lambda Invocation Params: ${JSON.stringify(params, null, 2)}`)
   try {
     let data = await ctx.state.invokelambda(params)
     if (!data) {

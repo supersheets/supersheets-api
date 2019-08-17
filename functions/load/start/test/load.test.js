@@ -171,9 +171,7 @@ describe('Func', () => {
     })
     let body = JSON.parse(ctx.response.body)
     expect(body).toMatchObject({
-      metadata_uuid: "UUID",
-      status_uuid: expect.anything(),
-      invokeStatusCode: 204
+      status: "DRYRUN"
     })
   })
   it ('should invoke the loader lambda', async () => {
@@ -185,9 +183,7 @@ describe('Func', () => {
     let body = JSON.parse(ctx.response.body)
     console.log(JSON.stringify(body, null, 2))
     expect(body).toMatchObject({
-      metadata_uuid: "UUID",
-      status_uuid: expect.anything(),
-      invokeStatusCode: 202
+      status: "INIT"
     })
   })
 })

@@ -13,7 +13,7 @@ function createStatus(metadata, user, options) {
   let d = new Date()
   return {
     uuid: options.uuid || uuidV4(),
-    status: "INIT",
+    status: options.dryrun && "DRYRUN" || "INIT",
     sheet_id: metadata.id,
     sheet_uuid: metadata.uuid,
     sheet_current_datauuid: metadata.datauuid,
