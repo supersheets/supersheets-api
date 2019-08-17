@@ -1,13 +1,12 @@
 require('dotenv').config()
 const axios = require('axios')
 const { fetchSheetData } = require('../lib/load')
+const awsParamStore = require('aws-param-store')
 
 // Supersheets Public View Test
 const GOOGLESPREADSHEET_ID = "1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I"
 // Supersheets Private View Test
 const GOOGLESPREADSHEET_PRIVATE_ID = "1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY"
-
-const GOOGLE_ACCESS_TOKEN = process.env.GOOGLE_ACCESS_TOKEN
 
 describe('Fetch Google Sheet Formatting', () => {
   beforeEach(async () => {
@@ -37,6 +36,10 @@ describe('Fetch Google Sheet Formatting', () => {
 })
 
 describe('Private Sheets', () => {
+  let token = null
+  beforeAll(async () => {
+    token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
+  })
   beforeEach(async () => {
     axios.defaults.baseURL = process.env.GOOGLESHEETS_BASE_URL
     axios.defaults.params = { }
@@ -66,7 +69,7 @@ describe('Private Sheets', () => {
     // fetchMetadata(axios, id, options) {
     let options = {
       access: 'private',
-      idptoken: GOOGLE_ACCESS_TOKEN,
+      idptoken: token,
       mode: "UNFORMATTED"
     }
     let data = await fetchSheetData(axios, GOOGLESPREADSHEET_ID, "Sheet1", options)

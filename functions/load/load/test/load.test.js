@@ -183,9 +183,9 @@ describe('Load Spreadsheet with Google Docs', () => {
     expect(metadata).toMatchObject({
       id: GOOGLESPREADSHEET_DOCS_ID,
       title: "Supersheets Public View GoogleDoc Test",
-      nrows: 1,
+      nrows: 3,
       ncols: 3,
-      ncells: 3
+      ncells: 9
     })
     console.log("METADATA", JSON.stringify(metadata, null, 2))
     expect(metadata.schema.columns.map(col => col.name)).toEqual([ 
@@ -202,6 +202,24 @@ describe('Load Spreadsheet with Google Docs', () => {
     expect(samples[2]).toMatchObject({
       title: "The Gettysburg Address"
     })
+    expect(metadata.schema.docs).toBeTruthy()
+    expect(metadata.schema.docs).toMatchObject({
+      "passage": {
+        "name": "passage",
+        "columns": [
+          {
+            "name": "title",
+            "datatype": "String",
+            "sample": "The Gettysburg Address"
+          },
+          {
+            "name": "body",
+            "datatype": "String",
+            "sample": expect.anything()
+          }
+        ]
+      }
+    })
     let status = await statuslib.getStatus(db, { uuid: statusuuid })
     expect(status).toMatchObject({
       status: "SUCCESS",
@@ -212,6 +230,7 @@ describe('Load Spreadsheet with Google Docs', () => {
       completed_at: expect.anything(),
       duration: expect.anything()
     })
+  
   }, 120 * 1000)
 })
 

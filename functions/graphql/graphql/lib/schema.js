@@ -35,7 +35,7 @@ const resolvers = {
 function createQuery(args) {
   let find = { query: { } }
   if (args.filter) {
-    find.query = formatOperators(args.filter)
+    find.query = formatFieldNames(formatOperators(args.filter))
   }
   if (args.skip) {
     find.skip = args.skip
@@ -52,6 +52,7 @@ function createQuery(args) {
 async function findResolver(parent, args, context, info) {
   let id = context.event.pathParameters.spreadsheetid
   let query = createQuery(args)
+  console.log(`find: ${JSON.stringify(query, null, 2)}`)
   return await makeRequest(id, query)
 }
 
@@ -59,6 +60,7 @@ async function findOneResolver(parent, args, context, info) {
   let id = context.event.pathParameters.spreadsheetid
   let query = createQuery(args)
   query.one = true
+  console.log(`findOne: ${JSON.stringify(query, null, 2)}`)
   return await makeRequest(id, query)
 }
 
@@ -135,6 +137,31 @@ function formatOperators(filter) {
     }
   }
   return formatted
+}
+
+function formatFieldNames(filter) {
+  let formatted = { }
+  for (let k in filter) {
+    switch (typeof filter[k]) {
+      case "object": 
+        if (Array.isArray(filter[k])) {
+          formatted[dotNotation(k)] = filter[k]
+        } else {
+          formatted[dotNotation(k)] = formatFieldNames(filter[k])
+        }
+        break
+      default:
+        formatted[dotNotation(k)] = filter[k]
+    }
+  }
+  return formatted
+}
+
+function dotNotation(k) {
+  if (k && k.includes("__")) {
+    return k.replace(/__/g, '.')
+  }
+  return k
 }
 
 // { fields: [ ], order: [ 'ASC', 'DESC' ] } => [ [ field1, asc ], [ field2, desc ] ]

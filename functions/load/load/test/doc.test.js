@@ -3,8 +3,8 @@ const axios = require('axios')
 const path = require('path')
 const fs = require("fs")
 const testdocs = initTestDocs([ "testdoc.json"])
-const { isGoogleDoc, fetchDoc, extract, fetchAndExtract, convertValues } = require('../lib/doc')
-
+const { isGoogleDoc, fetchDoc, extract, fetchAndExtract, convertValues, createGoogleDocSchemas } = require('../lib/doc')
+const awsParamStore = require('aws-param-store')
 
 describe('convertValues', () => {
   let cols = null
@@ -48,18 +48,177 @@ describe('isGoogleDoc', () => {
   })
 })
 
+describe('Doc Schema', () => {
+  it ('should create a schema for a single google doc column', async () => {
+    let docs = [ { 
+      "passage": {
+        hello: "world",
+        foo: "bar"
+      }
+    } ]
+    let datatypes = { 
+      "passage": "GoogleDoc"
+    } 
+    let schema = createGoogleDocSchemas(docs, datatypes)
+    expect(schema).toMatchObject({
+      passage: {
+        name: "passage",
+        columns: [
+          {
+            "name": "passage.hello",
+            "datatype": "String",
+            "sample": "world"
+          },
+          {
+            "name": "passage.foo",
+            "datatype": "String",
+            "sample": "bar"
+          }
+        ]
+      }
+    })
+  })
+  it ('should create a schema for a multiple google doc columns', async () => {
+    let docs = [ { 
+      "passage": {
+        hello: "world",
+        foo: "bar"
+      },
+      "author": {
+        first: "daniel",
+        last: "yoo"
+      }
+    } ]
+    let datatypes = { 
+      "passage": "GoogleDoc",
+      "author": "GoogleDoc"
+    } 
+    let schema = createGoogleDocSchemas(docs, datatypes)
+    expect(schema['passage']).toMatchObject({
+      "name": "passage",
+      "columns": [
+        {
+          "name": "passage.hello",
+          "datatype": "String",
+          "sample": "world"
+        },
+        {
+          "name": "passage.foo",
+          "datatype": "String",
+          "sample": "bar"
+        }
+      ]
+    })
+    expect(schema['author']).toMatchObject({
+      "name": "author",
+      "columns": [
+        {
+          "name": "author.first",
+          "datatype": "String",
+          "sample": "daniel"
+        },
+        {
+          "name": "author.last",
+          "datatype": "String",
+          "sample": "yoo"
+        }
+      ]
+    })
+  })
+  it ('should set all falsy sample values as null', async () => {
+    let docs = [ 
+      { 
+        "passage": {
+          hello: "",
+          foo: null
+        }
+      }
+    ]
+    let datatypes = { 
+      "passage": "GoogleDoc"
+    } 
+    let schema = createGoogleDocSchemas(docs, datatypes)
+    expect(schema.passage.columns[0]).toMatchObject({
+      "name": "passage.hello",
+      "datatype": "String",
+      "sample": null
+    })
+    expect(schema.passage.columns[1]).toMatchObject({
+      "name": "passage.foo",
+      "datatype": "String",
+      "sample": null
+    })
+  })
+  it ('should find a non null sample if it exists', async () => {
+    let docs = [ 
+      { 
+        "passage": {
+          hello: "",
+          foo: null
+        }
+      }, 
+      {
+        "passage": {
+          hello: "world",
+          foo: "bar"
+        }
+      }
+    ]
+    let datatypes = { 
+      "passage": "GoogleDoc"
+    } 
+    let schema = createGoogleDocSchemas(docs, datatypes)
+    expect(schema.passage.columns[0]).toMatchObject({
+      "name": "passage.hello",
+      "datatype": "String",
+      "sample": "world"
+    })
+    expect(schema.passage.columns[1]).toMatchObject({
+      "name": "passage.foo",
+      "datatype": "String",
+      "sample": "bar"
+    })
+    docs = [ 
+      {
+        "passage": {
+          hello: "world",
+          foo: "bar"
+        }
+      },
+      { 
+        "passage": {
+          hello: null,
+          foo: ""
+        }
+      }
+    ]
+    schema = createGoogleDocSchemas(docs, datatypes)
+    expect(schema.passage.columns[0]).toMatchObject({
+      "name": "passage.hello",
+      "datatype": "String",
+      "sample": "world"
+    })
+    expect(schema.passage.columns[1]).toMatchObject({
+      "name": "passage.foo",
+      "datatype": "String",
+      "sample": "bar"
+    })
+  })
+})
+
 describe('fetchDoc', () => {
+  let token = null
   let options = { }
+  beforeAll(async () => {
+    token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
+  })
   beforeEach(async () => {
     options = {
       //axios: mockaxios(testdocs["testdoc.json"]),
       axios: axios.create({
-        baseURL: process.env.GOOGLEDOCS_BASE_URL,
-        params: {
-          key: process.env.GOOGLESHEETS_API_KEY
-        }
+        baseURL: process.env.GOOGLEDOCS_BASE_URL
       }),
-      idptoken: process.env.GOOGLE_OAUTHTOKEN
+      idptoken: token
     }
   })
   it ('should fetch a Google Doc', async () => {

@@ -69,6 +69,12 @@ function createConverter(datatypes) {
       case "Number":
         conv[col] = convertToNumber
         break
+      case "Int":
+        conv[col] = convertToInt
+        break
+      case "Float":
+        conv[col] = convertToNumber
+        break
       case "Date":
         conv[col] = convertToDate
         break
@@ -113,12 +119,24 @@ const convertToNumber = (v) => {
     case "number": 
       return v
     case "string": 
-      console.log("number", v)
       return new Number(v)
     default:
       throw new Error(`Could not convert value ${v} to type Number`)
   }
 }
+
+const convertToInt = (v) => {
+  if (!v) return 0
+  switch(typeof v) {
+    case "number": 
+      return Math.floor(v)
+    case "string": 
+      return parseInt(v)
+    default:
+      throw new Error(`Could not convert value ${v} to type Int`)
+  }
+}
+
 
 const convertToBoolean = (v) => {
   if (!v) return false
@@ -274,7 +292,11 @@ function getSampleColumnValues(cols, docs) {
 
 function updateSchema(metadata) {
   let datatypes = metadata.config && metadata.config.mode == "UNFORMATTED" && metadata.config.datatypes || { }
-  let schema = { columns: [ ] }
+  if (!metadata.schema) {
+    metadata.schema = { }
+  }
+  metadata.schema.columns = [ ]
+  let schema = metadata.schema
   let cols = { }
   for (let sheet of metadata.sheets) {
     for (let column of sheet.columns) {
@@ -293,10 +315,34 @@ function updateSchema(metadata) {
   for (col of schema.columns) {
     col.sheets = cols[col.name]
   }
-  metadata.schema = schema
+  // metadata.schema = schema
   return metadata 
 }
 
+function updateGoogleDocSchemas(metadata, schemas) {
+  if (!metadata.schema) {
+    metadata.schema = { }
+  }
+  if (!metadata.schema.docs) {
+    metadata.schema.docs = schemas
+    return
+  }
+  for (let col in schemas) {
+    if (metadata.schema.docs[col]) {
+      updateExistingGoogleDocSchema(metadata.schema.docs[col], schemas[col])
+    } else {
+      metadata.schema.docs[col] = schemas[col]
+    }
+  }
+}
+
+function updateExistingGoogleDocSchema(current, schema) {
+  for (let key of schema.columns) {
+    if (!current.columns.find(k => k.name == key.name)) {
+      current.columns.push(key)
+    }
+  }
+}
 
 
 module.exports = {
@@ -308,7 +354,8 @@ module.exports = {
   updateSheetDoc,
   getSampleColumnValues,
   updateSchema,
-  createConverter
+  createConverter,
+  updateGoogleDocSchemas
 }
 
 // function detectNewColumns(dataObject, sheetDoc) {

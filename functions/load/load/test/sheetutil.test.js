@@ -264,6 +264,32 @@ describe('StringList', () => {
   })
 })
 
+describe('Number', () => {
+  let numconv = null
+  let intconv = null
+  let floatconv = null
+  beforeEach(async () => {
+    let converter = sheetutil.createConverter({
+      Number: "Number",
+      Int: "Int",
+      Float: "Float"
+    })
+    numconv = converter["Number"]
+    intconv = converter["Int"]
+    floatconv = converter["Float"]
+  })
+  it ('should parse a float as int', async () => {
+    expect(intconv(1.1)).toEqual(1)
+  })
+  it ('should parse a string as a int', async () => {
+    expect(intconv("1.1")).toEqual(1)
+  })
+  it ('should parse a string as a float', async () => {
+    expect(floatconv("1.1")).toEqual(1.1)
+  })
+})
+
+
 function createTestData() {
   let docs = [ {
     "col1": "val1a"

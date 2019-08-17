@@ -6,8 +6,17 @@ let metadata = {
   schema: {
     columns: [
       {"name":"letter","datatype":"String","sample":"A","sheets":["data"]},
-      {"name":"value","datatype":"Number","sample":65,"sheets":["data"]}
-    ]
+      {"name":"value","datatype":"Number","sample":65,"sheets":["data"]},
+      {"name":"doc","datatype":"GoogleDoc","sample":{ hello: "world" },"sheets":["data"]}
+    ],
+    docs: {
+      doc: {
+        name: "doc",
+        columns: [ 
+          { name: "hello", datatype: "String", sample: "world" }
+        ]
+      }
+    }
   }
 }
 

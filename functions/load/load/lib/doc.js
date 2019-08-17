@@ -1,5 +1,6 @@
 const { JSONPath } = require('jsonpath-plus')
 const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
+const allkeys = require('all-object-keys')
 
 async function convertValues(cols, docs, datatypes, options) {
   options = options || { }
@@ -16,6 +17,51 @@ async function convertValues(cols, docs, datatypes, options) {
       }
     }
   }
+}
+
+function createGoogleDocSchemas(docs, datatypes, options) {
+  let keyindex = { }
+  let schema = { }
+  for (let col in datatypes) {
+    if (datatypes[col] == "GoogleDoc") {
+      schema[col] = {
+        name: col,
+        columns: [ ]
+      }
+    }
+  }
+  for (let doc of docs) {
+    for (let col in schema) {
+      let gdoc = doc[col]
+      if (!gdoc || (typeof gdoc != 'object')) {
+        continue
+      }
+      let gdockeys = getKeysForDoc(col, gdoc)
+      for (let key of gdockeys) {
+        let fullname = `${col}.${key.name}`
+        if (!keyindex[fullname]) {
+          keyindex[fullname] = key
+          schema[col].columns.push(key)
+        } else if (!keyindex[fullname].sample) {
+          keyindex[fullname].sample = key.sample
+        }
+      }
+    }
+  }
+  return schema
+}
+
+function getKeysForDoc(col, doc) {
+  let keys = [ ]
+  let names = allkeys(doc)
+  for (let name of names) {
+    keys.push({
+      name: `${name}`,
+      datatype: "String", // For now we only support String
+      sample: doc[name] || null
+    })
+  }
+  return keys
 }
 
 async function fetchAndExtract(url, options) {
@@ -124,5 +170,6 @@ module.exports = {
   fetchDoc,
   extract,
   fetchAndExtract,
-  convertValues
+  convertValues,
+  createGoogleDocSchemas
 }

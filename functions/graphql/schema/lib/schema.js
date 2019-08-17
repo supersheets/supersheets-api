@@ -10,9 +10,13 @@ function generate(metadata, options) {
   s += `\n`
   s += generateDoc(metadata, options)
   s += `\n`
+  s += generateGoogleDocTypes(metadata, options)
+  s += `\n`
   s += generateFieldsEnum(metadata, options)
   s += `\n`
   s += generateFilterInput(metadata, options)
+  s += `\n`
+  s += generateGoogleDocFilterInputs(metadata, options)
   s += `\n`
   s += generateSortInput(metadata, options)
   s += `\n`
@@ -60,6 +64,19 @@ function generateDoc(metadata, options) {
   return s
 }
 
+function generateGoogleDocTypes(metadata) {
+  let s = ''
+  for (let col in metadata.schema.docs) {
+    let schema = metadata.schema.docs[col]
+    s = `type ${schema.name}Doc {\n`
+    for (let col of schema.columns) {
+      s += `  ${col.name}: ${convertToGraphQLType(col)}!\n`
+    } 
+    s += '}\n'
+  }
+  return s
+}
+
 function convertToGraphQLType({ name, datatype, sample }) {
   const isInt = (n) => { return parseInt(n) === n }
   switch(datatype) {
@@ -79,6 +96,8 @@ function convertToGraphQLType({ name, datatype, sample }) {
       return "Datetime"
     case "StringList":
       return "[String]"
+    case "GoogleDoc":
+      return `${name}Doc`
   }
 }
 
@@ -129,7 +148,26 @@ function generateFilterInput(metadata, options) {
   for (let col of metadata.schema.columns) {
     s += `  ${col.name}: ${convertToQueryOperator(col)}\n`
   }
+  for (let col in metadata.schema.docs) {
+    let docschema = metadata.schema.docs[col]
+    for (let doccol of docschema.columns) {
+      s += `  ${col}__${doccol.name}: ${convertToQueryOperator(doccol)}\n`
+    }
+  }
   s += `}\n`
+  return s
+}
+
+function generateGoogleDocFilterInputs(metadata) {
+  let s = ''
+  for (let col in metadata.schema.docs) {
+    let schema = metadata.schema.docs[col]
+    s = `input ${schema.name}FilterInput {\n`
+    for (let col of schema.columns) {
+      s += `  ${col.name}: ${convertToGraphQLType(col)}\n`
+    } 
+    s += '}\n'
+  }
   return s
 }
 
@@ -152,6 +190,8 @@ function convertToQueryOperator({ name, datatype, sample }) {
       return "DatetimeQueryOperatorInput"
     case "StringList":
       return "StringArrayQueryOperatorInput"
+    case "GoogleDoc":
+      return `${name}FilterInput`
   }
 }
 

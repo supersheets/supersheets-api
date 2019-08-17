@@ -56,7 +56,9 @@ async function findStatus(ctx, next) {
 
 async function fetchServiceToken(ctx, next) {
   let key = ctx.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH
+  ctx.logger.info(`FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH: ${key}`)
   ctx.state.servicetoken = (await ctx.state.paramstore.getParameter(key)).Value
+  ctx.logger.info(`Google Service Token: ${ctx.state.servicetoken}`)
   await next()
 }
 
@@ -72,6 +74,11 @@ async function loadHandler(ctx) {
   let new_datauuid = status.sheet_new_datauuid
   // LOAD EACH SHEET
   try {
+    if (metadata.schema && metadata.schema.docs) {
+      // clear the old doc schemas since we will regenerate
+      // as sheets load below
+      metadata.schema.docs = { }
+    }
     let sheets = [ ]
     if (metadata.sheets) {
       for (sheet of metadata.sheets) {
@@ -120,7 +127,6 @@ async function sheetHandler(ctx, sheet, new_datauuid) {
   let db = ctx.state.mongodb
   let mode = sheetutil.getLoadMode(metadata)
   let access = sheetutil.getAccess(metadata)
-
   let authorization = ctx.state.servicetoken || null 
   // let authorization = user.idptoken || null // right now this token doesn't have the proper scope
   ctx.logger.info(`Loading ${sheet.title}, mode=${mode}`)
@@ -137,6 +143,8 @@ async function sheetHandler(ctx, sheet, new_datauuid) {
       axios: axiosdocs,
       idptoken: authorization
     })
+    let schemas = docutil.createGoogleDocSchemas(docs.docs, metadata.config.datatypes)
+    sheetutil.updateGoogleDocSchemas(metadata, schemas)
   }
   sheetutil.updateSheetDoc(sheet, docs)
   await insertSheetDocs(db, new_datauuid, docs)
