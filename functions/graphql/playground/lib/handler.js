@@ -1,3 +1,5 @@
+// https://github.com/prisma/graphql-playground/blob/master/packages/graphql-playground-html/src/render-playground-page.ts
+// Seems to document the different configuration types
 // https://github.com/prisma/graphql-playground/blob/master/packages/graphql-playground-middleware-lambda/examples/basic/handler.js
 // or using require()
 const playground = require('graphql-playground-middleware-lambda').default
@@ -9,8 +11,7 @@ async function handler(ctx) {
   ctx.logger.info(`EVENT: ${JSON.stringify(event, null, 2)}`)
   // get the supersheetid
   // use it to fetch the graphql schema
-  const id = event.pathParameters && event.pathParameters.spreadsheetid
-  
+  const id = getSpreadsheetId(ctx)
   try {
     handler = createPlaygroundHandler(ctx, id)
   } catch (err) {
@@ -23,23 +24,21 @@ async function handler(ctx) {
 }
 
 function createPlaygroundHandler(ctx, id) {
+  let endpoint = `/${getStage(ctx)}/${id}/graphql`
+  ctx.logger.info(`ENDPOINT ${endpoint}`)
+  let tabs = getTabs(ctx)
+  ctx.logger.info(`TABS ${JSON.stringify(tabs, null, 2)}`)
+  let settings = getSettings(ctx)
+  ctx.logger.info(`SETTINGS ${JSON.stringify(settings, null, 2)}`)
   return promisify(playground({
-    endpoint: `/dev/${id}/graphql`,
-    //config: getConfig(ctx),
-    settings: getSettings(ctx),
-    //tabs: getTabs(ctx)
+    endpoint,
+    settings,
+    tabs
   }))
 }
 
 module.exports = {
   handler
-}
-
-function getConfig(ctx) {
-  if (ctx.event.queryStringParameters && ctx.event.queryStringParameters['config']) {
-    return decodeAndParse(ctx.event.queryStringParameters['config'])
-  }
-  return defaultConfig()
 }
 
 function getSettings(ctx) {
@@ -49,16 +48,11 @@ function getSettings(ctx) {
   return defaultSettings()
 }
 
-function getTabs() {
+function getTabs(ctx) {
   if (ctx.event.queryStringParameters && ctx.event.queryStringParameters['tabs']) {
-    return decodeAndParse(ctx.event.queryStringParameters['config'])
+    return decodeAndParse(ctx.event.queryStringParameters['tabs'])
   }
-  return defaultTabs()
-}
-
-function decodeAndParse(data) {
-  let buff = new Buffer(data, 'base64')
-  return JSON.parse(buff.toString('utf8'))
+  return defaultTabs(ctx)
 }
 
 function defaultSettings() {
@@ -81,10 +75,59 @@ function defaultSettings() {
   }
 }
 
-function defaultConfig() {
-  return null
+// export interface Tab {
+//   endpoint: string
+//   query: string
+//   name?: string
+//   variables?: string
+//   responses?: string[]
+//   headers?: { [key: string]: string }
+// }
+function defaultTabs(ctx) {
+  return [ {
+    name: 'find',
+    endpoint: getGraphQLEndpoint(ctx, true),
+    query: DEFAULT_QUERY.trim()
+  } ]
 }
 
-function defaultTabs() {
-  return null
+/*
+# return 'letter' and the 'value' for all data where letter equals "A"
+query {
+  find(filter: { letter: { eq: "A" } }) {
+    letter
+    value
+  }
 }
+*/
+
+function getSpreadsheetId(ctx) {
+  return ctx.event.pathParameters && ctx.event.pathParameters.spreadsheetid || null
+}
+
+function getGraphQLEndpoint(ctx, full) {
+  if (full) {
+    return `${ctx.env.SUPERSHEETS_BASE_URL}${getSpreadsheetId(ctx)}/graphql`
+  } 
+  return `/${getStage(ctx)}/${getSpreadsheetId(ctx)}/graphql`
+}
+
+function getStage(ctx) {
+  return ctx.env.SUPERSHEETS_BASE_URL.split('/')[3] // https://api.supersheets.io/dev/
+}
+
+function decodeAndParse(data) {
+  let buff = new Buffer(data, 'base64')
+  return JSON.parse(buff.toString('utf8'))
+}
+
+const DEFAULT_QUERY = `
+# return _id, _row, and _sheet for all records with _row less than 10
+query {
+  find(filter: { _row: { lt: 10 } }) {
+    _id
+    _row
+    _sheet
+  }
+}
+`
