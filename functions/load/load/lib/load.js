@@ -9,7 +9,8 @@ async function setGoogle(ctx, next) {
     ctx.state.sheets = axios.create({
       baseURL: ctx.env.GOOGLESHEETS_BASE_URL,
       params: {
-        key: ctx.env.GOOGLESHEETS_API_KEY
+        // We remove API KEY since we are using service account token
+        // key: ctx.env.GOOGLESHEETS_API_KEY
       }
     })
   } 
@@ -17,7 +18,8 @@ async function setGoogle(ctx, next) {
     ctx.state.docs = axios.create({
       baseURL: ctx.env.GOOGLEDOCS_BASE_URL,
       params: {
-        key: ctx.env.GOOGLESHEETS_API_KEY
+        // We remove API KEY since we are using service account token
+        // key: ctx.env.GOOGLESHEETS_API_KEY
       }
     })
   }
@@ -126,11 +128,15 @@ async function sheetHandler(ctx, sheet, new_datauuid) {
   let axiosdocs = ctx.state.docs
   let db = ctx.state.mongodb
   let mode = sheetutil.getLoadMode(metadata)
-  let access = sheetutil.getAccess(metadata)
+  // Ignore access because we always pass the service token for now
+  // which should work for both public sheets and private sheets that have added the service account
+  // let access = sheetutil.getAccess(metadata)
+  // right now this token doesn't have the proper scope
+  // Basically, we always include the service account google oauth token
+  // let authorization = user.idptoken || null 
   let authorization = ctx.state.servicetoken || null 
-  // let authorization = user.idptoken || null // right now this token doesn't have the proper scope
   ctx.logger.info(`Loading ${sheet.title}, mode=${mode}`)
-  let sheetdata = await fetchSheetData(axiossheets, metadata.id, sheet.title, { mode, access, authorization })
+  let sheetdata = await fetchSheetData(axiossheets, metadata.id, sheet.title, { mode, authorization })
   let docs = sheetutil.constructDocs(sheet, sheetdata.values)
   if (mode == "UNFORMATTED" && hasDataTypes(metadata)) {
     sheetutil.convertValues(docs.cols, docs.docs, metadata.config.datatypes, {
@@ -154,7 +160,7 @@ async function sheetHandler(ctx, sheet, new_datauuid) {
 async function fetchSheetData(axios, id, title, options) {
   options = options || { }
   mode = options.mode || "FORMATTED"
-  access = options.access || 'public'
+  // access = options.access || 'public'
   let params = { valueRenderOption: 'FORMATTED_VALUE' }
   if (mode == 'UNFORMATTED') {
     params = {
@@ -163,9 +169,12 @@ async function fetchSheetData(axios, id, title, options) {
     }
   }
   let headers = { }
-  if (access == 'private' && options.authorization) {
-    headers['Authorization'] = `Bearer ${options.authorization}`
+  if (options.authorization) {
+    headers['Authorization'] =`Bearer ${options.authorization}`
   }
+  // if (access == 'private' && options.authorization) {
+  //   headers['Authorization'] = `Bearer ${options.authorization}`
+  // }
   return (await axios.get(`${id}/values/${encodeURIComponent(title)}`, { params, headers })).data
 }
 

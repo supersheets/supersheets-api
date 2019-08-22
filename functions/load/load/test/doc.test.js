@@ -65,12 +65,12 @@ describe('Doc Schema', () => {
         name: "passage",
         columns: [
           {
-            "name": "passage.hello",
+            "name": "hello",
             "datatype": "String",
             "sample": "world"
           },
           {
-            "name": "passage.foo",
+            "name": "foo",
             "datatype": "String",
             "sample": "bar"
           }
@@ -98,12 +98,12 @@ describe('Doc Schema', () => {
       "name": "passage",
       "columns": [
         {
-          "name": "passage.hello",
+          "name": "hello",
           "datatype": "String",
           "sample": "world"
         },
         {
-          "name": "passage.foo",
+          "name": "foo",
           "datatype": "String",
           "sample": "bar"
         }
@@ -113,12 +113,12 @@ describe('Doc Schema', () => {
       "name": "author",
       "columns": [
         {
-          "name": "author.first",
+          "name": "first",
           "datatype": "String",
           "sample": "daniel"
         },
         {
-          "name": "author.last",
+          "name": "last",
           "datatype": "String",
           "sample": "yoo"
         }
@@ -139,12 +139,12 @@ describe('Doc Schema', () => {
     } 
     let schema = createGoogleDocSchemas(docs, datatypes)
     expect(schema.passage.columns[0]).toMatchObject({
-      "name": "passage.hello",
+      "name": "hello",
       "datatype": "String",
       "sample": null
     })
     expect(schema.passage.columns[1]).toMatchObject({
-      "name": "passage.foo",
+      "name": "foo",
       "datatype": "String",
       "sample": null
     })
@@ -169,12 +169,12 @@ describe('Doc Schema', () => {
     } 
     let schema = createGoogleDocSchemas(docs, datatypes)
     expect(schema.passage.columns[0]).toMatchObject({
-      "name": "passage.hello",
+      "name": "hello",
       "datatype": "String",
       "sample": "world"
     })
     expect(schema.passage.columns[1]).toMatchObject({
-      "name": "passage.foo",
+      "name": "foo",
       "datatype": "String",
       "sample": "bar"
     })
@@ -194,12 +194,12 @@ describe('Doc Schema', () => {
     ]
     schema = createGoogleDocSchemas(docs, datatypes)
     expect(schema.passage.columns[0]).toMatchObject({
-      "name": "passage.hello",
+      "name": "hello",
       "datatype": "String",
       "sample": "world"
     })
     expect(schema.passage.columns[1]).toMatchObject({
-      "name": "passage.foo",
+      "name": "foo",
       "datatype": "String",
       "sample": "bar"
     })

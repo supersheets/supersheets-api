@@ -6,7 +6,11 @@ const awsParamStore = require('aws-param-store')
 // Supersheets Public View Test
 const GOOGLESPREADSHEET_ID = "1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I"
 // Supersheets Private View Test
-const GOOGLESPREADSHEET_PRIVATE_ID = "1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY"
+//const GOOGLESPREADSHEET_PRIVATE_ID = "1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY"
+// Goalbook Private Supersheets Cross Domain Test
+// Added service account email with edit access to this sheet
+// https://docs.google.com/spreadsheets/d/1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM/edit#gid=0
+const GOOGLESPREADSHEET_PRIVATE_ID = "1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM"
 
 describe('Fetch Google Sheet Formatting', () => {
   beforeEach(async () => {
@@ -69,14 +73,14 @@ describe('Private Sheets', () => {
     // fetchMetadata(axios, id, options) {
     let options = {
       access: 'private',
-      idptoken: token,
+      authorization: token,
       mode: "UNFORMATTED"
     }
-    let data = await fetchSheetData(axios, GOOGLESPREADSHEET_ID, "Sheet1", options)
+    let data = await fetchSheetData(axios, GOOGLESPREADSHEET_PRIVATE_ID, "Sheet1", options)
     expect(data).toMatchObject({
       "majorDimension": "ROWS",
       "range": "Sheet1!A1:Z1000",
-      "values": [ [ "Col1", "Col2", "_ignored" ], [ "v1", "v2", "ignored" ] ]
+      "values": [ [ "cola", "colb" ], [ "hello", "world" ] ]
     })
   })
 })
