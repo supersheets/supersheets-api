@@ -232,11 +232,15 @@ input StringArrayQueryOperatorInput {
 
 input StringQueryOperatorInput {
   eq: String
-  glob: String
+  gt: String
+  gte: String
+  lt: String
+  lte: String
   in: [String]
   ne: String
   nin: [String]
   regex: String
+  options: String
 }
 
 input IntQueryOperatorInput {

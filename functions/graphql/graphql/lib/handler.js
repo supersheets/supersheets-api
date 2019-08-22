@@ -37,6 +37,16 @@ function createApolloHandler(event, context, { typeDefs, resolvers }) {
     typeDefs,
     resolvers,
     playground: true,
+      //   {
+      //     'editor.theme': 'light',
+      //   },
+      //   tabs: [
+      //     {
+      //       endpoint,
+      //       query: defaultQuery,
+      //     },
+      //   ],
+      // },
     introspection: true,
     context: ({ event, context }) => ({
       headers: event.headers,

@@ -103,7 +103,7 @@ const OPERATORS = [
   // Element
   'exists', 'type',
   // Evaluation
-  'expr', 'jsonSchema', 'mod', 'regex', 'text', 'where',
+  'expr', 'jsonSchema', 'mod', 'regex', 'options', 'text', 'where',
   // Geospatial
   'geoIntersects', 'geoWithin', 'near', 'nearSphere',
   // Array
