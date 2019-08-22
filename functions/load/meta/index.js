@@ -1,3 +1,4 @@
+const awsParamStore = require('aws-param-store')
 const func = require('@funcmaticjs/funcmatic')
 const ContextLoggerPlugin = require('@funcmaticjs/contextlogger-plugin')
 const EventPlugin = require('@funcmaticjs/event-plugin')
@@ -10,7 +11,7 @@ const Auth0Plugin = require('@funcmaticjs/auth0-plugin')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const BodyParserPlugin = require('@funcmaticjs/bodyparser-plugin')
 const coldHandler = require('@funcmaticjs/forcecoldstart')
-const { metaHandler } = require('./lib/meta')
+const { metaHandler, fetchServiceToken } = require('./lib/meta')
 const axios = require('axios')
 
 func.use(new ContextLoggerPlugin())
@@ -43,7 +44,13 @@ func.request(async (ctx, next) => {
   ctx.state.axios = axios
   await next()
 })
-
+func.request(async (ctx, next) => {
+  if (!ctx.state.paramstore) {
+    ctx.state.paramstore = awsParamStore
+  }
+  await next()
+})
+func.request(fetchServiceToken)
 func.request(metaHandler)
 
 func.error(async (ctx) => {

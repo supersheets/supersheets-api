@@ -1,13 +1,22 @@
 require('dotenv').config()
 const axios = require('axios')
 const { fetchMetadata } = require('../lib/meta')
+const awsParamStore = require('aws-param-store')
 
 // Supersheets Private View Test
 // https://docs.google.com/spreadsheets/d/1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY/edit#gid=0
 const GOOGLESPREADSHEET_ID = "1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY"
-const GOOGLE_ACCESS_TOKEN = process.env.GOOGLE_ACCESS_TOKEN
+
+// Goalbook Private Supersheets Cross Domain Test
+// Added service account email with edit access to this sheet
+// https://docs.google.com/spreadsheets/d/1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM/edit#gid=0
+const GOOGLESPREADSHEET_PRIVATE_ID = "1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM"
 
 describe('Private Sheets', () => {
+  let token = null
+  beforeAll(async () => {
+    token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
+  })
   beforeEach(async () => {
     axios.defaults.baseURL = process.env.GOOGLESHEETS_BASE_URL
     axios.defaults.params = { }
@@ -18,9 +27,8 @@ describe('Private Sheets', () => {
   it ('should fail to fetch a private sheet in public access mode', async () => {
     let error = null
     let options = { 
-      access: 'public', 
       GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL,
-      GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY
+      idptoken: token
     }
     try {
       await fetchMetadata(axios, GOOGLESPREADSHEET_ID, options)
@@ -37,15 +45,13 @@ describe('Private Sheets', () => {
   it ('should fetch a private sheet using IDP (Google) access token', async () => {
     // fetchMetadata(axios, id, options) {
     let options = {
-      access: 'private',
-      idptoken: GOOGLE_ACCESS_TOKEN,
-      GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL,
-      GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY
+      idptoken: token,
+      GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL
     }
-    let data = await fetchMetadata(axios, GOOGLESPREADSHEET_ID, options)
+    let data = await fetchMetadata(axios, GOOGLESPREADSHEET_PRIVATE_ID, options)
     expect(data).toMatchObject({
-      id: '1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY',
-      title: 'Supersheets Private View Test'
+      id: '1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM',
+      title: 'Goalbook Private Supersheets Cross Domain Test'
     })
   })
 })

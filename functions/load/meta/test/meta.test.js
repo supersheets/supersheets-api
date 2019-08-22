@@ -3,6 +3,7 @@ const axios = require('axios')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const prettify = require('@funcmaticjs/pretty-logs')
 const { metaHandler, fetchMetadata, updateMetadata } = require('../lib/meta')
+const awsParamStore = require('aws-param-store')
 
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
@@ -14,17 +15,20 @@ const TOKEN = process.env.AUTH0_TOKEN
 // const GOOGLESPREADSHEET_ID = "1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo"
 
 describe('fetchMetadata', () => {
+  let token = null
+  beforeAll(async () => {
+    token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
+  })
   beforeEach(async () => {
     axios.defaults.baseURL = process.env.GOOGLESHEETS_BASE_URL
     axios.defaults.params = { }
-    axios.defaults.params['key'] = process.env.GOOGLESHEETS_API_KEY
   })
   afterEach(async () => {
   })
   it ("should fetch metadata from spreadsheet", async () => {
     let metadata = await fetchMetadata(axios, GOOGLESPREADSHEET_ID, {
       GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL,
-      GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY
+      idptoken: token
     })
     expect(metadata).toMatchObject({
       "id": "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U",
@@ -233,10 +237,11 @@ function createCtx() {
     },
     env: {
       GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL,
-      GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY,
+      //GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY,
       FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI,
       FUNC_AUTH0_DOMAIN: process.env.FUNC_AUTH0_DOMAIN,
-      FUNC_AUTH0_SKIP_VERIFICATION: 'true'
+      FUNC_AUTH0_SKIP_VERIFICATION: 'true',
+      FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH: '/supersheetsio/shared/FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN'
     }
   }
 }

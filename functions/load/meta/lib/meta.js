@@ -2,6 +2,14 @@
 const uuidV4 = require('uuid/v4')
 const IGNORE_PREFIX = "_"
 
+async function fetchServiceToken(ctx, next) {
+  let key = ctx.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH
+  ctx.logger.info(`FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH: ${key}`)
+  ctx.state.servicetoken = (await ctx.state.paramstore.getParameter(key)).Value
+  ctx.logger.info(`Google Service Token: ${ctx.state.servicetoken}`)
+  await next()
+}
+
 async function metaHandler(ctx) {
   let user = userInfo(ctx)
   if (!user) {
@@ -22,11 +30,12 @@ async function metaHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
-  let access = current && getAccess(current) || ctx.event.queryStringParameters.access || 'public'
-  let idptoken = ctx.event.queryStringParameters.idptoken
+  //let access = current && getAccess(current) || ctx.event.queryStringParameters.access || 'public'
+  // let idptoken = ctx.event.queryStringParameters.idptoken
+  let idptoken = ctx.state.servicetoken
   let metadata = null
   try {
-    let options = Object.assign({ }, ctx.env, { idptoken, access })
+    let options = Object.assign({ }, ctx.env, { idptoken })
     metadata = await fetchMetadata(ctx.state.axios, ctx.event.pathParameters.spreadsheetid, options) 
   } catch (err) {
     ctx.response.httperror(404, `Google Spreadsheet ${id} could not be found.`) 
@@ -66,11 +75,15 @@ function getOrgFromEmail(email) {
 }
 
 async function fetchMetadata(axios, id, options) {
-  let url = `${options.GOOGLESHEETS_BASE_URL}/${id}?key=${options.GOOGLESHEETS_API_KEY}`
+  //let url = `${options.GOOGLESHEETS_BASE_URL}/${id}?key=${options.GOOGLESHEETS_API_KEY}`
+  let url = `${options.GOOGLESHEETS_BASE_URL}/${id}`
   let headers = { }
-  if (options.access == 'private' && options.idptoken) {
+  if (options.idptoken) {
     headers['Authorization'] = `Bearer ${options.idptoken}`
   }
+  // if (options.access == 'private' && options.idptoken) {
+  //   headers['Authorization'] = `Bearer ${options.idptoken}`
+  // }
   let doc = (await axios.get(url, { headers })).data
   return createMetadataFromGoogleSpreadsheet(doc)
 }
@@ -140,11 +153,12 @@ function createMetadataFromGoogleSpreadsheet(doc) {
   return metadataDoc;
 }
 
-function getAccess(metadata) {
-  return metadata.config && metadata.config.access || null
-}
+// function getAccess(metadata) {
+//   return metadata.config && metadata.config.access || null
+// }
 
 module.exports = {
+  fetchServiceToken,
   metaHandler,
   fetchMetadata,
   updateMetadata,

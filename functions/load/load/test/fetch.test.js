@@ -47,7 +47,7 @@ describe('Private Sheets', () => {
   beforeEach(async () => {
     axios.defaults.baseURL = process.env.GOOGLESHEETS_BASE_URL
     axios.defaults.params = { }
-    axios.defaults.params['key'] = process.env.GOOGLESHEETS_API_KEY
+    //axios.defaults.params['key'] = process.env.GOOGLESHEETS_API_KEY
   })
   afterEach(async () => {
   })
