@@ -1,5 +1,5 @@
 {
-  "name": "supersheets-api-v3-findcache",
+  "name": "supersheets-api-v3-find",
   "version": "0.0.1",
   "description": "Lambda function that implemenents the findcache API endpoint for supersheets.io",
   "main": "index.js",

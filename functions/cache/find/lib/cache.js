@@ -19,7 +19,7 @@ async function cacheHandler(ctx) {
     info.elapsed = Date.now() - info.t
     ctx.logger.debug({ msg: `MISS`, cache: info })
     try { 
-      data = (await ctx.state.supersheets.post(`${id}/find`, body)).data
+      data = (await ctx.state.supersheets.post(`${id}/find/db`, body)).data
       await cache.hset(key, field, data)
       ctx.logger.trace(`DATA=${JSON.stringify(data, null, 2)}`)
     } catch (err) {

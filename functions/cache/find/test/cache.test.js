@@ -3,7 +3,10 @@ const prettify = require('@funcmaticjs/pretty-logs')
 const RedisObjectCache = require('@funcmaticjs/redis-objectcache')
 
 // Goalbook Fist to Five Backend
-const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
+// const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
+
+// Supersheets Public View Test
+const GOOGLESPREADSHEET_ID = "1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I"
 
 describe('Valid Access', () => {
   let func = null
@@ -33,25 +36,25 @@ describe('Valid Access', () => {
     })
     let cacheresponse = decode64(ctx.response.get('X-Supersheets-Cache-Response'))
     expect(cacheresponse).toMatchObject({
-      key: 'supersheets:sheet:1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U:find',
-      field: 'ecMKTmMGd5Z8RUvuOFD5e+XFl9U=',
+      key: `supersheets:sheet:${GOOGLESPREADSHEET_ID}:find`,
+      field: 'Mq7LN8bXMqM/NyN08Sl+Zp+N+nE=',
       hit: false,
       t: expect.anything(),
       elapsed: expect.anything()
     })
     let body = JSON.parse(ctx.response.body)
     expect(body).toMatchObject({
-      query: { "question_id": "Q1" },
+      query: { "Col1": "v1" },
       one: false,
-      count: 4
+      count: 2
     })
     expect(body.result[0]).toMatchObject({
-      "question_id":"Q1"
+      "Col1":"v1"
     })
-  })
+  }, 30 * 1000)
   it ('should return 200 on a hit and return from the cache', async () => {
-    let key = 'supersheets:sheet:1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U:find'
-    let field = 'ecMKTmMGd5Z8RUvuOFD5e+XFl9U='
+    let key = `supersheets:sheet:${GOOGLESPREADSHEET_ID}:find`
+    let field = 'Mq7LN8bXMqM/NyN08Sl+Zp+N+nE='
     await cache.hset(key, field, { hello: "world" })
     let ctx = createCtx()
     await func.invoke(ctx)
@@ -60,8 +63,8 @@ describe('Valid Access', () => {
     })
     let cacheresponse = decode64(ctx.response.get('X-Supersheets-Cache-Response'))
     expect(cacheresponse).toMatchObject({
-      key: 'supersheets:sheet:1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U:find',
-      field: 'ecMKTmMGd5Z8RUvuOFD5e+XFl9U=',
+      key: `supersheets:sheet:${GOOGLESPREADSHEET_ID}:find`,
+      field: 'Mq7LN8bXMqM/NyN08Sl+Zp+N+nE=',
       hit: true,
       t: expect.anything(),
       elapsed: expect.anything()
@@ -70,7 +73,7 @@ describe('Valid Access', () => {
     expect(body).toMatchObject({
       hello: "world"
     })
-  })
+  }, 30 * 1000)
 })
 
 function createCtx() {
@@ -79,7 +82,7 @@ function createCtx() {
       pathParameters: {
         spreadsheetid: GOOGLESPREADSHEET_ID
       },
-      body: JSON.stringify({ query: { "question_id": "Q1" } }),
+      body: JSON.stringify({ query: { "Col1": "v1" } }),
       stageVariables: {
         FUNC_PARAMETERSTORE_PATH: '/supersheetsio/dev'
       },
