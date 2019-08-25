@@ -129,7 +129,11 @@ function createTestEvent(id, query, variables) {
       },
       body: JSON.stringify({ query, variables })
     },
-    context: { }
+    context: { },
+    env: {
+      SUPERSHEETS_BASE_URL: process.env.SUPERSHEETS_BASE_URL
+    },
+    state: { }
   }
 }
 

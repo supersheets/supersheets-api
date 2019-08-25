@@ -27,12 +27,23 @@ describe('Client', () => {
         find (filter: { letter: { eq: "A" } } ) { 
           letter
           number
-          floast
+          float
           date
           datetime
         } 
       }` 
     })
-    console.log(result)
+    expect(result.data).toMatchObject({
+      find: [
+        {
+          "letter": "A",
+          "number": 1,
+          "float": 1,
+          "date": "1979-05-16",
+          "datetime": "1979-05-16T21:01:23.000Z",
+          "__typename": "Doc"
+        }
+      ]
+    })
   })
 })
