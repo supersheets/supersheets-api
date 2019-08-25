@@ -18,7 +18,7 @@
   "dependencies": {
     "@funcmaticjs/auth0-plugin": "0.0.2",
     "@funcmaticjs/contextlogger-plugin": "0.0.2",
-    "@funcmaticjs/correlation-plugin": "~0.0.2",
+    "@funcmaticjs/correlation-plugin": "0.0.4",
     "@funcmaticjs/event-plugin": "0.0.2",
     "@funcmaticjs/forcecoldstart": "0.0.1",
     "@funcmaticjs/funcmatic": "0.0.7",
@@ -27,13 +27,13 @@
     "@funcmaticjs/parameterstore-plugin": "0.0.3",
     "@funcmaticjs/response-plugin": "~1.1.1",
     "@funcmaticjs/stagevars-plugin": "~0.0.1",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@funcmaticjs/package": "0.0.2",
     "@funcmaticjs/pretty-logs": "0.0.3",
-    "aws-sdk": "^2.512.0",
-    "dotenv": "^8.0.0",
+    "aws-sdk": "^2.517.0",
+    "dotenv": "^8.1.0",
     "jest": "^24.9.0"
   },
   "jest": {

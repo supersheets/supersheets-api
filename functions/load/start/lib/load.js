@@ -36,13 +36,14 @@ async function loadHandler(ctx) {
     ctx.response.httperror(500, `Error creating load status for sheet ${metadata.id}`, { expose: true })
     return
   }
-  let payload = createPayload(ctx.env, metadata, status, user)
+  let payload = createPayload(ctx, metadata, status, user)
   let params = {
     InvocationType: invocationType(ctx),
     FunctionName: FUNCTION_LOAD, 
     Qualifier: ctx.env.lambdaAlias || "$LATEST",
     Payload: JSON.stringify(payload)
   }
+  ctx.state.lambdaparams = params // we store in state simply so we can expose to unit tests 
   ctx.logger.info(`Lambda Invocation Params: ${JSON.stringify(params, null, 2)}`)
   try {
     let data = await ctx.state.invokelambda(params)
@@ -77,12 +78,12 @@ function invocationType(ctx) {
   return "Event"
 }
 
-function createPayload(env, metadata, status, user) {
+function createPayload(ctx, metadata, status, user) {
+  let headers = Object.assign({ "Content-Type": "application/json", "x-cold-start": "true" }, ctx.state.correlation)
+  let env = Object.assign({ }, ctx.env, { "FUNC_MONGODB_CACHE_CONNECTION": "false" })
   return { 
     stageVariables: env,
-    headers: {
-      'Content-Type': "application/json"
-    },
+    headers,
     body: JSON.stringify({
       user,
       spreadsheetid: metadata.id,

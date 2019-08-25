@@ -169,9 +169,46 @@ describe('Func', () => {
     expect(ctx.response).toMatchObject({
       statusCode: 200
     })
+    expect(ctx.state.lambdaparams).toMatchObject({
+      "InvocationType": "DryRun",
+      "FunctionName": "supersheets-api-v3-loader",
+      "Qualifier": "$LATEST"
+    })
     let body = JSON.parse(ctx.response.body)
     expect(body).toMatchObject({
       status: "DRYRUN"
+    })
+  })
+  it ('should invoke correct Qualifier using env.lambdaAlias', async () => {
+    let ctx = createCtx()
+    ctx.event.queryStringParameters = { "dryrun": "true" }
+    ctx.env.lambdaAlias = "PROD"
+    await func.invoke(ctx)
+    expect(ctx.state.lambdaparams).toMatchObject({
+      "Qualifier": "PROD"
+    })
+  })
+  it ('should pass correct headers in payload', async () => {
+    let ctx = createCtx()
+    ctx.event.queryStringParameters = { "dryrun": "true" }
+    await func.invoke(ctx)
+    let payload = JSON.parse(ctx.state.lambdaparams["Payload"])
+    expect(payload).toMatchObject({
+      headers: {
+        "x-correlation-id": expect.anything(),
+        "x-cold-start": "true"
+      }
+    })
+  })
+  it ('should pass correct env in payload', async () => {
+    let ctx = createCtx()
+    ctx.event.queryStringParameters = { "dryrun": "true" }
+    await func.invoke(ctx)
+    let payload = JSON.parse(ctx.state.lambdaparams["Payload"])
+    expect(payload).toMatchObject({
+      stageVariables: {
+        "FUNC_MONGODB_CACHE_CONNECTION": "false"
+      }
     })
   })
   it ('should invoke the loader lambda', async () => {
