@@ -124,20 +124,6 @@ describe('fetchAndMergeMetadata', () => {
   })
   afterAll(async () => {
   })
-  // it ('should throw if spreadsheetid not in the body', async () => {
-  //   let ctx = createTestCtx({
-  //     mongodb: db
-  //   })
-  //   ctx.event.body.spreadsheetid = null
-  //   let error = null
-  //   try {
-  //     await initOrFindMetadata(ctx)
-  //   } catch (err) {
-  //     error = err
-  //   }
-  //   expect(error).toBeTruthy()
-  //   expect(error.message).toEqual("No Google Spreadsheet Doc ID provided ('ctx.event.body.spreadsheetid')")
-  // })
   it ('should fetch and merge metadata from a public sheet', async () => {
     let ctx = createTestCtx({
       spreadsheetid: GOOGLESPREADSHEET_ID
@@ -164,6 +150,20 @@ describe('fetchAndMergeMetadata', () => {
       title: 'Goalbook Private Supersheets Cross Domain Test'
     })
   })
+  // it ('should throw if spreadsheetid not in the body', async () => {
+  //   let ctx = createTestCtx({
+  //     mongodb: db
+  //   })
+  //   ctx.event.body.spreadsheetid = null
+  //   let error = null
+  //   try {
+  //     await initOrFindMetadata(ctx)
+  //   } catch (err) {
+  //     error = err
+  //   }
+  //   expect(error).toBeTruthy()
+  //   expect(error.message).toEqual("No Google Spreadsheet Doc ID provided ('ctx.event.body.spreadsheetid')")
+  // })
 })
 
 describe('createOrUpdateMeta', () => {
@@ -209,7 +209,51 @@ describe('createOrUpdateMeta', () => {
   // TODO: need to test create vs update
   // also test backward compat if no created_at fields when doing an update
   // also ensure that if existing db in database it is overwritten by this
-  it ('should find and set existing metadata', async () => {
+  it ('should save new metadata with created and updated fields', async () => {
+    let ctx = createTestCtx({
+      mongodb: db
+    })
+    ctx.state.metadata = {
+      id: meta.id,
+      "_new": true
+    }
+    await createOrUpdateMetadata(ctx)
+    console.log("CREATE", ctx.state.metadata)
+    expect(ctx.state.metadata).toEqual({
+      "_id": expect.anything(),
+      id: meta.id,
+      created_at: expect.anything(),
+      created_by: ctx.state.user.userid,
+      created_by_email: ctx.state.user.email,
+      created_by_org: ctx.state.user.org,
+      updated_at: expect.anything(),
+      updated_by: ctx.state.user.userid,
+      updated_by_email: ctx.state.user.email,
+      updated_by_org: ctx.state.user.org
+    })
+  })
+  it ('should update metadata with update fields', async () => {
+    let ctx = createTestCtx({
+      mongodb: db
+    })
+    ctx.state.metadata = {
+      id: meta.id,
+      created_at: new Date(),
+      created_by: "creatorid"
+    }
+    await createOrUpdateMetadata(ctx)
+    expect(ctx.state.metadata).toEqual({
+      "_id": expect.anything(),
+      id: meta.id,
+      created_at: expect.anything(),
+      created_by: "creatorid",
+      updated_at: expect.anything(),
+      updated_by: ctx.state.user.userid,
+      updated_by_email: ctx.state.user.email,
+      updated_by_org: ctx.state.user.org
+    })
+  })
+  it ('should include created fields on update if they do not exist', async () => {
     let ctx = createTestCtx({
       mongodb: db
     })
@@ -219,7 +263,10 @@ describe('createOrUpdateMeta', () => {
     await createOrUpdateMetadata(ctx)
     console.log(ctx.state.metadata)
     expect(ctx.state.metadata).toMatchObject({
-      id: meta.id
+      created_at: expect.anything(),
+      created_by: ctx.state.user.userid,
+      created_by_email: ctx.state.user.email,
+      created_by_org: ctx.state.user.org
     })
   })
 })

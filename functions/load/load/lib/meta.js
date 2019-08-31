@@ -84,7 +84,6 @@ async function createOrUpdateMetadata(ctx) {
 
 function metadataCreateFields(user) {
   return {
-    uuid: uuidV4(),
     created_at: new Date(),
     created_by: user.userid,
     created_by_email: user.email,
