@@ -1,101 +1,49 @@
-const axios = require('axios')
 const { updateStatus, completeStatus, errorStatus } = require('./status')
 const sheetutil = require('./sheetutil')
 const docutil = require('./doc')
 
-// CUSTOM MIDDLEWARE 
-async function setGoogle(ctx, next) {
-  if (!ctx.state.sheets) {
-    ctx.state.sheets = axios.create({
-      baseURL: ctx.env.GOOGLESHEETS_BASE_URL,
-      params: {
-        // We remove API KEY since we are using service account token
-        // key: ctx.env.GOOGLESHEETS_API_KEY
-      }
-    })
-  } 
-  if (!ctx.state.docs) {
-    ctx.state.docs = axios.create({
-      baseURL: ctx.env.GOOGLEDOCS_BASE_URL,
-      params: {
-        // We remove API KEY since we are using service account token
-        // key: ctx.env.GOOGLESHEETS_API_KEY
-      }
-    })
-  }
-  return await next()
-}
-
-async function setUser(ctx, next) {
-  if (ctx.state.user) return await next()
-  ctx.state.user = ctx.event.body && ctx.event.body.user
-  return await next()
-}
-
-async function findMetadata(ctx, next) {
-  if (ctx.state.metadata) return await next()
-  let id = ctx.event.body.spreadsheetid
-  let db = ctx.state.mongodb
-  ctx.state.metadata = await db.collection('spreadsheets').findOne({ id })
-  ctx.logger.info(`Metadata: ${JSON.stringify(ctx.state.metadata, null, 2)}`) // should eventually be debug
-  if (!ctx.state.metadata) {
-    throw new Error(`Sheet ${id} does not exist`)
-  }
-  return await next()
-}
-
-async function findStatus(ctx, next) {
-  if (ctx.state.status) return await next()
-  let uuid = ctx.event.body.statusid
-  let db = ctx.state.mongodb
-  ctx.state.status = await db.collection('status').findOne({ uuid })
-  ctx.logger.info(`Status: ${JSON.stringify(ctx.state.status, null, 2)}`) // should eventually be debug
-  if (!ctx.state.status) {
-    throw new Error(`Status ${uuid} does not exist`)
-  }
-  return await next()
-}
-
-async function fetchServiceToken(ctx, next) {
-  let key = ctx.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH
-  ctx.logger.info(`FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH: ${key}`)
-  ctx.state.servicetoken = (await ctx.state.paramstore.getParameter(key)).Value
-  ctx.logger.info(`Google Service Token: ${ctx.state.servicetoken}`)
-  await next()
-}
-
 // PRIMARY HANDLER 
+// Basically two important responsibilities
+// - Fetch all data and load into the data collectoin (mongodb)
+// - Update ctx.state.metadata (memory) with updated sheet and schema information from the load
+// 
+// How this works:
 
+// For each sheet
+// - call sheet handler 
+// - load docs into the new collection
+// - update the status with progress
+// get final counts from all sheets
+// construct overall schema from all sheet schemas
+// DONE! the parent handlers will save metadata and complete the status object
 async function loadHandler(ctx) {
   let t = Date.now()
   let db = ctx.state.mongodb
   let metadata = ctx.state.metadata
   let status = ctx.state.status
   let user = ctx.state.user
-  let old_datauuid = metadata.datauuid || metadata.id
+  let old_datauuid = status.sheet_current_datauuid || metadata.id
   let new_datauuid = status.sheet_new_datauuid
+
+  
   // LOAD EACH SHEET
-  try {
-    if (metadata.schema && metadata.schema.docs) {
-      // clear the old doc schemas since we will regenerate
-      // as sheets load below
-      metadata.schema.docs = { }
-    }
-    let sheets = [ ]
-    if (metadata.sheets) {
-      for (sheet of metadata.sheets) {
-        let loaded = await sheetHandler(ctx, sheet, new_datauuid)
-        sheets.push(loaded)
-        await updateStatus(db, status, sheet)
-        ctx.logger.info(`Loaded sheet: ${loaded.title}`)
-      }
-    }
-    metadata.sheets = sheets
-  } catch (err) {
-    await errorStatus(db, status, err)
-    ctx.logger.error(err)
-    throw err
+  
+  if (metadata.schema && metadata.schema.docs) {
+    // clear the old doc schemas since we will regenerate
+    // as sheets load below
+    metadata.schema.docs = { }
   }
+  let sheets = [ ]
+  if (metadata.sheets) {
+    for (sheet of metadata.sheets) {
+      let loaded = await sheetHandler(ctx, sheet, new_datauuid)
+      sheets.push(loaded)
+      await updateStatus(db, status, sheet)
+      ctx.logger.info(`Loaded sheet: ${loaded.title}`)
+    }
+  }
+  metadata.sheets = sheets
+  
   // UPDATE METADATA
   try {
     sheetutil.updateSpreadsheetCountsFromSheets(metadata)
@@ -203,11 +151,6 @@ function hasGoogleDocDataTypes(metadata) {
 }
 
 module.exports = {
-  setUser,
-  setGoogle,
-  findMetadata,
-  findStatus,
-  fetchSheetData,
   loadHandler,
-  fetchServiceToken
+  fetchSheetData,
 }

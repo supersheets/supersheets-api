@@ -1,4 +1,3 @@
-const awsParamStore = require('aws-param-store')
 let func = require('@funcmaticjs/funcmatic')
 const ContextLoggerPlugin = require('@funcmaticjs/contextlogger-plugin')
 const EventPlugin = require('@funcmaticjs/event-plugin')
@@ -9,7 +8,10 @@ const LogLevelPlugin = require('@funcmaticjs/loglevel-plugin')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const BodyParserPlugin = require('@funcmaticjs/bodyparser-plugin')
 const coldHandler = require('@funcmaticjs/forcecoldstart')
-let { loadHandler, findMetadata, findStatus, setUser, setGoogle, fetchServiceToken } = require('./lib/load')
+let { setUser, setAuthorizationToken, setSheetsAPI, setDocsAPI } = require('./lib/auth')
+let { metaHandler, saveMetaHandler } = require('./lib/meta')
+let { findStatusHandler, errorStatusHandler } = require('./lib/status')
+let { loadHandler, findMetadata, findStatus } = require('./lib/load')
 
 func.use(new ContextLoggerPlugin())
 func.use(new EventPlugin())
@@ -25,18 +27,33 @@ func.request(async (ctx, next) => {
   ctx.logger.info(`CONTEXT ${JSON.stringify(ctx.context, null, 2)}`)
   await next()
 })
-func.request(async (ctx, next) => {
-  if (!ctx.state.paramstore) {
-    ctx.state.paramstore = awsParamStore
-  }
-  await next()
-})
+
+// Status
+func.request(findStatusHandler)
+
+// Auth Middleware
 func.request(setUser)
-func.request(setGoogle)
-func.request(findMetadata)
-func.request(findStatus)
-func.request(fetchServiceToken)
+func.request(setAuthorizationToken)
+func.request(setSheetsAPI)
+func.request(setDocsAPI)
+
+// Metadata 
+func.request(metaHandler)
+
+// Load
 func.request(loadHandler)
+
+// Save Metadata
+func.request(saveMetaHandler)
+
+// Save Status
+func.request(successStatusHandler)
+
+
+// Uncaught error handler should
+// always attempt to update the status
+// object indicating that the load failed 
+func.error(errorStatusHandler)
 
 // func.error(async (ctx) => {
 //   ctx.response.httperror((ctx.error.status || 500), `${ctx.error.message}`)
@@ -46,6 +63,4 @@ module.exports = {
   handler: coldHandler(func),
   func
 }
-
-
 

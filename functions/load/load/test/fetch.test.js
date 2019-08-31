@@ -65,7 +65,7 @@ describe('Private Sheets', () => {
     expect(error).toBeTruthy()
     expect(error.response.data.error).toMatchObject({
       code: 403,
-      message: "The caller does not have permission",
+      message: "The request is missing a valid API key.",
       status: "PERMISSION_DENIED"
     })
   })
