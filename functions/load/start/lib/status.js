@@ -16,7 +16,7 @@ function createStatus(metadata, user, options) {
     status: options.dryrun && "DRYRUN" || "INIT",
     sheet_id: metadata.id,
     sheet_uuid: metadata.uuid,
-    sheet_current_datauuid: metadata.datauuid,
+    sheet_current_datauuid: metadata.datauuid || metadata.id,
     sheet_new_datauuid: options.datauuid,
     num_sheets_loaded: 0,
     num_sheets_total: metadata.sheets.length,
