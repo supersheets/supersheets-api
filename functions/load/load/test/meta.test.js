@@ -241,7 +241,7 @@ describe('createOrUpdateMeta', () => {
       created_by: "creatorid"
     }
     await createOrUpdateMetadata(ctx)
-    expect(ctx.state.metadata).toEqual({
+    expect(ctx.state.metadata).toMatchObject({
       "_id": expect.anything(),
       id: meta.id,
       created_at: expect.anything(),
