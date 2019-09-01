@@ -25,7 +25,6 @@ const {
 const {
   metaHandler,
   initOrFindMetadata,
-  initOrFetchMetadata,
   fetchAndMergeMetadata,
   createOrUpdateMetadata,
   findMetadata,

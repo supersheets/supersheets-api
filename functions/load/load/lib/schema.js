@@ -61,21 +61,15 @@ function constructSheetSchema(cols, docs, datatypes) {
   let samples = getSampleColumnValues(cols, docs)
   let columns = [ ]
   for (let col of cols) {
-    columns.push({
+    let column = {
       name: col,
       datatype: datatypes[col] || "String",
       sample: samples[col]
-    })
-    if (datatypes[col] == "GoogleDoc" && docSchemas[col]) {
-      let docSchema = docSchemas[col]
-      for (let field of docSchema.fields) {
-        columns.push({
-          name: `${col}.${field.name}`,
-          datatype: field.datatype,
-          sample: field.sample
-        })
-      }
     }
+    if (datatypes[col] == "GoogleDoc" && docSchemas[col]) {
+      column.fields = docSchemas[col].fields
+    }
+    columns.push(column)
   }
   return { columns, docs: docSchemas }
 }

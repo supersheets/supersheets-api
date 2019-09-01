@@ -10,7 +10,7 @@ async function metaHandler(ctx, next) {
 }
 
 async function initOrFindMetadata(ctx) {
-  if (ctx.state.metadata) return await next()
+  if (ctx.state.metadata) return 
   let id = ctx.event.body.spreadsheetid
   if (!id) {
     throw new Error("No Google Spreadsheet Doc ID provided ('ctx.event.body.spreadsheetid')")

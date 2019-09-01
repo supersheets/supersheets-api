@@ -260,19 +260,18 @@ describe('constructSheetSchema', () => {
         "datatype": "GoogleDoc",
         "sample": {
           "hello": "world"
-        }
-      },
-      {
-        "name": "doc1.hello",
-        "datatype": "String",
-        "sample": "world"
-      },
-      {
-        "name": "doc1.key",
-        "datatype": "Int",
-        "sample": 123
+        },
+        "fields": [ {
+          "name": "hello",
+          "datatype": "String",
+          "sample": "world"
+        }, {
+          "name": "key",
+          "datatype": "Int",
+          "sample": 123
+        } ]
       }
-    ],
+    ]
   })
 })
 

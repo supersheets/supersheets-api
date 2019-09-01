@@ -9,9 +9,9 @@ const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const BodyParserPlugin = require('@funcmaticjs/bodyparser-plugin')
 const coldHandler = require('@funcmaticjs/forcecoldstart')
 let { setUser, setAuthorizationToken, setSheetsAPI, setDocsAPI } = require('./lib/auth')
-let { metaHandler, saveMetaHandler } = require('./lib/meta')
-let { findStatusHandler, errorStatusHandler } = require('./lib/status')
-let { loadHandler, findMetadata, findStatus } = require('./lib/load')
+let { metaHandler } = require('./lib/meta')
+let { statusHandler, errorStatusHandler } = require('./lib/status')
+let { loadHandler } = require('./lib/load')
 
 func.use(new ContextLoggerPlugin())
 func.use(new EventPlugin())
@@ -28,14 +28,14 @@ func.request(async (ctx, next) => {
   await next()
 })
 
-// Status
-func.request(findStatusHandler)
-
 // Auth Middleware
 func.request(setUser)
 func.request(setAuthorizationToken)
 func.request(setSheetsAPI)
 func.request(setDocsAPI)
+
+// Status
+func.request(statusHandler)
 
 // Metadata 
 func.request(metaHandler)
@@ -43,21 +43,10 @@ func.request(metaHandler)
 // Load
 func.request(loadHandler)
 
-// Save Metadata
-func.request(saveMetaHandler)
-
-// Save Status
-func.request(successStatusHandler)
-
-
 // Uncaught error handler should
 // always attempt to update the status
 // object indicating that the load failed 
 func.error(errorStatusHandler)
-
-// func.error(async (ctx) => {
-//   ctx.response.httperror((ctx.error.status || 500), `${ctx.error.message}`)
-// })
 
 module.exports = {
   handler: coldHandler(func),
