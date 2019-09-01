@@ -113,7 +113,7 @@ const convertToBoolean = (v) => {
 const convertToDatetime = (v, options) => {
   options = options || { }
   let tz = options.tz || "utc"
-  if (v === null) return null
+  if (v === null || v === undefined) return null
   switch(typeof v) {
     case "number": 
       return getISOStringFromExcel(v, tz)
@@ -132,7 +132,7 @@ const convertToDatetime = (v, options) => {
 const convertToDate = (v, options) => {
   options = options || { }
   let tz = "utc"
-  if (v === null) return null
+  if (v === null || v === undefined) return null
   switch(typeof v) {
     case "number": 
       return getISODateStringFromExcel(v, tz)

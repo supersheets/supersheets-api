@@ -17,6 +17,9 @@ describe('Datetime', () => {
   it ('should parse null value as null', async () => {
     expect(fconv(null)).toBe(null)
   })
+  it ('should parse undefined as null', async () => {
+    expect(fconv(undefined)).toBe(null)
+  })
   it ('should parse excel date number format for a specific timezone', async () => {
     let excel = 43195.52087962963 // "2018-04-05T12:30:04.000" (spreadsheet) 
     let d = fconv(excel, { tz })
@@ -75,6 +78,9 @@ describe('Date', () => {
   })
   it ('should parse null value as null', async () => {
     expect(fconv(null)).toBe(null)
+  })
+  it ('should parse undefined as null', async () => {
+    expect(fconv(undefined)).toBe(null)
   })
   it ('should parse excel date number format for a specific timezone', async () => {
     let excel = 43195.52087962963 // "2018-04-05T12:30:04.000-04:00" 
