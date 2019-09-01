@@ -218,11 +218,44 @@ describe('constructDocSchemas', () => {
       ]
     })
   })
+  // check "title.0" bug
+  it ('should create StringList doc field type', async () => {
+    let cols = [ 'doc' ]
+    let docs = [ {
+        'doc': {
+          "hello": [ "world" ],
+        }
+      }
+    ]
+    let datatypes = {
+      "doc": "GoogleDoc",
+      "doc.hello": "StringList"
+    }
+    let schema = constructDocSchemas(cols, docs, datatypes)
+    expect(schema).toEqual({
+      "doc": {
+        "name": "doc",
+        "fields": [
+          {
+            "name": "hello",
+            "datatype": "StringList",
+            "sample": [
+              "world"
+            ]
+          }
+        ]
+      }
+    })
+  })
 })
 
 describe('constructSheetSchema', () => {
   let cols = [ 'col1', 'col2', 'doc1' ]
   let docs = [ {
+    '_id': 'id',
+    '_sheet': "Sheet1",
+    '_row': 1,
+    '_errors': [ ],
     'col1': "Hello",
     'doc1': {
       "hello": "world",
@@ -243,36 +276,62 @@ describe('constructSheetSchema', () => {
     "doc1.key": "Int"
   }
   let schema = constructSheetSchema(cols, docs, datatypes)
-  expect(schema).toMatchObject({
-    "columns": [
-      {
-        "name": "col1",
-        "datatype": "String",
-        "sample": "Hello"
+  let usercolumns = schema.columns.filter(col => !col.reserved)
+  let reserved = schema.columns.filter(col => col.reserved)
+  expect(usercolumns).toEqual([
+    {
+      "name": "col1",
+      "datatype": "String",
+      "sample": "Hello"
+    },
+    {
+      "name": "col2",
+      "datatype": "Int",
+      "sample": 123
+    },
+    {
+      "name": "doc1",
+      "datatype": "GoogleDoc",
+      "sample": {
+        "hello": "world"
       },
-      {
-        "name": "col2",
+      "fields": [ {
+        "name": "hello",
+        "datatype": "String",
+        "sample": "world"
+      }, {
+        "name": "key",
         "datatype": "Int",
         "sample": 123
-      },
-      {
-        "name": "doc1",
-        "datatype": "GoogleDoc",
-        "sample": {
-          "hello": "world"
-        },
-        "fields": [ {
-          "name": "hello",
-          "datatype": "String",
-          "sample": "world"
-        }, {
-          "name": "key",
-          "datatype": "Int",
-          "sample": 123
-        } ]
-      }
-    ]
-  })
+      } ]
+    } ])
+
+  expect(reserved).toEqual([
+    {
+      "name": "_id",
+      "datatype": "String",
+      "sample": "id",
+      "reserved": true
+    },
+    {
+      "name": "_sheet",
+      "datatype": "String",
+      "sample": "Sheet1",
+      "reserved": true
+    },
+    {
+      "name": "_row",
+      "datatype": "Int",
+      "sample": 1,
+      "reserved": true
+    },
+    {
+      "name": "_errors",
+      "datatype": "StringList",
+      "sample": [],
+      "reserved": true
+    }
+  ])
 })
 
 // From old doc.test.js

@@ -1,5 +1,6 @@
 
 const { DateTime } = require('luxon')
+const allkeys = require('all-object-keys')
 
 function convertValues(cols, docs, datatypes, options) {
   let conv = createConverter(datatypes)
@@ -9,6 +10,16 @@ function convertValues(cols, docs, datatypes, options) {
       try {
         if (conv[col]) {
           doc[col] = conv[col](doc[col], options)
+        }
+        if (datatypes[col] == "GoogleDoc" && doc[col] && (typeof doc[col] == 'object')) {
+          let obj = doc[col]
+          let fields = allkeys(obj)
+          for (let field of fields) {
+            let full = `${col}.${field}`
+            if (conv[full]) {
+              obj[field] = conv[full](obj[field], options)
+            }
+          }
         }
       } catch (err) {
         doc["_errors"].push({
@@ -23,44 +34,42 @@ function convertValues(cols, docs, datatypes, options) {
 function createConverter(datatypes) {
   let conv = { }
   for (let col in datatypes) {
-    switch(datatypes[col]) {
-      case "Boolean":
-        conv[col] = convertToBoolean
-        break
-      case "String":
-        conv[col] = convertToString
-        break
-      case "Number":
-        conv[col] = convertToNumber
-        break
-      case "Int":
-        conv[col] = convertToInt
-        break
-      case "Float":
-        conv[col] = convertToNumber
-        break
-      case "Date":
-        conv[col] = convertToDate
-        break
-      case "Datetime":
-        conv[col] = convertToDatetime
-        break
-      case "JSON":
-        conv[col] = convertToJSON
-        break
-      case "StringList":
-        conv[col] = convertToStringList
-        break
-      case "GoogleDoc":
-        // we just noop because we'll have separate
-        // logic that will deal with Google Docs
-        conv[col] = convertNoop
-        break
-      default:
-        throw new Error(`Unknown type ${datatypes[col]}`)
+    let f = getConv(datatypes[col], col, datatypes)
+    if (!f) {
+      throw new Error(`Unknown type ${datatypes[col]}`)
     }
+    conv[col] = f
   }
   return conv
+}
+
+function getConv(datatype, col, datatypes) {
+  switch(datatype) {
+    case "Boolean":
+      return convertToBoolean
+    case "String":
+      return convertToString
+    case "Number":
+      return convertToNumber
+    case "Int":
+      return convertToInt
+    case "Float":
+      return convertToNumber
+    case "Date":
+      return convertToDate
+    case "Datetime":
+      return convertToDatetime
+    case "JSON":
+      return convertToJSON
+    case "StringList":
+      return convertToStringList
+    case "GoogleDoc":
+      // we just noop because we'll have separate
+      // logic that will deal with Google Docs
+      return convertNoop
+    default:
+      return null
+  }
 }
 
 const convertToString = (v) => {

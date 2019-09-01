@@ -1,6 +1,3 @@
-const allkeys = require('all-object-keys')
-
-
 /**
  * Metadata Level Schema Construction
  */
@@ -49,9 +46,6 @@ function mergeSheetSchemaDocs(schemas) {
   return merged
 }
 
-
-
-
 /**
  * Sheet Level Schema Construction
  */
@@ -71,7 +65,8 @@ function constructSheetSchema(cols, docs, datatypes) {
     }
     columns.push(column)
   }
-  return { columns, docs: docSchemas }
+  let reserved = createdReservedSchemaColumns(docs[0])
+  return { columns: reserved.concat(columns), docs: docSchemas }
 }
 
 function constructDocSchemas(cols, docs, datatypes) {
@@ -88,7 +83,7 @@ function constructDocSchemas(cols, docs, datatypes) {
     for (let col of cols) {
       let obj = doc[col]
       if (!obj || (typeof obj != 'object')) continue
-      let fields = allkeys(obj)
+      let fields = Object.getOwnPropertyNames(obj) // allkeys(obj) will traverse StringList array values aka "title.0" bug
       for (let name of fields) {
         let full = `${col}.${name}`
         if (!index[full]) {
@@ -100,7 +95,7 @@ function constructDocSchemas(cols, docs, datatypes) {
           schemas[col].fields.push(c)
           index[full] = c
         } else if (!index[full].sample) {
-          index[full].sample = c.sample
+          index[full].sample = obj[name]
         }
       }
     }
@@ -121,6 +116,38 @@ function getSampleColumnValues(cols, docs, datatypes) {
   }
   return samples
 }
+
+
+function createdReservedSchemaColumns(doc) {
+  doc = Object.assign({
+    "_id": "5d6b2f2f0c6d3f00074ad599",
+    "_sheet": "Sheet1",
+    "_row": 1,
+    "_errors": []
+  }, doc)
+  return [ {
+    name: "_id",
+    datatype: "String",
+    sample: doc["_id"],
+    reserved: true
+  }, {
+    name: "_sheet",
+    datatype: "String",
+    sample: doc["_sheet"],
+    reserved: true
+  }, {
+    name: "_row",
+    datatype: "Int",
+    sample: doc["_row"],
+    reserved: true
+  }, {
+    name: "_errors",
+    datatype: "StringList",
+    sample: doc["_errors"],
+    reserved: true
+  } ]
+}
+
 
 module.exports = {
   constructSchema,

@@ -2,8 +2,40 @@ require('dotenv').config()
 const { DateTime } = require('luxon')
 
 const {
+  convertValues,
   createConverter
 } = require('../lib/convert')
+
+describe("GoogleDoc", () => {
+  let cols = null
+  let docs = null
+  let datatypes = null
+  beforeEach(async () => {
+    cols = [ "GoogleDoc" ]
+    docs = [ { 
+      "GoogleDoc": {
+        "hello": "world",
+        "foo": "123"
+      },
+      "_errors": [ ]
+    } ]
+    datatypes = {
+      "GoogleDoc": "GoogleDoc",
+      "GoogleDoc.hello": "String",
+      "GoogleDoc.foo": "Int"
+    }
+  })
+  it ('should convert GoogleDoc field types', async () => {
+    let converted = convertValues(cols, docs, datatypes)
+    console.log(JSON.stringify(converted.docs[0], null, 2))
+    expect(converted.docs[0]).toMatchObject({
+      "GoogleDoc": {
+        "hello": "world",
+        "foo": 123
+      }
+    })
+  })
+})
 
 describe('Datetime', () => {
   let fconv = null

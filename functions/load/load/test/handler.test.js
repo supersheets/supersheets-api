@@ -77,14 +77,14 @@ describe('Load', () => {
       nrows: 6,
       ncols: 7
     })
-    expect(metadata.schema.columns.map(col => col.name)).toEqual([ 
+    expect(metadata.schema.columns.filter(col => !col.reserved).map(col => col.name)).toEqual([ 
       "question_id", 
       "question_text", 
       "created_at", 
       "student_name", 
       "student_response" 
     ])
-    expect(metadata.schema.columns.map(col => col.sample)).toEqual([ 
+    expect(metadata.schema.columns.filter(col => !col.reserved).map(col => col.sample)).toEqual([ 
       "Q1", 
       "How ready do you feel for our quiz tomorrow?", 
       "2017-04-24T23:39:16.718Z", 
@@ -124,14 +124,14 @@ describe('Load', () => {
       nrows: 6,
       ncols: 7
     })
-    expect(metadata.schema.columns.map(col => col.datatype)).toEqual([ 
+    expect(metadata.schema.columns.filter(col => !col.reserved).map(col => col.datatype)).toEqual([ 
       "String", 
       "String", 
       "Datetime", 
       "String", 
       "Number"
     ])
-    expect(metadata.schema.columns.map(col => col.sample)).toEqual([ 
+    expect(metadata.schema.columns.filter(col => !col.reserved).map(col => col.sample)).toEqual([ 
       "Q1", 
       "How ready do you feel for our quiz tomorrow?", 
       //"2017-04-24T23:39:16.718Z", 
@@ -185,12 +185,12 @@ describe('Load Spreadsheet with Google Docs', () => {
       ncols: 3
     })
     console.log("METADATA", JSON.stringify(metadata, null, 2))
-    expect(metadata.schema.columns.map(col => col.name)).toEqual([ 
+    expect(metadata.schema.columns.filter(col => !col.reserved).map(col => col.name)).toEqual([ 
       "id",
       "writer",
       "passage" 
     ])
-    let samples = metadata.schema.columns.map(col => col.sample)
+    let samples = metadata.schema.columns.filter(col => !col.reserved).map(col => col.sample)
     expect(samples).toEqual([ 
       123, 
       "danieljyoo@goalbookapp.com", 
