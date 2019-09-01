@@ -18,9 +18,10 @@ const {
 async function loadSheet(ctx, sheet) {
   let metadata = ctx.state.metadata
   let datatypes = metadata.config && metadata.config.datatypes || { }
-  let { cols, docs } = await fetchData(ctx, metadata, sheet)
+  let { cols, docs, excluded } = await fetchData(ctx, metadata, sheet)
   convertValues(cols, docs, datatypes)
   let schema = constructSheetSchema(cols, docs, datatypes)
+  schema.excluded = excluded
   sheet.cols = cols
   sheet.docs = docs
   sheet.schema = schema
@@ -30,12 +31,12 @@ async function loadSheet(ctx, sheet) {
 }
 
 async function fetchData(ctx, metadata, sheet) {
-  let { cols, docs } = await fetchSheetData(ctx.state.sheetsapi, metadata.id, sheet, { mode: getLoadMode(metadata) })
+  let { cols, docs, excluded } = await fetchSheetData(ctx.state.sheetsapi, metadata.id, sheet, { mode: getLoadMode(metadata) })
   if (hasGoogleDocDataTypes(metadata)) {
     let doccols = filterGoogleDocColumns(metadata, cols)
     await fetchDocsData(ctx.state.docsapi, doccols, docs)
   }
-  return { cols, docs }
+  return { cols, docs, excluded }
 }
 
 async function fetchSheetData(axios, id, sheet, options) {

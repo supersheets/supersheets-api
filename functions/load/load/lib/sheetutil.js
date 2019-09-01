@@ -27,8 +27,8 @@ function constructDocs(sheetDoc, data) {
       docs.push(doc)
     }
   }
-  cols = cols.filter(name => isValidColumnName(name))
   let excluded = cols.filter(name => !isValidColumnName(name))
+  cols = cols.filter(name => isValidColumnName(name))
   return { cols, docs, excluded } 
 }
 
