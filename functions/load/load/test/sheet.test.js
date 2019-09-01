@@ -30,8 +30,8 @@ describe('loadSheet', () => {
   it ('should fetch a single sheet', async () => {
     ctx.state.metadata = createTestMetadata()
     let sheet = { title: "Passages" }
-    let { cols, docs, schema } = await loadSheet(ctx, sheet)
-    console.log(JSON.stringify({ cols, docs, schema}, null, 2))
+    sheet = await loadSheet(ctx, sheet)
+    console.log(JSON.stringify(sheet, null, 2))
   })
 })
 

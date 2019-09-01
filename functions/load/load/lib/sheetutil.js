@@ -32,39 +32,9 @@ function constructDocs(sheetDoc, data) {
   return { cols, docs, excluded } 
 }
 
-function updateSpreadsheetCountsFromSheets(metadata) {
-  metadata.nrows = 0
-  metadata.ncols = 0
-  metadata.ncells = 0
-  for (var i=0; i<metadata.sheets.length; i++) {
-    if (metadata.sheets[i].skip) continue
-    metadata.nrows += metadata.sheets[i].nrows
-    metadata.ncols += metadata.sheets[i].ncols
-    metadata.ncells += metadata.sheets[i].ncells
-  }
-  metadata.updated_at = new Date()
-  return metadata
-}
-
-function updateSheetDoc(sheet, docs) {
-  let preview = {}
-  if (docs.docs.length > 0) {
-    preview = docs.docs[0]
-  } 
-  sheet.preview = preview
-  sheet.columns = docs.cols
-  sheet.samples = getSampleColumnValues(sheet.columns, docs.docs)
-  sheet.nrows = docs.docs.length
-  sheet.ncols = docs.cols.length
-  sheet.ncells = (docs.docs.length * docs.cols.length)
-  sheet.updated_at = new Date()
-  return sheet
-}
 
 module.exports = {
-  updateSpreadsheetCountsFromSheets,
-  constructDocs,
-  updateSheetDoc
+  constructDocs
 }
 
 // function getSampleColumnValues(cols, docs) {

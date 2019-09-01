@@ -1,6 +1,3 @@
-const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
-const allkeys = require('all-object-keys')
-
 const {
   constructDocs,
 } = require('./sheetutil')
@@ -11,7 +8,7 @@ const {
 } = require('./docutil')
 
 const {
-  constructSchema,
+  constructSheetSchema,
 } = require('./schema')
 
 const {
@@ -23,8 +20,13 @@ async function loadSheet(ctx, sheet) {
   let datatypes = metadata.config && metadata.config.datatypes || { }
   let { cols, docs } = await fetchData(ctx, metadata, sheet)
   convertValues(cols, docs, datatypes)
-  let schema = constructSchema(cols, docs, datatypes)
-  return { cols, docs, schema }
+  let schema = constructSheetSchema(cols, docs, datatypes)
+  sheet.cols = cols
+  sheet.docs = docs
+  sheet.schema = schema
+  sheet.ncols = cols.length
+  sheet.nrows = docs.length
+  return sheet
 }
 
 async function fetchData(ctx, metadata, sheet) {
@@ -88,7 +90,6 @@ function filterGoogleDocColumns(metadata, cols) {
   let datatypes = metadata.config && metadata.config.datatypes || { }
   return cols.filter(col => datatypes[col] == "GoogleDoc")
 }
-
 
 module.exports = {
   loadSheet,

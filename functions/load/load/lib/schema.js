@@ -1,6 +1,61 @@
 const allkeys = require('all-object-keys')
 
-function constructSchema(cols, docs, datatypes) {
+
+/**
+ * Metadata Level Schema Construction
+ */
+
+function constructSchema(metadata) {
+  let columns = mergeSheetSchemaColumns(metadata.sheets.map(sheet => sheet.schema.columns))
+  let docs = mergeSheetSchemaDocs(metadata.sheets.map(sheet => sheet.schema.docs))
+  return { columns, docs }
+}
+
+function mergeSheetSchemaColumns(schemas) {
+  let index = { }
+  let merged = [ ]
+  for (let columns of schemas) {
+    for (let col of columns) {
+      if (!index[col.name]) {
+        merged.push(col)
+        index[col.name] = col
+      } else if (!index[col.name].sample) {
+        index[col.name].sample = col.sample
+      }
+    }
+  }
+  return merged
+}
+
+function mergeSheetSchemaDocs(schemas) {
+  let index = { }
+  let merged = { }
+  for (let docs of schemas) {
+    for (let col in docs) {
+      for (let field of docs[col].fields) {
+        let full = `${col}.${field.name}`
+        if (!index[full]) {
+          if (!merged[col]) {
+            merged[col] = { name: col, fields: [ ] }
+          }
+          merged[col].fields.push(field)
+          index[full] = field
+        } else if (!index[full].sample) {
+          index[full].sample = field.sample
+        }
+      }
+    }
+  }
+  return merged
+}
+
+
+
+
+/**
+ * Sheet Level Schema Construction
+ */
+function constructSheetSchema(cols, docs, datatypes) {
   let doccols = cols.filter(col => datatypes[col] == "GoogleDoc")
   let docSchemas = constructDocSchemas(doccols, docs, datatypes)
   let samples = getSampleColumnValues(cols, docs)
@@ -75,5 +130,8 @@ function getSampleColumnValues(cols, docs, datatypes) {
 
 module.exports = {
   constructSchema,
+  mergeSheetSchemaColumns,
+  mergeSheetSchemaDocs,
+  constructSheetSchema,
   constructDocSchemas
 }

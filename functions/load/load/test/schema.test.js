@@ -2,8 +2,164 @@ require('dotenv').config()
 
 const {
   constructSchema,
+  mergeSheetSchemaColumns,
+  mergeSheetSchemaDocs,
+  constructSheetSchema,
   constructDocSchemas
 } = require('../lib/schema')
+
+describe('constructSchemna', () => {
+  it ('should merge from updated sheets', async () => {
+    let sheet1 = { schema: { 
+      columns: [ { name: "col1", datatype: "String", sample: null } ],
+      docs: { 'doc1': { name: 'doc1', fields: [ { name: "hello", datatype: "String", sample: null } ] } }
+    }}
+    let sheet2 = { schema: {
+      columns: [ { name: "col1", datatype: "String", sample: "a" },  { name: "col2", datatype: "String", sample: "b" } ],
+      docs: { 'doc1': { name: 'doc1', fields: [ { name: "hello", datatype: "String", sample: "foo" }, { name: "world", datatype: "String", sample: "bar" } ] } }
+    }}
+    let metadata = { sheets: [ sheet1, sheet2 ] }
+    let { columns, docs } = constructSchema(metadata)
+    expect(columns).toEqual([
+      {
+        "name": "col1",
+        "datatype": "String",
+        "sample": "a"
+      },
+      {
+        "name": "col2",
+        "datatype": "String",
+        "sample": "b"
+      }
+    ])
+    expect(docs).toEqual({
+      "doc1": {
+        "name": "doc1",
+        "fields": [
+          {
+            "name": "hello",
+            "datatype": "String",
+            "sample": "foo"
+          },
+          {
+            "name": "world",
+            "datatype": "String",
+            "sample": "bar"
+          }
+        ]
+      }
+    })
+  })
+})
+
+describe('mergeSheetSchemaColumns', () => {
+  it ('should merge different columns', async () => {
+    let schemas = [ 
+      [ { name: "col1", datatype: "String", sample: "a" } ],
+      [ { name: "col2", datatype: "String", sample: "b" } ]
+    ]
+    let merged = mergeSheetSchemaColumns(schemas)
+    expect(merged).toEqual([
+      {
+        "name": "col1",
+        "datatype": "String",
+        "sample": "a"
+      },
+      {
+        "name": "col2",
+        "datatype": "String",
+        "sample": "b"
+      }
+    ])
+  })
+  it ('should merge same column across sheets', async () => {
+    let schemas = [ 
+      [ { name: "col1", datatype: "String", sample: null },  ],
+      [ { name: "col1", datatype: "String", sample: "b" } ]
+    ]
+    let merged = mergeSheetSchemaColumns(schemas)
+    expect(merged).toEqual([
+      {
+        "name": "col1",
+        "datatype": "String",
+        "sample": "b"
+      }
+    ])
+  })
+})
+
+describe('mergeSheetSchemaDocs', () => {
+  it ('should merge two different docs', async () => {
+    let schemas = [ {
+      'doc1': {
+        name: "doc1",
+        fields: [ { name: "number", datatype: "Int", sample: 123 } ]
+      } 
+    }, {
+      'doc2': {
+        name: "doc2",
+        fields: [ { name: "number", datatype: "Int", sample: 123 } ]
+      }
+    } ]
+    let merged = mergeSheetSchemaDocs(schemas)
+    expect(merged).toEqual({
+      "doc1": {
+        "name": "doc1",
+        "fields": [
+          {
+            "name": "number",
+            "datatype": "Int",
+            "sample": 123  
+          }
+        ]
+      },
+      "doc2": {
+        "name": "doc2",
+        "fields": [
+          {
+            "name": "number",
+            "datatype": "Int",
+            "sample": 123
+          }
+        ]
+      }
+    })
+  })
+  it ('should merge different fields for same doc schema across sheets', async () => {
+    let docs = [ {
+      'doc1': {
+        name: "doc1",
+        fields: [ { name: "number", datatype: "Int", sample: null } ]
+      } 
+    }, {
+      'doc1': {
+        name: "doc1",
+        fields: [ 
+          { name: "string", datatype: "String", sample: "hello" },
+          { name: "number", datatype: "Int", sample: 123 }
+        ]
+      }
+    } ]
+    let merged = mergeSheetSchemaDocs(docs)
+    expect(merged).toEqual({
+      "doc1": {
+        "name": "doc1",
+        "fields": [
+          {
+            "name": "number",
+            "datatype": "Int",
+            "sample": 123
+          },
+          {
+            "name": "string",
+            "datatype": "String",
+            "sample": "hello"
+          }
+        ]
+      }
+    })
+  })
+})
 
 describe('constructDocSchemas', () => {
   it ('should create schemas for google doc objects', async () => {
@@ -64,7 +220,7 @@ describe('constructDocSchemas', () => {
   })
 })
 
-describe('constructSchemas', () => {
+describe('constructSheetSchema', () => {
   let cols = [ 'col1', 'col2', 'doc1' ]
   let docs = [ {
     'col1': "Hello",
@@ -86,7 +242,7 @@ describe('constructSchemas', () => {
     "doc1.hello": "String",
     "doc1.key": "Int"
   }
-  let schema = constructSchema(cols, docs, datatypes)
+  let schema = constructSheetSchema(cols, docs, datatypes)
   expect(schema).toMatchObject({
     "columns": [
       {
