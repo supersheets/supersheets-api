@@ -199,8 +199,8 @@ describe('StringList', () => {
     })
     fconv = converter["StringList"]
   })
-  it ('should parse null as empty array', async () => {
-    expect(fconv(null)).toEqual([])
+  it ('should parse null as null', async () => {
+    expect(fconv(null)).toEqual(null)
   })
   it ('should treat a single value as an array with one value', async () => {
     let str = "One"
@@ -225,6 +225,9 @@ describe('StringList', () => {
   it ('should string and array a single number', async () => {
     let number = 1
     expect(fconv(number)).toEqual([ "1" ])
+  })
+  it ('should string and array a single boolean', async () => {
+    expect(fconv(true)).toEqual([ "TRUE" ])
   })
   it ('should throw on any object', async () => {
     let obj = { hello: "world" }
@@ -261,5 +264,122 @@ describe('Number', () => {
   })
   it ('should parse a string as a float', async () => {
     expect(floatconv("1.1")).toEqual(1.1)
+  })
+})
+
+describe('Boolean', () => {
+  let boolconv = null
+  beforeEach(async () => {
+    let converter = createConverter({
+      Boolean: "Boolean"
+    })
+    boolconv = converter["Boolean"]
+  })
+  it ('should return undefined as null', async () => {
+    expect(boolconv(undefined)).toEqual(null)
+  })
+  it ('should return 0 as false', async () => {
+    expect(boolconv(0)).toEqual(false)
+  })
+  it ('should return "" as false', async () => {
+    expect(boolconv("")).toEqual(false)
+  })
+  it ('should return " " as false', async () => {
+    expect(boolconv(" ")).toEqual(false)
+  })
+  it ('should return 1 as true', async () => {
+    expect(boolconv(1)).toEqual(true)
+  })
+  it ('should return "Y" as true', async () => {
+    expect(boolconv("Y")).toEqual(true)
+  })
+})
+
+describe('String', () => {
+  let strconv = null
+  beforeEach(async () => {
+    let converter = createConverter({
+      String: "String"
+    })
+    strconv = converter["String"]
+  })
+  it ('should return undefined as null', async () => {
+    expect(strconv(undefined)).toEqual(null)
+  })
+  it ('should return true as "TRUE', async () => {
+    expect(strconv(true)).toEqual("TRUE")
+  })
+  it ('should return false as "FALSE', async () => {
+    expect(strconv(false)).toEqual("FALSE")
+  })
+  it ('should return 1 as "1"', async () => {
+    expect(strconv(1)).toEqual("1")
+  })
+  it ('should return 1.1 as "1.1"', async () => {
+    expect(strconv(1.1)).toEqual("1.1")
+  })
+})
+
+describe('Int', () => {
+  let conv = null
+  beforeEach(async () => {
+    let converter = createConverter({
+      Int: "Int"
+    })
+    conv = converter["Int"]
+  })
+  it ('should return undefined as null', async () => {
+    expect(conv(undefined)).toEqual(null)
+  })
+  it ('should return true as 1', async () => {
+    expect(conv(true)).toEqual(1)
+  })
+  it ('should return false as 0', async () => {
+    expect(conv(false)).toEqual(0)
+  })
+  it ('should return 1.3 as 1', async () => {
+    expect(conv(1.3)).toEqual(1)
+  })
+  it ('should throw on "hello"', async () => {
+    let error = null
+    try { 
+      conv("hello")
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual(`hello is NaN`)
+  })
+})
+
+describe('Float', () => {
+  let conv = null
+  beforeEach(async () => {
+    let converter = createConverter({
+      Float: "Float"
+    })
+    conv = converter["Float"]
+  })
+  it ('should return undefined as null', async () => {
+    expect(conv(undefined)).toEqual(null)
+  })
+  it ('should return true as 1', async () => {
+    expect(conv(true)).toEqual(1)
+  })
+  it ('should return false as 0', async () => {
+    expect(conv(false)).toEqual(0)
+  })
+  it ('should return 1.3 as 1.3', async () => {
+    expect(conv(1.3)).toEqual(1.3)
+  })
+  it ('should throw on "hello"', async () => {
+    let error = null
+    try { 
+      conv("hello")
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual(`hello is NaN`)
   })
 })

@@ -2,29 +2,41 @@
 const { DateTime } = require('luxon')
 const allkeys = require('all-object-keys')
 
+function isNullOrUndefined(v) {
+  return v === null || v === undefined
+}
+
 function convertValues(cols, docs, datatypes, options) {
   let conv = createConverter(datatypes)
   options = options || { }
   for (let doc of docs) {
     for (let col of cols) {
-      try {
-        if (conv[col]) {
+      if (conv[col]) {
+        try {
           doc[col] = conv[col](doc[col], options)
+        } catch (err) {
+          doc[col] = null 
+          doc["_errors"].push({
+            col, message: err.message
+          })
         }
-        if (datatypes[col] == "GoogleDoc" && doc[col] && (typeof doc[col] == 'object')) {
-          let obj = doc[col]
-          let fields = allkeys(obj)
-          for (let field of fields) {
-            let full = `${col}.${field}`
-            if (conv[full]) {
+      }
+      if (datatypes[col] == "GoogleDoc" && doc[col] && (typeof doc[col] == 'object')) {
+        let obj = doc[col]
+        let fields = allkeys(obj)
+        for (let field of fields) {
+          let full = `${col}.${field}`
+          if (conv[full]) {
+            try {
               obj[field] = conv[full](obj[field], options)
+            } catch (err) {
+              obj[field] = null 
+              doc["_errors"].push({
+                full, message: err.message
+              })
             }
           }
         }
-      } catch (err) {
-        doc["_errors"].push({
-          col, message: err.message
-        })
       }
     }
   }
@@ -73,7 +85,7 @@ function getConv(datatype, col, datatypes) {
 }
 
 const convertToString = (v) => {
-  if (!v) return ''
+  if (isNullOrUndefined(v)) return null
   switch(typeof v) {
     case "string":
       return v
@@ -81,30 +93,42 @@ const convertToString = (v) => {
       return v.toString()
     case "object":
       return JSON.stringify(v)
+    case "boolean":
+      return v && "TRUE" || "FALSE"
     default:
       throw new Error(`Could not convert value ${v} to type String`)
   }
 }
 
 const convertToNumber = (v) => {
-  if (!v) return 0
+  if (isNullOrUndefined(v)) return null
   switch(typeof v) {
     case "number": 
       return v
     case "string": 
-      return new Number(v)
+      if (isNaN(parseFloat(v))) {
+        throw new Error(`${v} is NaN`)
+      }
+      return parseFloat(v)
+    case "boolean":
+      return v && 1 || 0
     default:
       throw new Error(`Could not convert value ${v} to type Number`)
   }
 }
 
 const convertToInt = (v) => {
-  if (!v) return 0
+  if (isNullOrUndefined(v)) return null
   switch(typeof v) {
     case "number": 
       return Math.floor(v)
     case "string": 
+      if (isNaN(parseInt(v))) {
+        throw new Error(`${v} is NaN`)
+      }
       return parseInt(v)
+    case "boolean":
+      return v && 1 || 0
     default:
       throw new Error(`Could not convert value ${v} to type Int`)
   }
@@ -112,9 +136,19 @@ const convertToInt = (v) => {
 
 
 // 0 false 1 (or any number) is true
+// whitepsce 
 const convertToBoolean = (v) => {
-  if (!v) return false
-  return true
+  if (isNullOrUndefined(v)) return null
+  switch (typeof v) {
+    case "boolean": 
+      return v
+    case "string":
+      return v.trim() && true || false
+    case "number":
+      return (v !== 0) && true || false
+    default:
+      throw new Error(`Could not convert value ${v} to type Boolean`)
+  }
 }
 
 // what is the value of empty date cell? 
@@ -155,6 +189,7 @@ const convertToDate = (v, options) => {
 }
 
 const convertToJSON = (v) => {
+  if (isNullOrUndefined(v)) return null
   switch (typeof v) {
     case "string":
       return JSON.parse(v)
@@ -170,12 +205,14 @@ const convertToJSON = (v) => {
 const convertToStringList = (v, options) => {
   options = options || { }
   let separator = options.separator || '\n'
-  if (!v) return [ ]
+  if (isNullOrUndefined(v)) return null
   switch (typeof v) {
     case "string":
       return v.split(separator).map(s => s.trim()).filter(s => s)
     case "number":
       return [ v.toString() ]
+    case "boolean":
+      return v && [ "TRUE" ] || [ "FALSE" ]
     default:
       throw new Error(`Could not convert value ${v} to StringList`)
   }
