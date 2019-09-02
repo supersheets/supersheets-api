@@ -111,6 +111,7 @@ const convertToInt = (v) => {
 }
 
 
+// 0 false 1 (or any number) is true
 const convertToBoolean = (v) => {
   if (!v) return false
   return true
