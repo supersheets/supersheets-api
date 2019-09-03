@@ -1,6 +1,6 @@
 const axios = require('axios')
-
 const func = require('@funcmaticjs/funcmatic')
+const ContextLoggerPlugin = require('@funcmaticjs/contextlogger-plugin')
 const EventPlugin = require('@funcmaticjs/event-plugin')
 const StageVarsPlugin = require('@funcmaticjs/stagevars-plugin')
 const ParameterStorePlugin = require('@funcmaticjs/parameterstore-plugin')
@@ -13,6 +13,7 @@ const BodyParserPlugin = require('@funcmaticjs/bodyparser-plugin')
 const coldHandler = require('@funcmaticjs/forcecoldstart')
 const { cacheHandler } = require('./lib/cache')
 
+func.use(new ContextLoggerPlugin())
 func.use(new EventPlugin())
 func.use(new StageVarsPlugin())
 func.use(new ParameterStorePlugin())

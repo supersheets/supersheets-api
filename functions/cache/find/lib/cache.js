@@ -5,7 +5,7 @@ async function cacheHandler(ctx) {
   let body = ctx.event.body
   let cache = ctx.state.cache
   let { key, field } = cachekey(id, body)
-  let info = { key, field, hit: false, t: Date.now(), elapsed: 0, }
+  let info = { spreadsheetid: id, key, field, hit: false, t: Date.now(), elapsed: 0, }
   // await check
   ctx.logger.debug({ msg: `GET`, cache: info })
   let data = null 
@@ -34,6 +34,8 @@ async function cacheHandler(ctx) {
     ctx.logger.debug({ msg: `HIT`, cache: info })
   }
   info.elapsed = Date.now() - info.t
+  info.size = data && JSON.stringify(data).length || 0
+  ctx.logger.info({ msg: `STAT`, cache: info })
   ctx.response.set('X-Supersheets-Cache-Response', base64(info))
   ctx.response.json(data)
   return

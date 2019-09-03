@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@funcmaticjs/bodyparser-plugin": "~0.0.1",
+    "@funcmaticjs/contextlogger-plugin": "0.0.2",
     "@funcmaticjs/correlation-plugin": "~0.0.2",
     "@funcmaticjs/event-plugin": "0.0.2",
     "@funcmaticjs/forcecoldstart": "0.0.1",
