@@ -19,7 +19,10 @@ async function loadSheet(ctx, sheet) {
   let metadata = ctx.state.metadata
   let datatypes = metadata.config && metadata.config.datatypes || { }
   let { cols, docs, excluded } = await fetchData(ctx, metadata, sheet)
-  convertValues(cols, docs, datatypes)
+  convertValues(cols, docs, datatypes, {
+    tz: metadata.tz,
+    locale: metadata.locale
+  })
   let schema = constructSheetSchema(cols, docs, datatypes)
   schema.excluded = excluded
   sheet.cols = cols
