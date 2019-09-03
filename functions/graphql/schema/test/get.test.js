@@ -1,8 +1,11 @@
 require('dotenv').config()
+const path = require('path')
+const fs = require('fs')
 const axios = require('axios')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const prettify = require('@funcmaticjs/pretty-logs')
 
+// Supersheets Public GraphQL Test
 // https://docs.google.com/spreadsheets/d/1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI/edit#gid=0
 const SPREADSHEETID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
 
@@ -15,8 +18,8 @@ describe('Error Handling', () => {
   afterEach(async () => {
     await func.invokeTeardown()
   })
-  it ("should return 404 Not Found if the id is invalid", async () => {
-    let ctx = createCtx() 
+  it("should return 404 Not Found if the id is invalid", async () => {
+    let ctx = createCtx()
     ctx.event.pathParameters.spreadsheetid = 'BAD-SPREADSHEET-ID'
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
@@ -24,15 +27,15 @@ describe('Error Handling', () => {
     })
     let body = JSON.parse(ctx.response.body)
     expect(body).toMatchObject({
-      errorMessage: `Could not find metadata with id BAD-SPREADSHEET-ID` 
+      errorMessage: `Could not find metadata with id BAD-SPREADSHEET-ID`
     })
   })
-  it ("should return 500 Internal Server error if mongodb error", async () => {
-    let ctx = createCtx() 
-    ctx.state = { 
+  it("should return 500 Internal Server error if mongodb error", async () => {
+    let ctx = createCtx()
+    ctx.state = {
       mongodb: mockdb(async () => {
         throw new Error("some Mongodb error")
-      }) 
+      })
     }
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
@@ -45,7 +48,7 @@ describe('Error Handling', () => {
   })
 })
 
-describe('Function', () => { 
+describe('Function', () => {
   let func = null
   beforeEach(async () => {
     func = require('../index.js').func
@@ -54,23 +57,10 @@ describe('Function', () => {
   afterEach(async () => {
     await func.invokeTeardown()
   })
-  it ("should return the metadata for a spreadsheet", async () => {
-    let ctx = createCtx() 
+  it("should return the metadata for a spreadsheet", async () => {
+    let ctx = createCtx()
     ctx.state.mongodb = mockdb(async () => {
-      return {
-        schema: {
-          columns: [
-            {"name":"letter","datatype":"String","sample":"A","sheets":["data"]},
-            {"name":"value","datatype":"Number","sample":65,"sheets":["data"]},
-            {"name":"number","datatype":"Number","sample":1,"sheets":["data"]},
-            {"name":"float","datatype":"Number","sample":1,"sheets":["data"]},
-            {"name":"boolean","datatype":"Boolean","sample":true,"sheets":["data"]},
-            {"name":"list","datatype":"StringList","sample":["hello","world"],"sheets":["data"]},
-            {"name":"date","datatype":"Date","sample":"1979-05-16T00:00:00.000Z","sheets":["data"]},
-            {"name":"datetime","datatype":"Datetime","sample":"1979-05-16T21:01:23.000Z","sheets":["data"]}
-          ]
-        }
-      }
+      return getTestMetadata()
     })
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
@@ -82,7 +72,7 @@ describe('Function', () => {
 })
 
 function createCtx() {
-  return { 
+  return {
     event: {
       httpMethod: 'GET',
       pathParameters: {
@@ -95,7 +85,7 @@ function createCtx() {
     env: {
       FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI
     },
-    state: { }
+    state: {}
   }
 }
 
@@ -109,4 +99,8 @@ function mockdb(callback) {
       }
     }
   }
+}
+
+function getTestMetadata() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, 'metadata.json')))
 }

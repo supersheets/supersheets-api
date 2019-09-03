@@ -12,7 +12,7 @@ let metadata = {
     docs: {
       doc: {
         name: "doc",
-        columns: [ 
+        fields: [ 
           { name: "hello", datatype: "String", sample: "world" }
         ]
       }

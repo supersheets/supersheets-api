@@ -1,3 +1,5 @@
+const SEP = "___"
+
 function generate(metadata, options) {
   options = options || { }
   // var schema = new GraphQLSchema({
@@ -54,9 +56,9 @@ function generateDoc(metadata, options) {
   options = options || { }
   let name = options.name || "Doc"
   let s = `type ${name} {\n`
-  s += `  _id: ID!\n`
-  s += `  _sheet: String!\n`
-  s += `  _row: Int!\n`
+  // s += `  _id: ID!\n`
+  // s += `  _sheet: String!\n`
+  // s += `  _row: Int!\n`
   for (let col of metadata.schema.columns) {
     s += `  ${col.name}: ${convertToGraphQLType(col)}\n`
   }
@@ -69,8 +71,8 @@ function generateGoogleDocTypes(metadata) {
   for (let col in metadata.schema.docs) {
     let schema = metadata.schema.docs[col]
     s = `type ${schema.name}Doc {\n`
-    for (let col of schema.columns) {
-      s += `  ${col.name}: ${convertToGraphQLType(col)}!\n`
+    for (let field of schema.fields) {
+      s += `  ${field.name}: ${convertToGraphQLType(field)}!\n`
     } 
     s += '}\n'
   }
@@ -79,6 +81,9 @@ function generateGoogleDocTypes(metadata) {
 
 function convertToGraphQLType({ name, datatype, sample }) {
   const isInt = (n) => { return parseInt(n) === n }
+  if (name == "_id") {
+    return 'ID!'
+  }
   switch(datatype) {
     case "String":
       return 'String'
@@ -113,15 +118,10 @@ enum FieldsEnum {
 function generateFieldsEnum(metadata, options) {
   options = options || { }
   let name = `${options.name || "Doc"}FieldsEnum`
-  let values = {
-    "_id": { value: "_id" },
-    "_sheet": { value: "_sheet" },
-    "_row": { value: "_row" }
-  }
   let s = `enum ${name} {\n`
-  s += `  _id\n`
-  s += `  _sheet\n`
-  s += `  _row\n`
+  // s += `  _id\n`
+  // s += `  _sheet\n`
+  // s += `  _row\n`
   for (let col of metadata.schema.columns) {
     s += `  ${col.name}\n`
   }
@@ -142,16 +142,16 @@ function generateFilterInput(metadata, options) {
   options = options || { }
   let name = `${options.name || "Doc"}FilterInput`
   let s = `input ${name} {\n`
-  s += `  _id: StringQueryOperatorInput\n`
-  s += `  _sheet: StringQueryOperatorInput\n`
-  s += `  _row: IntQueryOperatorInput\n`
+  // s += `  _id: StringQueryOperatorInput\n`
+  // s += `  _sheet: StringQueryOperatorInput\n`
+  // s += `  _row: IntQueryOperatorInput\n`
   for (let col of metadata.schema.columns) {
     s += `  ${col.name}: ${convertToQueryOperator(col)}\n`
   }
   for (let col in metadata.schema.docs) {
     let docschema = metadata.schema.docs[col]
-    for (let doccol of docschema.columns) {
-      s += `  ${col}__${doccol.name}: ${convertToQueryOperator(doccol)}\n`
+    for (let doccol of docschema.fields) {
+      s += `  ${col}${SEP}${doccol.name}: ${convertToQueryOperator(doccol)}\n`
     }
   }
   s += `}\n`
@@ -163,8 +163,8 @@ function generateGoogleDocFilterInputs(metadata) {
   for (let col in metadata.schema.docs) {
     let schema = metadata.schema.docs[col]
     s = `input ${schema.name}FilterInput {\n`
-    for (let col of schema.columns) {
-      s += `  ${col.name}: ${convertToGraphQLType(col)}\n`
+    for (let col of schema.fields) {
+      s += `  ${col.name}: ${convertToQueryOperator(col)}\n`
     } 
     s += '}\n'
   }
