@@ -36,6 +36,7 @@ describe('Valid Access', () => {
     })
     let cacheresponse = decode64(ctx.response.get('X-Supersheets-Cache-Response'))
     expect(cacheresponse).toMatchObject({
+      spreadsheetid: GOOGLESPREADSHEET_ID,
       key: `supersheets:sheet:${GOOGLESPREADSHEET_ID}:find`,
       field: 'Mq7LN8bXMqM/NyN08Sl+Zp+N+nE=',
       hit: false,
@@ -46,7 +47,7 @@ describe('Valid Access', () => {
     expect(body).toMatchObject({
       query: { "Col1": "v1" },
       one: false,
-      count: 2
+      count: 1
     })
     expect(body.result[0]).toMatchObject({
       "Col1":"v1"
@@ -63,6 +64,7 @@ describe('Valid Access', () => {
     })
     let cacheresponse = decode64(ctx.response.get('X-Supersheets-Cache-Response'))
     expect(cacheresponse).toMatchObject({
+      spreadsheetid: GOOGLESPREADSHEET_ID,
       key: `supersheets:sheet:${GOOGLESPREADSHEET_ID}:find`,
       field: 'Mq7LN8bXMqM/NyN08Sl+Zp+N+nE=',
       hit: true,
