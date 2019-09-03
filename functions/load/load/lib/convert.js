@@ -241,24 +241,36 @@ function getJsDateFromExcel(excelDate) {
 }
 
 function parseDatetimeFromString(str, fmt, tz) {
+  let d = null
   if (fmt == "ISO") {
     // setZone only sets the zone if str does not include offset
-    return DateTime.fromISO(str, { zone: tz, setZone: true })
+    d = DateTime.fromISO(str, { zone: tz, setZone: true })
+  } else {
+    d = DateTime.fromFormat(str, fmt, { zone: tz })
   }
-  return DateTime.fromFormat(str, fmt, { zone: tz })
+  if (!d.isValid) {
+    throw new Error(`${d.invalidReason}: ${d.invalidExplanation}`)
+  }
+  return d
 }
 
 function parseDateFromString(str, fmt, tz) {
+  let d = null
   if (fmt == "ISO") {
     // setZone only sets the zone if str does not include offset
     str = str.split('T')[0]
-    return DateTime.fromISO(str, { zone: tz, setZone: true }).set({
+    d = DateTime.fromISO(str, { zone: tz, setZone: true }).set({
+      hour: 0, minute: 0, seconds: 0, millisecond: 0 
+    })
+  } else {
+    d = DateTime.fromFormat(str, fmt, { zone: tz }).set({
       hour: 0, minute: 0, seconds: 0, millisecond: 0 
     })
   }
-  return DateTime.fromFormat(str, fmt, { zone: tz }).set({
-    hour: 0, minute: 0, seconds: 0, millisecond: 0 
-  })
+  if (!d.isValid) {
+    throw new Error(`${d.invalidReason}: ${d.invalidExplanation}`)
+  }
+  return d
 }
 
 module.exports = {

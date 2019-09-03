@@ -97,6 +97,18 @@ describe('Datetime', () => {
     let d = fconv(str, { tz })
     expect(JSON.stringify({d})).toEqual(JSON.stringify({d:"2017-04-24T00:00:00.000-04:00"}))
   })
+  it ('should throw if unable to parse datetime', async () => {
+    let error = null
+    try {
+      let str = "hello-world"
+      let d = fconv(str, { tz })
+      console.log(d)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual(`unparsable: the input "hello-world" can't be parsed as ISO 8601`)
+  })
 })
 
 describe('Date', () => {
@@ -149,6 +161,18 @@ describe('Date', () => {
     let str = "2017-04-24"
     let d = fconv(str, { tz })
     expect(JSON.stringify({d})).toEqual(JSON.stringify({d:"2017-04-24T00:00:00.000Z"}))
+  })
+  it ('should throw if unable to parse date', async () => {
+    let error = null
+    try {
+      let str = "hello-world"
+      let d = fconv(str, { tz })
+      console.log(d)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual(`unparsable: the input "hello-world" can't be parsed as ISO 8601`)
   })
 })
 
