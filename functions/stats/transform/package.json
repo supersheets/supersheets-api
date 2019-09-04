@@ -1,0 +1,26 @@
+{
+  "name": "supersheets-api-v3-stats-transform",
+  "version": "0.0.1",
+  "description": "Retrieve an Auth0 authentication token for accessing the Auth0 Management API",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "package": "package"
+  },
+  "author": "Daniel Jhin Yoo <danieljyoo@gmail.com> (https://github.com/danieljyoo)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danieljyoo/supersheets-api-v3.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@funcmaticjs/package": "0.0.2",
+    "aws-sdk": "^2.400.0",
+    "dotenv": "^6.2.0",
+    "jest": "^24.8.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}

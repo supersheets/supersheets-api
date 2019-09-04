@@ -1,0 +1,46 @@
+{
+  "messageType": "DATA_MESSAGE",
+  "owner": "233748856986",
+  "logGroup": "/aws/lambda/supersheets-api-v3-find",
+  "logStream": "2019/09/03/[$LATEST]1cc77f9b6ba847eb98f1a3306d405085",
+  "subscriptionFilters": [
+    "Stat"
+  ],
+  "logEvents": [
+    {
+      "id": "34956090844136659928372797865989052996152018249194536960",
+      "timestamp": 1567485325398,
+      "message": "2019-09-03T04:35:25.379Z\t8a1c8884-467c-40c4-9d50-89da43b16b8f\tINFO\t{ src: 'AsyncFunction:cacheHandler',\r  lifecycle: 'request',\r  functionName: 'supersheets-api-v3-find',\r  functionVersion: '$LATEST',\r  invokedQualifier: 'STAGING',\r  coldstart: false,\r  awsRequestId: '8a1c8884-467c-40c4-9d50-89da43b16b8f',\r  memoryLimitInMB: 128,\r  'x-correlation-id': '8a1c8884-467c-40c4-9d50-89da43b16b8f',\r  time: 1567485325379,\r  level: 30,\r  level_name: 'info',\r  msg: 'STAT',\r  cache:\r   { spreadsheetid: '1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI',\r     key:\r      'supersheets:sheet:1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI:find',\r     field: 'gUkWfxifTUlDCnWiD0A2UhUCpgM=',\r     hit: true,\r     t: 1567485325339,\r     elapsed: 40,\r     size: 493 } }\n"
+    },
+    {
+      "id": "34956090844582674832343410328819767361604985479314145281",
+      "timestamp": 1567485325418,
+      "message": "END RequestId: 8a1c8884-467c-40c4-9d50-89da43b16b8f\n"
+    },
+    {
+      "id": "34956090844582674832343410328819767361604985479314145282",
+      "timestamp": 1567485325418,
+      "message": "REPORT RequestId: 8a1c8884-467c-40c4-9d50-89da43b16b8f\tDuration: 71.98 ms\tBilled Duration: 100 ms \tMemory Size: 128 MB\tMax Memory Used: 102 MB\t\n"
+    },
+    {
+      "id": "34956090914116398361361893284128136935722576654961082371",
+      "timestamp": 1567485328536,
+      "message": "START RequestId: 38047ab7-b7f0-4650-bcc2-8939a613fc2e Version: $LATEST\n"
+    },
+    {
+      "id": "34956090914629315500928097616383458455993488969598631940",
+      "timestamp": 1567485328559,
+      "message": "2019-09-03T04:35:28.559Z\t38047ab7-b7f0-4650-bcc2-8939a613fc2e\tINFO\t{ src: 'AsyncFunction:cacheHandler',\r  lifecycle: 'request',\r  functionName: 'supersheets-api-v3-find',\r  functionVersion: '$LATEST',\r  invokedQualifier: 'STAGING',\r  coldstart: false,\r  awsRequestId: '38047ab7-b7f0-4650-bcc2-8939a613fc2e',\r  memoryLimitInMB: 128,\r  'x-correlation-id': '38047ab7-b7f0-4650-bcc2-8939a613fc2e',\r  time: 1567485328559,\r  level: 30,\r  level_name: 'info',\r  msg: 'STAT',\r  cache:\r   { spreadsheetid: '1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI',\r     key:\r      'supersheets:sheet:1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI:find',\r     field: 'gUkWfxifTUlDCnWiD0A2UhUCpgM=',\r     hit: true,\r     t: 1567485328538,\r     elapsed: 21,\r     size: 493 } }\n"
+    },
+    {
+      "id": "34956090915053029659700179456072637103173807838212259845",
+      "timestamp": 1567485328578,
+      "message": "END RequestId: 38047ab7-b7f0-4650-bcc2-8939a613fc2e\n"
+    },
+    {
+      "id": "34956090915053029659700179456072637103173807838212259846",
+      "timestamp": 1567485328578,
+      "message": "REPORT RequestId: 38047ab7-b7f0-4650-bcc2-8939a613fc2e\tDuration: 22.98 ms\tBilled Duration: 100 ms \tMemory Size: 128 MB\tMax Memory Used: 102 MB\t\n"
+    }
+  ]
+}
