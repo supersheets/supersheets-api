@@ -5,8 +5,8 @@ const { GraphQLScalarType } = require('graphql')
 
 async function fetchSchema(axios) {
   let res = (await axios.get(`graphql/schema`)).data
-  console.log("schema", res.schema)
   const schemastr = res.schema
+  console.log(schemastr)
   let typeDefs =  gql`${schemastr}`
   let resolvers = createResolvers(axios)
   return { typeDefs, resolvers }
@@ -144,8 +144,8 @@ function formatFieldNames(filter) {
 }
 
 function dotNotation(k) {
-  if (k && k.includes("__")) {
-    return k.replace(/__/g, '.')
+  if (k && k.includes("___")) {
+    return k.replace(/___/g, '.')
   }
   return k
 }

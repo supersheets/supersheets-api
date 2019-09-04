@@ -16,6 +16,10 @@ func.use(new CorrelationPlugin())
 func.use(new LogLevelPlugin())
 func.use(new ResponsePlugin())
 
+func.error(async (ctx, next) => {
+  console.error(ctx.error)
+})
+
 func.request(async (ctx, next) => {
   let id = ctx.event.pathParameters && ctx.event.pathParameters.spreadsheetid
   if (!ctx.state.axios) {

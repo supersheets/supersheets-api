@@ -20,6 +20,7 @@ async function handler(ctx) {
   try {
     handler = createApolloHandler(ctx.event, ctx.context, { typeDefs, resolvers })
   } catch (err) {
+    ctx.logger.error(err)
     return ctx.response.httperror(500, `Error initializing GraphQL server: ${err.message}`)
   }
   // Kind of a hack here. Since apollo-graphql creates its own independent response

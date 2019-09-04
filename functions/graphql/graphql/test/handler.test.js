@@ -26,7 +26,7 @@ describe('Handler', () => {
         ]
       }
     })
-  })
+  }, 30 * 1000)
   it ('should run a graphql find query with limit and skip', async () => {
     let query = `{ find (filter: { value: { gt: 65, lt: 73 } }, limit: 2, skip: 1) { letter } }`
     let ctx = createTestEvent(SPREADSHEETID, query)
@@ -101,7 +101,7 @@ describe('Handler', () => {
     })
   })
   it ('should filter on a nested parameter', async () => {
-    let query = `{ find (filter: { googledoc__title: { eq: "Song of Solomon" } } ) { letter, googledoc { title } } }`
+    let query = `{ find (filter: { googledoc___title: { eq: "Song of Solomon" } } ) { letter, googledoc { title } } }`
     let ctx = createTestEvent(SPREADSHEETID, query)
     await func.invoke(ctx)
     expect(ctx.response.statusCode).toBe(200)
