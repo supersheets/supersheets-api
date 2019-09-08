@@ -10,6 +10,7 @@ async function startStatus(db, metadata, user, options) {
 
 function createStatus(metadata, user, options) {
   options = options || { }
+  if (metadata["_new"]) return createStatusNew(metadata, user, options)
   let d = new Date()
   return {
     uuid: options.uuid || uuidV4(),
@@ -20,6 +21,31 @@ function createStatus(metadata, user, options) {
     sheet_new_datauuid: options.datauuid,
     num_sheets_loaded: 0,
     num_sheets_total: metadata.sheets.length,
+    sheets_loaded: [ ],
+    created_at: d,
+    created_by: user.userid,
+    created_by_email: user.email,
+    created_by_org: user.org,
+    updated_at: d,
+    updated_by: user.userid,
+    updated_by_email: user.email,
+    updated_by_org: user.org,
+    error: null
+  }
+}
+
+function createStatusNew(metadata, user, options) {
+  options = options || { }
+  let d = new Date()
+  return {
+    uuid: options.uuid || uuidV4(),
+    status: options.dryrun && "DRYRUN" || "INIT",
+    sheet_id: metadata.id,
+    sheet_uuid: metadata.uuid,
+    sheet_current_datauuid: null,
+    sheet_new_datauuid: options.datauuid,
+    num_sheets_loaded: 0,
+    num_sheets_total: -1,
     sheets_loaded: [ ],
     created_at: d,
     created_by: user.userid,

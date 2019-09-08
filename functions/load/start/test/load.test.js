@@ -1,7 +1,6 @@
 require('dotenv').config()
 const prettify = require('@funcmaticjs/pretty-logs')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
-const status = require('../lib/status')
 
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
@@ -140,7 +139,45 @@ describe('Error Handling', () => {
   })
 })
 
-describe('Func', () => {
+describe('Initial Load', () => {
+  let func = null
+  let plugin = new MongoDBPlugin()
+  let client = null
+  let db = null
+  beforeEach(async () => {
+    // Import our main function each time which
+    // simulates an AWS "cold start" load
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    db = client.db()
+  })
+  afterEach(async () => {
+    await client.close()
+    // We invoke any teardown handlers so that
+    // middleware can clean up after themselves
+    await func.invokeTeardown()
+  })
+  it ('should leave ctx.state.metadata as null if a new load', async () => {
+    let ctx = createCtx()
+    ctx.event.queryStringParameters = { "dryrun": "true" }
+    await func.invoke(ctx)
+    expect(ctx.response).toMatchObject({
+      statusCode: 200
+    })
+    let status = JSON.parse(ctx.response.body)
+    expect(status).toMatchObject({
+      status: "DRYRUN",
+      sheet_uuid: expect.anything(),
+      sheet_id: ctx.event.pathParameters.spreadsheetid,
+      num_sheets_total: -1,
+      error: null
+    })
+  })
+})
+
+describe('Reload', () => {
   let func = null
   let plugin = new MongoDBPlugin()
   let client = null
