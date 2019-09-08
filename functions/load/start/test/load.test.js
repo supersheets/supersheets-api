@@ -169,8 +169,8 @@ describe('Initial Load', () => {
     let status = JSON.parse(ctx.response.body)
     expect(status).toMatchObject({
       status: "DRYRUN",
-      sheet_uuid: expect.anything(),
       sheet_id: ctx.event.pathParameters.spreadsheetid,
+      sheet_uuid: null,
       num_sheets_total: -1,
       error: null
     })

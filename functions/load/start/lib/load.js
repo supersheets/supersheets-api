@@ -22,7 +22,7 @@ async function loadHandler(ctx) {
   if (!metadata) {
     // That means a sheet with this id does not exist and therefore 
     // this is being loaded for the first time
-    metadata = { id, uuid: uuidV4(), "_new": true }
+    metadata = { id, "_new": true }
   }
   if (metadata.created_by_org && metadata.created_by_org != user.org) {
     ctx.response.httperror(401, 'Unauthorized')
