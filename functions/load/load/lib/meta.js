@@ -24,7 +24,7 @@ async function initOrFindMetadata(ctx) {
     }
   } 
   if (!metadata) {
-    metadata = { "_new": true }
+    metadata = initMetadata(id)
   }
   ctx.state.metadata = metadata
   return
@@ -98,6 +98,10 @@ function metadataUpdateFields(user) {
     updated_by_email: user.email,
     updated_by_org: user.org
   }
+}
+
+function initMetadata(id) {
+  return { id, "_new": true }
 }
 
 async function findMetadata(db, id) {

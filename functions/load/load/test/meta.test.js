@@ -107,6 +107,7 @@ describe('initOrFindMeta', () => {
     await initOrFindMetadata(ctx)
     console.log(ctx.state.metadata)
     expect(ctx.state.metadata).toMatchObject({
+      "id": 'new-spreadsheet-id',
       "_new": true
     })
   })
@@ -149,20 +150,6 @@ describe('fetchAndMergeMetadata', () => {
       title: 'Goalbook Private Supersheets Cross Domain Test'
     })
   })
-  // it ('should throw if spreadsheetid not in the body', async () => {
-  //   let ctx = createTestCtx({
-  //     mongodb: db
-  //   })
-  //   ctx.event.body.spreadsheetid = null
-  //   let error = null
-  //   try {
-  //     await initOrFindMetadata(ctx)
-  //   } catch (err) {
-  //     error = err
-  //   }
-  //   expect(error).toBeTruthy()
-  //   expect(error.message).toEqual("No Google Spreadsheet Doc ID provided ('ctx.event.body.spreadsheetid')")
-  // })
 })
 
 describe('createOrUpdateMeta', () => {
