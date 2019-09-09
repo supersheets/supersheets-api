@@ -26,11 +26,10 @@ async function loadSheet(ctx, sheet) {
   let schema = constructSheetSchema(cols, docs, datatypes)
   schema.excluded = excluded
   sheet.cols = cols
-  sheet.docs = docs
   sheet.schema = schema
   sheet.ncols = cols.length
   sheet.nrows = docs.length
-  return sheet
+  return { sheet, docs }
 }
 
 async function fetchData(ctx, metadata, sheet) {

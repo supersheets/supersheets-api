@@ -1,11 +1,13 @@
 const uuidV4 = require('uuid/v4')
 const COLLECTION = 'spreadsheets'
 const IGNORE_PREFIX = "_"
+const { constructSchema } = require('./schema')
 
 async function metaHandler(ctx, next) {
   await initOrFindMetadata(ctx)
   await fetchAndMergeMetadata(ctx)
   await next()
+  updateSpreadsheetMetadata(ctx)
   await createOrUpdateMetadata(ctx)
 }
 
@@ -22,8 +24,7 @@ async function initOrFindMetadata(ctx) {
     if (metadata.created_by_org && metadata.created_by_org != user.org) {
       throw new Error(`Unauthorized: ${user.email} not does not belong to org ${metadata.created_by_org}`)
     }
-  } 
-  if (!metadata) {
+  } else {
     metadata = initMetadata(id)
   }
   ctx.state.metadata = metadata
@@ -63,12 +64,22 @@ function createMetadataFromGoogleSpreadsheet(doc) {
   return metadata
 }
 
+function updateSpreadsheetMetadata(ctx) {
+  let metadata = ctx.state.metadata
+  updateSpreadsheetCountsFromSheets(metadata)
+  metadata.schema = constructSchema(metadata)
+}
+
 async function createOrUpdateMetadata(ctx) {
   let user = ctx.state.user
   let metadata = ctx.state.metadata
   let db = ctx.state.mongodb
+  if (!metadata) {
+    throw new Error("ctx.state.metadata is null")
+  }
   if (metadata["_new"]) {
     Object.assign(metadata, metadataCreateFields(user))
+    Object.assign(metadata, metadataUpdateFields(user))
     delete metadata["_new"]
   } else {
     if (!metadata.created_at) {
@@ -79,6 +90,7 @@ async function createOrUpdateMetadata(ctx) {
   }
   await saveMetadata(db, metadata)
   ctx.state.metadata = await findMetadata(db, metadata.id)
+  ctx.logger.info(`Saved updated metadata: id=${metadata.id} uuid=${metadata.uuid} datauuid=${metadata.datauuid}`)
   return
 }
 
@@ -111,6 +123,16 @@ async function findMetadata(db, id) {
 async function saveMetadata(db, metadata) {
   let id = metadata.id
   return await db.collection(COLLECTION).updateOne({ id }, { "$set": metadata }, { upsert: true, w: 1 })
+}
+
+function updateSpreadsheetCountsFromSheets(metadata) {
+  metadata.nrows = 0
+  metadata.ncols = 0
+  for (let sheet of metadata.sheets) {
+    metadata.nrows += (sheet.nrows || 0)
+    metadata.ncols += (sheet.ncols || 0)
+  }
+  return metadata
 }
 
 // unit testing only

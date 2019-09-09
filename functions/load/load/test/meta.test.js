@@ -34,6 +34,65 @@ const {
 
 const NOOP = async () => { }
 
+
+describe('metaHandler', () => {
+  let plugin = new MongoDBPlugin()
+  let client = null
+  let db = null
+  let meta = null
+  let status = null
+  let sheetsapi = null 
+  beforeAll(async () => {
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    db = client.db()
+    sheetsapi = await createSheetsApi()
+  })
+  afterAll(async () => {
+    if (client) {
+      await client.close()
+    }
+    client = null
+    db = null
+  })
+  beforeEach(async () => {
+
+  })
+  afterEach(async () => {
+    await deleteStatus(db, { sheet_id: GOOGLESPREADSHEET_ID})
+    await deleteMetadata(db, GOOGLESPREADSHEET_ID)
+  })
+  it ('should load a new spreadsheet metadata', async () => {
+    let ctx = createTestCtx({ mongodb: db })
+    ctx.state.sheetsapi = sheetsapi
+    await metaHandler(ctx, NOOP)
+    let metadata = await findMetadata(db, GOOGLESPREADSHEET_ID)
+    expect(metadata["_new"]).toBe(undefined)
+    expect(metadata).toMatchObject({
+      nrows: 0,
+      ncols: 0
+    })
+    expect(metadata.schema).toEqual({
+      "columns": [],
+      "docs": {}
+    })
+  })
+  it ('should reload a spreadsheet metadata', async () => {
+    await createTestMetadata(db)
+    let ctx = createTestCtx({ mongodb: db })
+    ctx.state.sheetsapi = sheetsapi
+    await metaHandler(ctx, NOOP)
+    let saved = await findMetadata(db, GOOGLESPREADSHEET_ID)
+    expect(saved).toMatchObject({
+      nrows: 0,
+      ncols: 0
+    })
+    expect(saved.schema).toEqual({
+      "columns": [],
+      "docs": {}
+    })
+  })
+})
+
 describe('initOrFindMeta', () => {
   let plugin = new MongoDBPlugin()
   let client = null
@@ -57,7 +116,7 @@ describe('initOrFindMeta', () => {
   })
   afterEach(async () => {
     await deleteStatus(db, { uuid: status.uuid })
-    await deleteMetadata(db, { id: meta.id })
+    await deleteMetadata(db, meta.id)
     status = null
   })
   it ('should throw if spreadsheetid not in the body', async () => {
@@ -94,7 +153,6 @@ describe('initOrFindMeta', () => {
       mongodb: db
     })
     await initOrFindMetadata(ctx)
-    console.log(ctx.state.metadata)
     expect(ctx.state.metadata).toMatchObject({
       id: meta.id
     })
@@ -105,7 +163,6 @@ describe('initOrFindMeta', () => {
       mongodb: db
     })
     await initOrFindMetadata(ctx)
-    console.log(ctx.state.metadata)
     expect(ctx.state.metadata).toMatchObject({
       "id": 'new-spreadsheet-id',
       "_new": true
@@ -116,11 +173,7 @@ describe('initOrFindMeta', () => {
 describe('fetchAndMergeMetadata', () => {
   let sheetsapi = null
   beforeAll(async () => {
-    let token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
-    sheetsapi = axios.create({
-      baseURL: process.env.GOOGLESHEETS_BASE_URL
-    })
-    sheetsapi.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    sheetsapi = await createSheetsApi()
   })
   afterAll(async () => {
   })
@@ -175,7 +228,7 @@ describe('createOrUpdateMeta', () => {
   })
   afterEach(async () => {
     await deleteStatus(db, { uuid: status.uuid })
-    await deleteMetadata(db, { id: meta.id })
+    await deleteMetadata(db, meta.id)
     status = null
   })
   // it ('should throw if spreadsheetid not in the body', async () => {
@@ -204,7 +257,6 @@ describe('createOrUpdateMeta', () => {
       "_new": true
     }
     await createOrUpdateMetadata(ctx)
-    console.log("CREATE", ctx.state.metadata)
     expect(ctx.state.metadata).toEqual({
       "_id": expect.anything(),
       id: meta.id,
@@ -247,7 +299,6 @@ describe('createOrUpdateMeta', () => {
       id: meta.id
     }
     await createOrUpdateMetadata(ctx)
-    console.log(ctx.state.metadata)
     expect(ctx.state.metadata).toMatchObject({
       created_at: expect.anything(),
       created_by: ctx.state.user.userid,
@@ -263,6 +314,15 @@ function createTestUser() {
     email: "danieljyoo@funcmatic.com",
     org: "funcmatic.com"
   }
+}
+
+async function createSheetsApi() {
+  let token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
+  let sheetsapi = axios.create({
+    baseURL: process.env.GOOGLESHEETS_BASE_URL
+  })
+  sheetsapi.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  return sheetsapi
 }
 
 async function createTestMetadata(db, options) {

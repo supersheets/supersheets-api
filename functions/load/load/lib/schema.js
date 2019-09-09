@@ -3,8 +3,8 @@
  */
 
 function constructSchema(metadata) {
-  let columns = mergeSheetSchemaColumns(metadata.sheets.map(sheet => sheet.schema.columns))
-  let docs = mergeSheetSchemaDocs(metadata.sheets.map(sheet => sheet.schema.docs))
+  let columns = mergeSheetSchemaColumns(metadata.sheets.map(sheet => sheet.schema && sheet.schema.columns || [ ]))
+  let docs = mergeSheetSchemaDocs(metadata.sheets.map(sheet => sheet.schema && sheet.schema.docs || { }))
   return { columns, docs }
 }
 

@@ -53,8 +53,6 @@ describe('Load', () => {
     db = client.db()
   }, 60 * 1000)
   afterAll(async () => {
-    await deletemeta(db, GOOGLESPREADSHEET_ID)
-    await deletestatus(db, statusuuid)
     await client.close()
   })
   beforeEach(async () => {
@@ -62,7 +60,22 @@ describe('Load', () => {
     func.logger.logger.prettify = prettify
   })
   afterEach(async () => {
+    await deletemeta(db, GOOGLESPREADSHEET_ID)
+    await deletestatus(db, statusuuid)
     await func.invokeTeardown()
+  })
+  it ('should do a new load with no datatypes config', async () => {
+    await initstatus(db, statusuuid)
+    let ctx = createCtx()
+    await func.invoke(ctx)
+    expect(ctx.error).toBeFalsy()
+    let metadata = await getmeta(db, GOOGLESPREADSHEET_ID)
+    expect(metadata).toMatchObject({
+      id: GOOGLESPREADSHEET_ID,
+      title: "Goalbook Fist to Five Backend",
+      nrows: 6,
+      ncols: 7
+    })
   })
   it ('should do a reload with no datatypes config', async () => {
     await initmeta(db, GOOGLESPREADSHEET_ID)

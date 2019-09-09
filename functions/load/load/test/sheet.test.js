@@ -29,9 +29,14 @@ describe('loadSheet', () => {
   })
   it ('should fetch a single sheet', async () => {
     ctx.state.metadata = createTestMetadata()
-    let sheet = { title: "Passages" }
-    sheet = await loadSheet(ctx, sheet)
-    console.log(JSON.stringify(sheet, null, 2))
+    let { sheet, docs } = await loadSheet(ctx, { title: "Passages" })
+    expect(sheet).toMatchObject({
+      title: "Passages",
+      cols: [ "id", "writer", "passage" ],
+      ncols: 3,
+      nrows: 3
+    })
+    expect(docs.length).toEqual(3)
   })
 })
 

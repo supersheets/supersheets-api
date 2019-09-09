@@ -21,8 +21,7 @@ describe('Load', () => {
     db = client.db()
   })
   afterAll(async () => {
-    // await deletemeta(db, GOOGLESPREADSHEET_ID)
-    // await deletestatus(db, statusuuid)
+    await deletestatus(db, GOOGLESPREADSHEET_DOCS_ID)
     if (client) {
       await client.close()
       client = null
@@ -33,7 +32,9 @@ describe('Load', () => {
     let ctx = createCtx({ mongodb: db, token })
     ctx.state.mongodb = db
     await loadHandler(ctx)
-    console.log(JSON.stringify(ctx.state.metadata))
+    expect(ctx.state.metadata).toMatchObject({
+      id: GOOGLESPREADSHEET_DOCS_ID
+    })
   })
 })
 
@@ -83,6 +84,14 @@ function createTestStatus() {
   }
 }
  
+async function deletestatus(db, sheet_id) {
+  try {
+    await db.collection('status').deleteOne({ sheet_id })
+  } catch (err) {
+    console.log(`Could not drop status for sheet ${sheet_id}`)
+  }
+}
+
 // GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL,
 // GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY,
 // GOOGLEDOCS_BASE_URL: process.env.GOOGLEDOCS_BASE_URL,
@@ -114,13 +123,7 @@ function createTestStatus() {
 //   }
 // }
 
-// async function deletestatus(db, uuid) {
-//   try {
-//     await db.collection('status').deleteOne({ uuid })
-//   } catch (err) {
-//     console.log(`Could not drop status ${id}`)
-//   }
-// }
+
 
 // async function getmeta(db, id) {
 //   return await  db.collection('spreadsheets').findOne({ id })
