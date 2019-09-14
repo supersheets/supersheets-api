@@ -21,11 +21,16 @@ let metadata = {
 }
 
 describe('Generate', () => {
-  it ('should print schema', async () => {
+  it ('should parse valid schema', async () => {
     let sdl = generate(metadata, { name: "Letter" })
-    console.log(sdl)
-    let parsed = gql`${sdl}`
-    console.log(parsed)
+    let error = null
+    try {
+      let parsed = gql`${sdl}`
+    } catch (err) {
+      console.error(err)
+      error = err
+    }
+    expect(error).toBeFalsy()
   })
 })
 

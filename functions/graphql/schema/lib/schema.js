@@ -1,3 +1,6 @@
+// Based on Gatsby
+// https://www.gatsbyjs.org/docs/schema-connections/
+
 const SEP = "___"
 
 function generate(metadata, options) {
@@ -10,7 +13,11 @@ function generate(metadata, options) {
   s += `\n`
   s += generateQuery(metadata, options)
   s += `\n`
-  s += generateDoc(metadata, options)
+  s += generateRow(metadata, options)
+  s += `\n`
+  s += generateRowConnection(metadata, options)
+  s += `\n`
+  s += generateRowEdge(metadata, options)
   s += `\n`
   s += generateGoogleDocTypes(metadata, options)
   s += `\n`
@@ -29,15 +36,15 @@ function generate(metadata, options) {
 
 /*
 type Query {
-  find(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): [Doc!]
+  find(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): Doc
   findOne(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): Doc
 }
 */
 function generateQuery(metadata, options) {
   options = options || { }
-  let name = options.name || "Doc"
+  let name = options.name || "Row"
   let s = `type Query {\n`
-  s += `  find(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): [${name}!]\n`
+  s += `  find(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}Connection\n`
   s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}!\n`
   s += `}\n`
   return s
@@ -52,9 +59,9 @@ type Doc {
   value: Int!
 }
 */
-function generateDoc(metadata, options) {
+function generateRow(metadata, options) {
   options = options || { }
-  let name = options.name || "Doc"
+  let name = options.name || "Row"
   let s = `type ${name} {\n`
   // s += `  _id: ID!\n`
   // s += `  _sheet: String!\n`
@@ -65,6 +72,45 @@ function generateDoc(metadata, options) {
   s += '}\n'
   return s
 }
+
+function generateRowConnection(metadata, options) {
+  options = options || { }
+  let name = options.name || "Row"
+  let s = `type ${name}Connection {\n`
+  s += `  edges: [${name}Edge!]\n`
+  s += `  totalCount: Int!\n`
+  s += `  pageInfo: PageInfo!\n` 
+  // Not supported yet
+  // s += `  distinct: Boolean\n` 
+  // s += `  group [${name}GroupConnection]\n`
+  s += `}\n`
+  return s
+}
+
+function generateRowEdge(metadata, options) {
+  options = options || { }
+  let name = options.name || "Row"
+  let s = `type ${name}Edge {\n`
+  s += `  node: ${name}!\n`
+  // Not supported yet
+  // s += `  next: ...?!\n`
+  // s += `  previous: ...?!\n`
+  s += `}\n`
+  return s
+}
+
+
+// function generateRowGroupConnection(metadata, options) {
+//   options = options || { }
+//   let name = options.name || "Doc"
+//   let s = `type ${name}GroupConnection {\n`
+//   s += `  edges [${name}!]\n`
+//   s += `  group [${name}GroupConnection]\n`
+//   s += `  totalCount: Int!\n`
+//   // s += `  distinct\n` Not supported yet
+//   // s += `  pageInfo: \n` Not supported yet
+//   s += `}\n`
+// }
 
 function generateGoogleDocTypes(metadata) {
   let s = ''
@@ -117,7 +163,7 @@ enum FieldsEnum {
 */
 function generateFieldsEnum(metadata, options) {
   options = options || { }
-  let name = `${options.name || "Doc"}FieldsEnum`
+  let name = `${options.name || "Row"}FieldsEnum`
   let s = `enum ${name} {\n`
   // s += `  _id\n`
   // s += `  _sheet\n`
@@ -140,7 +186,7 @@ input FilterInput {
 */
 function generateFilterInput(metadata, options) {
   options = options || { }
-  let name = `${options.name || "Doc"}FilterInput`
+  let name = `${options.name || "Row"}FilterInput`
   let s = `input ${name} {\n`
   // s += `  _id: StringQueryOperatorInput\n`
   // s += `  _sheet: StringQueryOperatorInput\n`
@@ -162,7 +208,7 @@ function generateGoogleDocFilterInputs(metadata) {
   let s = ''
   for (let col in metadata.schema.docs) {
     let schema = metadata.schema.docs[col]
-    s = `input ${schema.name}FilterInput {\n`
+    s = `input ${schema.name}DocFilterInput {\n`
     for (let col of schema.fields) {
       s += `  ${col.name}: ${convertToQueryOperator(col)}\n`
     } 
@@ -191,7 +237,7 @@ function convertToQueryOperator({ name, datatype, sample }) {
     case "StringList":
       return "StringArrayQueryOperatorInput"
     case "GoogleDoc":
-      return `${name}FilterInput`
+      return `${name}DocFilterInput`
   }
 }
 
@@ -203,7 +249,7 @@ input SortInput {
 */
 function generateSortInput(metadata, options) {
   options = options || { }
-  let name = options.name || "Doc"
+  let name = options.name || "Row"
   let s = `input SortInput {\n`
   s += `  fields: [${name}FieldsEnum]\n`
   s += `  order: [SortOrderEnum]\n`
@@ -211,13 +257,25 @@ function generateSortInput(metadata, options) {
   return s
 }
 
+// SWAPI 
+// https://graphql.org/swapi-graphql/
+
 function generateStaticTypeDefs() {
-  return `scalar Date
+  return `
+
+scalar Date
 scalar Datetime
 
 enum SortOrderEnum {
   ASC
   DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
 }
 
 input StringArrayQueryOperatorInput {
@@ -298,7 +356,7 @@ input DatetimeQueryOperatorInput {
 
 module.exports = {
   generate,
-  generateDoc
+  generateRow
 }
 
 /*

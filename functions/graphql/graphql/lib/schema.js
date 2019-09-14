@@ -18,6 +18,24 @@ function createResolvers(axios) {
       find: createFindResolver(axios),
       findOne: createFindOneResolver(axios)
     },
+    RowConnection: {
+      edges: async (results) => {
+        return results.map(doc => {
+          return { node: doc }
+        })
+      },
+      totalCount: async (results) => {
+        return results && results.length || 0
+      },
+      pageInfo: async () => {
+        return {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null
+        }
+      }
+    },
     Date: dateScalarType()
   }
 }
