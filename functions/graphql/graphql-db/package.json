@@ -1,0 +1,47 @@
+{
+  "name": "supersheets-api-v3-graphql-db",
+  "version": "0.0.1",
+  "description": "Lambda function that implemenents the graphql db API endpoint for supersheets.io",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "package": "package"
+  },
+  "keywords": [],
+  "author": "Daniel Jhin Yoo <danieljyoo@gmail.com> (https://github.com/danieljyoo)",
+  "license": "MIT",
+  "homepage": "https://github.com/danieljyoo/supersheets-api-v3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danieljyoo/supersheets-api-v3.git"
+  },
+  "dependencies": {
+    "@funcmaticjs/contextlogger-plugin": "0.0.2",
+    "@funcmaticjs/correlation-plugin": "0.0.2",
+    "@funcmaticjs/forcecoldstart": "0.0.1",
+    "@funcmaticjs/funcmatic": "0.0.6",
+    "@funcmaticjs/loglevel-plugin": "0.0.4",
+    "@funcmaticjs/mongodb-plugin": "0.0.4",
+    "@funcmaticjs/parameterstore-plugin": "0.0.3",
+    "@funcmaticjs/response-plugin": "^1.1.1",
+    "@funcmaticjs/stagevars-plugin": "0.0.1",
+    "apollo-server-lambda": "^2.8.1",
+    "axios": "^0.19.0",
+    "graphql": "^14.4.2"
+  },
+  "devDependencies": {
+    "@funcmaticjs/package": "0.0.2",
+    "@funcmaticjs/pretty-logs": "0.0.3",
+    "apollo-cache-inmemory": "^1.6.3",
+    "apollo-client": "^2.6.4",
+    "apollo-link-http": "^1.5.15",
+    "aws-sdk": "^2.488.0",
+    "dotenv": "^8.0.0",
+    "graphql-tag": "^2.10.1",
+    "jest": "^24.8.0",
+    "node-fetch": "^2.6.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
