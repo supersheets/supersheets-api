@@ -30,8 +30,9 @@ async function findMetadata(ctx, next) {
   return await next()
 }
 
-
 async function handler(ctx) {
+  ctx.logger.info(`EVENT ${JSON.stringify(ctx.event, null, 2)}`)
+  ctx.logger.info(`CONTEXT ${JSON.stringify(ctx.context, null, 2)}`)
   let metadata = ctx.state.metadata 
   let typeDefs = null
   let resolvers = null

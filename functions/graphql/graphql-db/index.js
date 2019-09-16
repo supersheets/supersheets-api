@@ -19,7 +19,7 @@ func.use(new ResponsePlugin())
 func.use(new MongoDBPlugin())
 
 func.error(async (ctx, next) => {
-  console.error(ctx.error)
+  ctx.logger.error(ctx.error)
 })
 
 func.request(setupSupersheetsApi)
@@ -28,7 +28,5 @@ func.request(handler)
 
 module.exports = {
   handler: coldHandler(func),
-  func,
-  setupSupersheetsApi,
-  findMetadata
+  func
 }
