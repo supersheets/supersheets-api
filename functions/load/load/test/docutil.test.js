@@ -17,12 +17,37 @@ describe('Extract', () => {
   beforeEach(async () => {
     doc = testdocs["testdoc.json"]
   }) 
+  // https://docs.google.com/document/d/1JGLoOUVoF5LA1f463b2MhwOUAKMDSnuPTuVR6yksS4E/edit
   it ('should extract keys and values from the doc', async () => {
     let values = extractData(doc)
     expect(values).toMatchObject({
-      name: "body",
-      type: "string",
-      value: expect.anything()
+      name: expect.anything(),
+      type: expect.anything(),
+      value: expect.anything(),
+      "_doc": expect.anything()
+    })
+    expect(values['name'].length).toEqual(1)
+    expect(values['name'][0]).toEqual({
+      "startIndex": 204,
+      "endIndex": 209,
+      "paragraph": {
+        "elements": [
+          {
+            "startIndex": 204,
+            "endIndex": 209,
+            "textRun": {
+              "content": "body\n",
+              "textStyle": {}
+            }
+          }
+        ],
+        "paragraphStyle": {
+          "namedStyleType": "NORMAL_TEXT",
+          "lineSpacing": 100,
+          "direction": "LEFT_TO_RIGHT",
+          "avoidWidowAndOrphan": false
+        }
+      }
     })
   })
 })

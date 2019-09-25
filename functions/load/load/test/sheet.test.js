@@ -1,6 +1,8 @@
 require('dotenv').config()
 const axios = require('axios')
 const awsParamStore = require('aws-param-store')
+const { convertToPlainText } = require('../lib/convert')
+
 
 // Supersheets Public View GoogleDoc Test
 const GOOGLESHEET_ID = '1xyhRUvGTAbbOPFPNB-05Xn6rUT60wNUXJxtGY5RWzpU'
@@ -58,10 +60,12 @@ describe('fetchData', () => {
       "id": 123,
       "writer": "danieljyoo@goalbookapp.com",
       "passage": {
-        "title": `The Gettysburg Address`,
-        "body": `Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`
+        "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+        "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
       }
     })
+    expect(convertToPlainText(docs[0].passage.title)).toEqual(`The Gettysburg Address`)
+    expect(convertToPlainText(docs[0].passage.body)).toEqual(`Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
   })
 })
 
@@ -129,14 +133,18 @@ describe('fetchDocsData', () => {
     expect(docs[0]).toMatchObject({
       "name": "hello",
       "doc1": {
-        title: `The Gettysburg Address`,
-        body: `Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`
+        "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+        "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
       },
       "doc2": {
-        title: `Song of Solomon`,
-        body: `The North Carolina Mutual life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`
+        "_docid": "1ej3jkUeP433331cMnt-LMXQ4HzC8Kk4Dw1UeL-UW8z8",
+        "_url": "https://docs.google.com/document/d/1ej3jkUeP433331cMnt-LMXQ4HzC8Kk4Dw1UeL-UW8z8/edit"
       }
     })
+    expect(convertToPlainText(docs[0]["doc1"].title)).toEqual(`The Gettysburg Address`)
+    expect(convertToPlainText(docs[0]["doc1"].body)).toEqual(`Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
+    expect(convertToPlainText(docs[0]["doc2"].title)).toEqual(`Song of Solomon`)
+    expect(convertToPlainText(docs[0]["doc2"].body)).toEqual(`The North Carolina Mutual life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`)
   })
 })
 
@@ -152,10 +160,12 @@ describe('fetchDoc', () => {
   })
   it ('should fetch a doc and extract data', async () => {
     let data = await fetchDoc(docsapi, GOOGLEDOC_URL)
-    expect(data).toEqual({
-      title: 'The Gettysburg Address',
-      body: 'Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.'
+    expect(data).toMatchObject({
+      "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+      "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
     })
+    expect(convertToPlainText(data.title)).toEqual('The Gettysburg Address')
+    expect(convertToPlainText(data.body)).toEqual(`Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
   })
   it ('should throw if given invalid googel doc url', async () => {
     let error = null 

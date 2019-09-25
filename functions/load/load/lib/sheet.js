@@ -69,7 +69,10 @@ async function fetchDoc(axios, url) {
     throw new Error(`Invalid Google Doc URL: ${url}`)
   }
   let doc = (await axios.get(`${docid}`)).data
-  return extractData(doc)
+  let data = extractData(doc)
+  data['_url'] = url
+  data['_docid'] = docid
+  return data
 }
 
 function getLoadMode(metadata) {

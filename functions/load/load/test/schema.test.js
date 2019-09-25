@@ -193,12 +193,14 @@ describe('constructDocSchemas', () => {
         {
           "name": "hello",
           "datatype": "String",
-          "sample": "world"
+          "sample": "world",
+          "reserved": false
         },
         {
           "name": "key",
           "datatype": "String",
-          "sample": "value"
+          "sample": "value",
+          "reserved": false
         }
       ]
     })
@@ -208,12 +210,14 @@ describe('constructDocSchemas', () => {
         {
           "name": "foo",
           "datatype": "Int",
-          "sample": 123
+          "sample": 123,
+          "reserved": false
         },
         {
           "name": "key",
           "datatype": "String",
-          "sample": "value"
+          "sample": "value",
+          "reserved": false
         }
       ]
     })
@@ -241,7 +245,51 @@ describe('constructDocSchemas', () => {
             "datatype": "StringList",
             "sample": [
               "world"
-            ]
+            ],
+            "reserved": false
+          }
+        ]
+      }
+    })
+  })
+  it ('should create reserved fields', async () => {
+    let cols = [ 'doc' ]
+    let docs = [ {
+        'doc': {
+          "_docid": "my-google-doc-id",
+          "_url": "https://link.to.google.doc",
+          "hello": [ "world" ]
+        }
+      }
+    ]
+    let datatypes = {
+      "doc": "GoogleDoc",
+      "doc.hello": "StringList"
+    }
+    let schema = constructDocSchemas(cols, docs, datatypes)
+    expect(schema).toEqual({
+      "doc": {
+        "name": "doc",
+        "fields": [
+          {
+            "name": "_docid",
+            "datatype": "String",
+            "sample": "my-google-doc-id",
+            "reserved": true
+          },
+          {
+            "name": "_url",
+            "datatype": "String",
+            "sample": "https://link.to.google.doc",
+            "reserved": true
+          },
+          {
+            "name": "hello",
+            "datatype": "StringList",
+            "sample": [
+              "world"
+            ],
+            "reserved": false
           }
         ]
       }
@@ -298,11 +346,13 @@ describe('constructSheetSchema', () => {
       "fields": [ {
         "name": "hello",
         "datatype": "String",
-        "sample": "world"
+        "sample": "world",
+        "reserved": false
       }, {
         "name": "key",
         "datatype": "Int",
-        "sample": 123
+        "sample": 123,
+        "reserved": false
       } ]
     } ])
 

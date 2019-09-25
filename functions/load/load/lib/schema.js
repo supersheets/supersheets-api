@@ -1,3 +1,5 @@
+const DOC_RESERVED_FIELDS = [ "_url", "_docid" ]
+
 /**
  * Metadata Level Schema Construction
  */
@@ -90,7 +92,8 @@ function constructDocSchemas(cols, docs, datatypes) {
           let c = {
             name,
             datatype: datatypes[full] || "String",
-            sample: obj[name] || null
+            sample: obj[name] || null,
+            reserved: DOC_RESERVED_FIELDS.includes(name) || false
           }
           schemas[col].fields.push(c)
           index[full] = c

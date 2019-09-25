@@ -1,6 +1,7 @@
 const { JSONPath } = require('jsonpath-plus')
 const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
-
+const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/
+const KEY_PREFIX = "$"
 
 function isGoogleDoc(url) {
   let match = docidRegex.exec(url)
@@ -23,7 +24,9 @@ function isGoogleDoc(url) {
 function extractData(doc) {
   let tables = extractTables(doc)
   let values = tables.map(cells => matchKeysAndValues(cells))
-  return Object.assign({}, ...values)
+  let data = Object.assign({}, ...values)
+  data["_doc"] = doc
+  return data
 }
 
 function extractTables(doc) {
@@ -42,16 +45,18 @@ function extractParagraphs(cell) {
   if (isFieldName(cell)) {
     return extractFieldName(cell)
   } 
-  return { 
-    text: extractTextContent(cell),
-    content: cell
-  } 
+  return cell
+  // return { 
+  //   text: extractTextContent(cell),
+  //   content: cell
+  // } 
 }
 
 function isFieldName(cell) {
   let path = "$..elements..textRun..content"
   let paragraphs = JSONPath(path, cell)
-  return paragraphs[0] && paragraphs[0].startsWith("$")
+  let name = paragraphs[0].trim()
+  return name && name.startsWith(KEY_PREFIX) && name.substring(KEY_PREFIX.length).match(GRAPHQL_NAME_REGEX) 
 }
 
 function extractFieldName(cell) {
@@ -75,7 +80,8 @@ function matchKeysAndValues(cells) {
       continue
     }
     if (key) {
-      values[key.substring(1)] = cell.text
+      //values[key.substring(1)] = cell.text
+      values[key.substring(1)] = cell
       key = null
     }
   }

@@ -1,5 +1,9 @@
 require('dotenv').config()
+const fs = require('fs')
+const path = require('path')
+const testdocs = initTestDocs([ "testdoc.json"])
 const { DateTime } = require('luxon')
+const { extractData  } = require('../lib/docutil')
 
 const {
   convertValues,
@@ -7,31 +11,70 @@ const {
 } = require('../lib/convert')
 
 describe("GoogleDoc", () => {
+  let googledoc = testdocs["testdoc.json"]
   let cols = null
   let docs = null
-  let datatypes = null
   beforeEach(async () => {
     cols = [ "GoogleDoc" ]
     docs = [ { 
-      "GoogleDoc": {
-        "hello": "world",
-        "foo": "123"
-      },
+      "GoogleDoc": extractData(googledoc),
       "_errors": [ ]
     } ]
-    datatypes = {
-      "GoogleDoc": "GoogleDoc",
-      "GoogleDoc.hello": "String",
-      "GoogleDoc.foo": "Int"
-    }
+
   })
-  it ('should convert GoogleDoc field types', async () => {
+  it ('should convert GoogleDoc standard field types', async () => {
+    let datatypes = {
+      "GoogleDoc": "GoogleDoc",
+      "GoogleDoc.name": "String",
+      "GoogleDoc.type": "String",
+      "GoogleDoc.value": "String"
+    }
+    let converted = convertValues(cols, docs, datatypes)
+    expect(converted.docs[0]).toMatchObject({
+      "GoogleDoc": {
+        "name": "body",
+        "type": "string",
+        "value": expect.anything()
+      }
+    })
+  })
+  it ('should convert GoogleDoc value field types', async () => {
+    let datatypes = {
+      "GoogleDoc": "GoogleDoc",
+      "GoogleDoc.name": "PlainText",
+      "GoogleDoc.type": "GoogleJSON",
+      "GoogleDoc.value": "Markdown"
+    }
     let converted = convertValues(cols, docs, datatypes)
     console.log(JSON.stringify(converted.docs[0], null, 2))
     expect(converted.docs[0]).toMatchObject({
       "GoogleDoc": {
-        "hello": "world",
-        "foo": 123
+        "name": "body",
+        "type": [
+          {
+            "startIndex": 218,
+            "endIndex": 225,
+            "paragraph": {
+              "elements": [
+                {
+                  "startIndex": 218,
+                  "endIndex": 225,
+                  "textRun": {
+                    "content": "string\n",
+                    "textStyle": {}
+                  }
+                }
+              ],
+              "paragraphStyle": {
+                "namedStyleType": "NORMAL_TEXT",
+                "lineSpacing": 100,
+                "direction": "LEFT_TO_RIGHT",
+                "avoidWidowAndOrphan": false
+              }
+            }
+          }
+        ],
+        "value": expect.anything()
       }
     })
   })
@@ -407,3 +450,11 @@ describe('Float', () => {
     expect(error.message).toEqual(`hello is NaN`)
   })
 })
+
+function initTestDocs(filenames) {
+  let docs = { }
+  for (let name of filenames) {
+    docs[name] = JSON.parse(fs.readFileSync(path.join(__dirname, name)))
+  }
+  return docs
+}
