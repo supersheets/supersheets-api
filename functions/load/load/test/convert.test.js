@@ -22,6 +22,20 @@ describe("GoogleDoc", () => {
     } ]
 
   })
+  it ('should convert GoogleDoc default field types', async () => {
+    let datatypes = {
+      "GoogleDoc": "GoogleDoc"
+    }
+    let converted = convertValues(cols, docs, datatypes)
+    console.log(JSON.stringify(converted.docs[0], null, 2))
+    expect(converted.docs[0]).toMatchObject({
+      "GoogleDoc": {
+        "name": "body",
+        "type": "string",
+        "value": expect.stringMatching(/^Four score and seven years ago/)
+      }
+    })
+  })
   it ('should convert GoogleDoc standard field types', async () => {
     let datatypes = {
       "GoogleDoc": "GoogleDoc",
@@ -34,7 +48,7 @@ describe("GoogleDoc", () => {
       "GoogleDoc": {
         "name": "body",
         "type": "string",
-        "value": expect.anything()
+        "value": expect.stringMatching(/^Four score and seven years ago/)
       }
     })
   })
@@ -46,7 +60,6 @@ describe("GoogleDoc", () => {
       "GoogleDoc.value": "Markdown"
     }
     let converted = convertValues(cols, docs, datatypes)
-    console.log(JSON.stringify(converted.docs[0], null, 2))
     expect(converted.docs[0]).toMatchObject({
       "GoogleDoc": {
         "name": "body",

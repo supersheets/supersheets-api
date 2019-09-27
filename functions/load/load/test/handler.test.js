@@ -220,12 +220,26 @@ describe('Load Spreadsheet with Google Docs', () => {
           {
             "name": "title",
             "datatype": "String",
+            "reserved": false,
             "sample": "The Gettysburg Address"
           },
           {
             "name": "body",
             "datatype": "String",
+            "reserved": false,
             "sample": expect.anything()
+          },
+          {
+            "datatype": "String",
+            "name": "_url",
+            "reserved": true,
+            "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+          },
+          {
+            "datatype": "String",
+            "name": "_docid",
+            "reserved": true,
+            "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0"
           }
         ]
       }

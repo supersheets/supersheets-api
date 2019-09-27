@@ -18,9 +18,9 @@ function convertValues(cols, docs, datatypes, options) {
           doc[col] = conv[col](doc[col], options)
         } catch (err) {
           doc[col] = null 
-          doc["_errors"].push({
-            col, message: err.message
-          })
+          doc["_errors"].push(JSON.stringify({
+            field: col, message: err.message
+          }))
         }
       }
       if (datatypes[col] == "GoogleDoc" && doc[col] && (typeof doc[col] == 'object')) {
@@ -30,15 +30,17 @@ function convertValues(cols, docs, datatypes, options) {
         let fields = Object.getOwnPropertyNames(obj) // allkeys(obj)
         for (let field of fields) {
           let full = `${col}.${field}`
-          if (conv[full]) {
-            try {
-              obj[field] = conv[full](obj[field], { doc: googledoc })
-            } catch (err) {
-              obj[field] = null 
-              doc["_errors"].push({
-                full, message: err.message
-              })
-            }
+          let f = conv[full]
+          if (!f) {
+            f = convertToPlainText  // default googledoc field converter
+          }
+          try {
+            obj[field] = f(obj[field], { doc: googledoc })
+          } catch (err) {
+            obj[field] = null 
+            doc["_errors"].push(JSON.stringify({
+              field: full, message: err.message
+            }))
           }
         }
       }
@@ -190,6 +192,7 @@ const convertToDatetime = (v, options) => {
     case "number": 
       return getISOStringFromExcel(v, tz)
     case "string": 
+      if (v.trim() === "") return null
       let fmt = options.fmt || 'ISO' 
       return parseDatetimeFromString(v, fmt, tz)
     default:
@@ -209,6 +212,7 @@ const convertToDate = (v, options) => {
     case "number": 
       return getISODateStringFromExcel(v, tz)
     case "string": 
+      if (v.trim() === "") return null
       let fmt = options.fmt || 'ISO' 
       return parseDateFromString(v, fmt, tz)
     default:
@@ -253,9 +257,15 @@ const convertNoop = (v) => {
 // Google Doc Converters 
 
 const convertToPlainText = (v) => {
+  if (typeof v === 'string') {
+    if (v.trim() === "") return null
+    return v
+  }
   let path = "$..elements..textRun..content"
   let lines = JSONPath(path, v)
-  return lines.join('').trim()
+  let val = lines.join('').trim()
+  if (val === "") return null
+  return val
 }
 
 const convertToGoogleJSON = (v) => {
