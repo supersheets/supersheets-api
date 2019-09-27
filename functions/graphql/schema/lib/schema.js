@@ -118,7 +118,7 @@ function generateGoogleDocTypes(metadata) {
     let schema = metadata.schema.docs[col]
     s = `type ${schema.name}Doc {\n`
     for (let field of schema.fields) {
-      s += `  ${field.name}: ${convertToGraphQLType(field)}!\n`
+      s += `  ${field.name}: ${convertToGraphQLType(field)}\n`
     } 
     s += '}\n'
   }
