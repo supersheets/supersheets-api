@@ -125,9 +125,13 @@ const DEFAULT_QUERY = `
 # return _id, _row, and _sheet for all records with _row less than 10
 query {
   find(filter: { _row: { lt: 10 } }) {
-    _id
-    _row
-    _sheet
+    edges {
+      node {
+        _id
+        _row
+        _sheet
+      }
+    }
   }
 }
 `
