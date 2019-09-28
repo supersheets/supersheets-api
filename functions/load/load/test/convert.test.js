@@ -63,7 +63,7 @@ describe("GoogleDoc", () => {
     expect(converted.docs[0]).toMatchObject({
       "GoogleDoc": {
         "name": "body",
-        "type": [
+        "type": JSON.stringify([
           {
             "startIndex": 218,
             "endIndex": 225,
@@ -86,7 +86,7 @@ describe("GoogleDoc", () => {
               }
             }
           }
-        ],
+        ]),
         "value": expect.anything()
       }
     })

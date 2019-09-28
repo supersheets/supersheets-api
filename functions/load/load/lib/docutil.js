@@ -2,6 +2,7 @@ const { JSONPath } = require('jsonpath-plus')
 const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
 const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/
 const KEY_PREFIX = "$"
+const IGNORE_PREFIX = "_"
 
 function isGoogleDoc(url) {
   let match = docidRegex.exec(url)
@@ -56,19 +57,19 @@ function isFieldName(cell) {
   let path = "$..elements..textRun..content"
   let paragraphs = JSONPath(path, cell)
   let name = paragraphs[0].trim()
-  return name && name.startsWith(KEY_PREFIX) && name.substring(KEY_PREFIX.length).match(GRAPHQL_NAME_REGEX) 
+  return isFieldNameValid(name) 
+}
+
+function isFieldNameValid(name) {
+  if (!name || !name.startsWith(KEY_PREFIX)) return false
+  let field = name.substring(KEY_PREFIX.length)
+  return field && !field.startsWith(IGNORE_PREFIX) && name.substring(KEY_PREFIX.length).match(GRAPHQL_NAME_REGEX) || false
 }
 
 function extractFieldName(cell) {
   let path = "$..elements..textRun..content"
   let paragraphs = JSONPath(path, cell)
   return paragraphs[0].trim()
-}
-
-function extractTextContent(cell) {
-  let path = "$..elements..textRun..content"
-  let lines = JSONPath(path, cell)
-  return lines.join('').trim()
 }
 
 function matchKeysAndValues(cells) {
@@ -88,7 +89,15 @@ function matchKeysAndValues(cells) {
   return values
 }
 
+// function extractTextContent(cell) {
+//   let path = "$..elements..textRun..content"
+//   let lines = JSONPath(path, cell)
+//   return lines.join('').trim()
+// }
+
 module.exports = {
   isGoogleDoc,
+  isFieldName,
+  isFieldNameValid,
   extractData
 }

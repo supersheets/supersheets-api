@@ -269,7 +269,7 @@ const convertToPlainText = (v) => {
 }
 
 const convertToGoogleJSON = (v) => {
-  return v
+  return JSON.stringify(v)
 }
 
 const convertToMarkdown = (v, { doc }) => {

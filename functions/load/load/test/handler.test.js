@@ -218,6 +218,18 @@ describe('Load Spreadsheet with Google Docs', () => {
         "name": "passage",
         "fields": [
           {
+            "datatype": "String",
+            "name": "_docid",
+            "reserved": true,
+            "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0"
+          },
+          {
+            "datatype": "String",
+            "name": "_url",
+            "reserved": true,
+            "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+          },
+          {
             "name": "title",
             "datatype": "String",
             "reserved": false,
@@ -230,16 +242,10 @@ describe('Load Spreadsheet with Google Docs', () => {
             "sample": expect.anything()
           },
           {
+            "name": "markdown",
             "datatype": "String",
-            "name": "_url",
-            "reserved": true,
-            "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
-          },
-          {
-            "datatype": "String",
-            "name": "_docid",
-            "reserved": true,
-            "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0"
+            "reserved": false,
+            "sample": expect.anything()
           }
         ]
       }
