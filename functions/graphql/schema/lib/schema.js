@@ -149,6 +149,12 @@ function convertToGraphQLType({ name, datatype, sample }) {
       return "[String]"
     case "GoogleDoc":
       return `${name}Doc`
+    case "PlainText": 
+      return 'String'
+    case "Markdown":
+      return 'String'
+    case "GoogleJSON":
+      return 'String'
   }
 }
 
@@ -238,6 +244,12 @@ function convertToQueryOperator({ name, datatype, sample }) {
       return "StringArrayQueryOperatorInput"
     case "GoogleDoc":
       return `${name}DocFilterInput`
+    case "PlainText": 
+      return 'StringQueryOperatorInput'
+    case "Markdown":
+      return 'StringQueryOperatorInput'
+    case "GoogleJSON":
+      return 'StringQueryOperatorInput'
   }
 }
 
