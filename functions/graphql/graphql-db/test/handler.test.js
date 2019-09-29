@@ -259,38 +259,69 @@ describe('find', () => {
       }
     })
   }, 30 * 1000)
+  it("should filter using regex", async () => {
+    let query = `{ 
+      find (filter: { googledoc___title: { regex: "^Song", options: "i" } }) { 
+        edges {
+          node {
+            googledoc {
+              title
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              googledoc: {
+                title: "Song of Solomon"
+              }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should sort, limit, and skip", async () => {
+    let query = `{ 
+      find (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
+        edges {
+          node {
+            letter
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    console.log("response", JSON.stringify(ctx.response, null, 2))
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ {
+            node: { 
+              letter: "D"
+            }
+          }, { 
+            node: {
+              letter: "C"
+            }
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
 })
 
-//   it ('should run a graphql find query with limit and skip', async () => {
-//     let query = `{ find (filter: { value: { gt: 65, lt: 73 } }, limit: 2, skip: 1) { letter } }`
-//     let ctx = createTestEvent(SPREADSHEETID, query)
-//     await func.invoke(ctx)
-//     expect(ctx.response.statusCode).toBe(200)
-//     let body = JSON.parse(ctx.response.body)
-//     expect(body).toEqual({
-//       data: {
-//         find: [ 
-//           { "letter": "C" },
-//           { "letter": "D" }
-//         ]
-//       }
-//     })
-//   })
-//   it ('should do a basic sort', async () => {
-//     let query = `{ find (filter: { value: { gt: 65, lt: 73 } }, limit: 2, skip: 1, sort: { fields: [ value ], order: [ DESC ] }) { letter } }`
-//     let ctx = createTestEvent(SPREADSHEETID, query)
-//     await func.invoke(ctx)
-//     expect(ctx.response.statusCode).toBe(200)
-//     let body = JSON.parse(ctx.response.body)
-//     expect(body).toEqual({
-//       data: {
-//         find: [ 
-//           { "letter": "G" },
-//           { "letter": "F" }
-//         ]
-//       }
-//     })
-//   })
 //   it ('should match on an array value', async () => {
 //     let query = `{ find (filter: { list: { in: [ "foo", "world" ] } }) { letter } }`
 //     let ctx = createTestEvent(SPREADSHEETID, query)
@@ -315,22 +346,6 @@ describe('find', () => {
 //     expect(body).toEqual({
 //       data: {
 //         find: [ { "letter": "A" } ]
-//       }
-//     })
-//   })
-//   it ('should serialize date and datetime correctly', async () => {
-//     let query = `{ find (filter: { letter: { eq: "A" } } ) { letter, date, datetime } }`
-//     let ctx = createTestEvent(SPREADSHEETID, query)
-//     await func.invoke(ctx)
-//     expect(ctx.response.statusCode).toBe(200)
-//     let body = JSON.parse(ctx.response.body)
-//     expect(body).toEqual({
-//       data: {
-//         find: [ {
-//           "letter": "A",
-//           "date": "1979-05-16",
-//           "datetime": "1979-05-16T21:01:23.000Z"
-//         } ]
 //       }
 //     })
 //   })
@@ -387,8 +402,8 @@ async function createTestMetadata(db, options) {
 
 async function createTestData(db, options) {
   let data = [ 
-    { letter: "A", value: 65, date: new Date("1979-05-16"), datetime: new Date("1979-05-16T21:01:23.000Z") },
-    { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z") },
+    { letter: "A", value: 65, date: new Date("1979-05-16"), datetime: new Date("1979-05-16T21:01:23.000Z"), googledoc: { title: "The Gettysburg Address" } },
+    { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z"), googledoc: { title: "Song of Solomon" } },
     { letter: "C", value: 66 },
     { letter: "D", value: 67 },
     { letter: "E", value: 68 }
