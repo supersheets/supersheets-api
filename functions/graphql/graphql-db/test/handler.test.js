@@ -2,38 +2,45 @@ require('dotenv').config()
 // Supersheets Public GraphQL Test
 // https://docs.google.com/spreadsheets/d/1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI/edit#gid=0
 const SPREADSHEETID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
+const fs = require('fs')
+const path = require('path')
+const { gql } = require('apollo-server-lambda')
 const { LoggerWrapper } = require('@funcmaticjs/funcmatic')
 const prettify = require('@funcmaticjs/pretty-logs')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const { findMetadata } = require('../lib/handler')
 const NOOP = async () => { }
 
+let plugin = new MongoDBPlugin()
+let client = null
+let db = null
+beforeAll(async () => {
+  client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+  db = client.db()
+  await createTestMetadata(db)
+})
+afterAll(async () => {
+  if (db) {
+    await deleteTestMetadata(db)
+  }
+  if (client) {
+    await client.close()
+  }
+  client = null
+  db = null
+})
+
+
 describe('findMetadata', () => {
-  let plugin = new MongoDBPlugin()
-  let client = null
-  let db = null
   let ctx = null
-  beforeAll(async () => {
-    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    db = client.db()
-  })
-  afterAll(async () => {
-    if (client) {
-      await client.close()
-    }
-    client = null
-    db = null
-  })
   beforeEach(async () => {
     ctx = {
       event: { pathParameters: { spreadsheetid: SPREADSHEETID } },
       state: { mongodb: db },
       logger: new LoggerWrapper({ prettify })
     }
-    await createTestMetadata(db)
   })
   afterEach(async () => {
-    await deleteTestMetadata(db)
   })
   it ('should throw if id is invalid', async () => {
     let error = null
@@ -57,31 +64,14 @@ describe('findMetadata', () => {
   }, 30 * 1000)
 })
 
-
-describe('Handler', () => {
+describe('findOne', () => {
   let func = null
-  let plugin = new MongoDBPlugin()
-  let client = null
-  let db = null
-  beforeAll(async () => {
-    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
-    db = client.db()
-  })
-  afterAll(async () => {
-    if (client) {
-      await client.close()
-    }
-    client = null
-    db = null
-  })
   beforeEach(async () => {
     func = require('../index.js').func
     func.logger.logger.prettify = prettify
-    await createTestMetadata(db)
   }, 30 * 1000)
   afterEach(async () => {
-    await func.invokeTeardown()
-    await deleteTestMetadata(db)
+    // await func.invokeTeardown()
   }, 30 * 1000)
   it ('should run a basic findOne query', async () => {
     let query = `{ 
@@ -118,6 +108,17 @@ describe('Handler', () => {
         }
       }
     })
+  }, 30 * 1000)
+})
+
+describe('find', () => {
+  let func = null
+  beforeEach(async () => {
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  }, 30 * 1000)
+  afterEach(async () => {
+    // await func.invokeTeardown()
   }, 30 * 1000)
   it ('should run a basic find all query', async () => {
     let query = `{ 
@@ -171,6 +172,89 @@ describe('Handler', () => {
           edges: [
             { node: { "letter": "B" } }
           ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should serialize date and datetime correctly", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        edges {
+          node {
+            letter
+            date
+            datetime 
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              letter: "A",
+              date: "1979-05-16",
+              datetime: "1979-05-16T21:01:23.000Z" 
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should filter query date and datetime", async () => {
+    let query = `{ 
+      find (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:23.000Z" } }) { 
+        edges {
+          node {
+            letter
+            date
+            datetime 
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              letter: "A",
+              date: "1979-05-16",
+              datetime: "1979-05-16T21:01:23.000Z" 
+            } 
+          } ]
+        }
+      }
+    })
+    // Time just barely missing by a second
+    query = `{ 
+      find (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:22.000Z" } }) { 
+        edges {
+          node {
+            letter
+            date
+            datetime 
+          }
+        } 
+      }
+    }`
+    ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ ]
         }
       }
     })
@@ -284,20 +368,13 @@ function createTestEvent(id, query, variables) {
       SUPERSHEETS_BASE_URL: process.env.SUPERSHEETS_BASE_URL,
       FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI
     },
-    state: { },
+    state: { 
+      mongodb: db,
+      typeDefs: gql(fs.readFileSync(path.join(__dirname, 'typedefs.gql')).toString('utf8'))
+    },
     logger: new LoggerWrapper({ prettify })
   }
 }
-
-// new Promise((resolve, reject) => {
-//   handler(event, context, (err, value) => {
-//     if (err) {
-//       return reject(err)
-//     } 
-//     return resolve(value)
-//   })
-// })
-
 
 async function createTestMetadata(db, options) {
   options = options || { }
@@ -310,8 +387,8 @@ async function createTestMetadata(db, options) {
 
 async function createTestData(db, options) {
   let data = [ 
-    { letter: "A", value: 65 },
-    { letter: "B", value: 65 },
+    { letter: "A", value: 65, date: new Date("1979-05-16"), datetime: new Date("1979-05-16T21:01:23.000Z") },
+    { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z") },
     { letter: "C", value: 66 },
     { letter: "D", value: 67 },
     { letter: "E", value: 68 }

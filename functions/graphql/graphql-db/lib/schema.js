@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const { gql } = require('apollo-server-lambda')
 const { GraphQLScalarType } = require('graphql') 
+const { Kind } = require('graphql/language')
 
 async function fetchSchema(axios) {
   let res = (await axios.get(`graphql/schema`)).data
@@ -28,7 +29,8 @@ function createResolvers() {
         }
       }
     },
-    Date: dateScalarType()
+    Date: dateScalarType(),
+    Datetime: datetimeScalarType()
   }
 }
 
@@ -100,11 +102,30 @@ function dateScalarType() {
       return value // value from the client
     },
     serialize(value) {
-      return value.split('T')[0]; // "2019-08-01" 
+      return value && value.toISOString().split('T')[0] || null; // "2019-08-01"  // value sent to the client
     },
     parseLiteral(ast) {
       if (ast.kind === Kind.STRING) {
-        return new Date(ast.value) // ast value is always in string format
+        return ast.value && new Date(ast.value) || null // ast value is always in string format
+      }
+      return null;
+    },
+  })
+}
+
+function datetimeScalarType() {
+  return new GraphQLScalarType({
+    name: 'Datetime',
+    description: 'Datetime custom scalar type',
+    parseValue(value) {
+      return value // value from the client
+    },
+    serialize(value) {
+      return value
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING) {
+        return ast.value && new Date(ast.value) || null // ast value is always in string format
       }
       return null;
     },
@@ -143,7 +164,9 @@ function formatOperators(filter) {
   for (let k in filter) {
     switch (typeof filter[k]) {
       case "object": 
-        if (Array.isArray(filter[k])) {
+        if (isDateObject(filter[k])) {
+          formatted[addDollarIfOperator(k)] = filter[k]
+        } else if (Array.isArray(filter[k])) {
           formatted[addDollarIfOperator(k)] = filter[k]
         } else {
           formatted[addDollarIfOperator(k)] = formatOperators(filter[k])
@@ -161,7 +184,9 @@ function formatFieldNames(filter) {
   for (let k in filter) {
     switch (typeof filter[k]) {
       case "object": 
-        if (Array.isArray(filter[k])) {
+        if (isDateObject(filter[k])) {
+          formatted[dotNotation(k)] = filter[k]
+        } else if (Array.isArray(filter[k])) {
           formatted[dotNotation(k)] = filter[k]
         } else {
           formatted[dotNotation(k)] = formatFieldNames(filter[k])
@@ -179,6 +204,10 @@ function dotNotation(k) {
     return k.replace(/___/g, '.')
   }
   return k
+}
+
+function isDateObject(obj) {
+  return obj instanceof Date
 }
 
 // { fields: [ ], order: [ 'ASC', 'DESC' ] } => [ [ field1, asc ], [ field2, desc ] ]

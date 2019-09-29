@@ -38,7 +38,7 @@ async function handler(ctx) {
   let resolvers = null
   let db = ctx.state.mongodb
   try {
-    typeDefs = await fetchSchema(ctx.state.axios)
+    typeDefs = ctx.state.typeDefs || await fetchSchema(ctx.state.axios)  // so we can inject typeDefs in unit testing
     if (!typeDefs) {
       return ctx.response.httperror(404, `Could not find schema for id=${metadata.id}`) 
     }
