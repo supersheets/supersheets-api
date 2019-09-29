@@ -45,7 +45,7 @@ function generateQuery(metadata, options) {
   let name = options.name || "Row"
   let s = `type Query {\n`
   s += `  find(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}Connection\n`
-  s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}!\n`
+  s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}\n`
   s += `}\n`
   return s
 }
