@@ -67,7 +67,13 @@ function generateRow(metadata, options) {
   // s += `  _sheet: String!\n`
   // s += `  _row: Int!\n`
   for (let col of metadata.schema.columns) {
-    s += `  ${col.name}: ${convertToGraphQLType(col)}\n`
+    let graphqltype = convertToGraphQLType(col)
+    if (["Date","Datetime"].includes(graphqltype)) {
+      console.log(col, graphqltype)
+      s += generateGraphQLDateField(col)
+    } else {
+      s += `  ${col.name}: ${graphqltype}\n`
+    }
   }
   s += '}\n'
   return s
@@ -118,10 +124,25 @@ function generateGoogleDocTypes(metadata) {
     let schema = metadata.schema.docs[col]
     s = `type ${schema.name}Doc {\n`
     for (let field of schema.fields) {
-      s += `  ${field.name}: ${convertToGraphQLType(field)}\n`
+      let graphqltype = convertToGraphQLType(field)
+      if (["Date","Datetime"].includes(graphqltype)) {
+        s += generateGraphQLDateField(field)
+      } else {
+        s += `  ${field.name}: ${graphqltype}\n`
+      }
     } 
     s += '}\n'
   }
+  return s
+}
+
+function generateGraphQLDateField(field) {
+  let s = `  ${field.name}(\n`
+  s += `    formatString: String\n`
+  s += `    fromNow: Boolean\n`
+  s += `    difference: String\n`
+  s += `    locale: String\n`
+  s += `  ): ${convertToGraphQLType(field)}\n`
   return s
 }
 

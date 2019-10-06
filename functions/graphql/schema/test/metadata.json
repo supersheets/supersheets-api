@@ -616,7 +616,7 @@
         },
         {
           "name": "datetime",
-          "datatype": "Date",
+          "datatype": "Datetime",
           "sample": "1979-05-16T00:00:00.000Z"
         },
         {

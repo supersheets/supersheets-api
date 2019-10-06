@@ -68,6 +68,7 @@ describe('Function', () => {
     })
     let body = JSON.parse(ctx.response.body)
     console.log("Schema", body.schema)
+    console.log("metadata", JSON.stringify(body.metadata.schema, null, 2))
   })
 })
 
