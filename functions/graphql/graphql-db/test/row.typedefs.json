@@ -1,0 +1,350 @@
+{
+  "kind": "ObjectTypeDefinition",
+  "name": {
+    "kind": "Name",
+    "value": "Row"
+  },
+  "interfaces": [],
+  "directives": [],
+  "fields": [
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "_id"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NonNullType",
+        "type": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "ID"
+          }
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "_sheet"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "String"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "_row"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Int"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "_errors"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "ListType",
+        "type": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "String"
+          }
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "letter"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "String"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "value"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Int"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "number"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Int"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "float"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Float"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "boolean"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Boolean"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "list"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "ListType",
+        "type": {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "String"
+          }
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "date"
+      },
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "formatString"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "fromNow"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "difference"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "locale"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": []
+        }
+      ],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Date"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "datetime"
+      },
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "formatString"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "fromNow"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "difference"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": []
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "locale"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": []
+        }
+      ],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "Datetime"
+        }
+      },
+      "directives": []
+    },
+    {
+      "kind": "FieldDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "googledoc"
+      },
+      "arguments": [],
+      "type": {
+        "kind": "NamedType",
+        "name": {
+          "kind": "Name",
+          "value": "googledocDoc"
+        }
+      },
+      "directives": []
+    }
+  ]
+}

@@ -10,6 +10,7 @@ const prettify = require('@funcmaticjs/pretty-logs')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const { findMetadata } = require('../lib/handler')
 const NOOP = async () => { }
+const SCHEMA_TEST_FILE = 'typedefs_dateformat.gql'
 
 let plugin = new MongoDBPlugin()
 let client = null
@@ -176,6 +177,79 @@ describe('find', () => {
       }
     })
   }, 30 * 1000)
+  it("should filter using regex", async () => {
+    let query = `{ 
+      find (filter: { googledoc___title: { regex: "^Song", options: "i" } }) { 
+        edges {
+          node {
+            googledoc {
+              title
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              googledoc: {
+                title: "Song of Solomon"
+              }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should sort, limit, and skip", async () => {
+    let query = `{ 
+      find (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
+        edges {
+          node {
+            letter
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    console.log("response", JSON.stringify(ctx.response, null, 2))
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ {
+            node: { 
+              letter: "D"
+            }
+          }, { 
+            node: {
+              letter: "C"
+            }
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+})
+
+
+describe('date and datetime', () => {
+  let func = null
+  beforeEach(async () => {
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  }, 30 * 1000)
+  afterEach(async () => {
+    // await func.invokeTeardown()
+  }, 30 * 1000)
   it("should serialize date and datetime correctly", async () => {
     let query = `{ 
       find (filter: { letter: { eq: "A" } }) { 
@@ -259,20 +333,22 @@ describe('find', () => {
       }
     })
   }, 30 * 1000)
-  it("should filter using regex", async () => {
+  it("should take date and datetime formatting arguments", async () => {
+    console.log("DATEFORMATS------------------------------")
     let query = `{ 
-      find (filter: { googledoc___title: { regex: "^Song", options: "i" } }) { 
+      find (filter: { letter: { eq: "A" } }) { 
         edges {
           node {
-            googledoc {
-              title
-            }
+            letter
+            date(formatString: "DDDD")
+            datetime(formatString: "DDDD ttt")
           }
         } 
       }
     }`
     let ctx = createTestEvent(SPREADSHEETID, query)
     await func.invoke(ctx)
+    console.log("DATEFORMATS END ------------------------------")
     expect(ctx.response.statusCode).toBe(200)
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
@@ -280,41 +356,10 @@ describe('find', () => {
         find: {
           edges: [ { 
             node: { 
-              googledoc: {
-                title: "Song of Solomon"
-              }
+              letter: "A",
+              date: "Wednesday, May 16, 1979",
+              datetime: "Wednesday, May 16, 1979 9:01:23 PM UTC" 
             } 
-          } ]
-        }
-      }
-    })
-  }, 30 * 1000)
-  it("should sort, limit, and skip", async () => {
-    let query = `{ 
-      find (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
-        edges {
-          node {
-            letter
-          }
-        } 
-      }
-    }`
-    let ctx = createTestEvent(SPREADSHEETID, query)
-    await func.invoke(ctx)
-    console.log("response", JSON.stringify(ctx.response, null, 2))
-    expect(ctx.response.statusCode).toBe(200)
-    let body = JSON.parse(ctx.response.body)
-    expect(body).toEqual({
-      data: {
-        find: {
-          edges: [ {
-            node: { 
-              letter: "D"
-            }
-          }, { 
-            node: {
-              letter: "C"
-            }
           } ]
         }
       }
@@ -385,7 +430,7 @@ function createTestEvent(id, query, variables) {
     },
     state: { 
       mongodb: db,
-      typeDefs: gql(fs.readFileSync(path.join(__dirname, 'typedefs.gql')).toString('utf8'))
+      typeDefs: gql(fs.readFileSync(path.join(__dirname, SCHEMA_TEST_FILE)).toString('utf8'))
     },
     logger: new LoggerWrapper({ prettify })
   }

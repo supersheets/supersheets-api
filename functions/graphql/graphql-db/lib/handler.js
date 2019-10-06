@@ -42,7 +42,7 @@ async function handler(ctx) {
     if (!typeDefs) {
       return ctx.response.httperror(404, `Could not find schema for id=${metadata.id}`) 
     }
-    resolvers = createResolvers()
+    resolvers = createResolvers({ typeDefs })
   } catch (err) {
     ctx.logger.error(err)
     return ctx.response.httperror(500, `Error fetching schema for id=${metadata.id}: ${err.message}`) 

@@ -1,8 +1,9 @@
 const path = require('path')
 const fs = require('fs')
 const { gql } = require('apollo-server-lambda')
-const { GraphQLScalarType } = require('graphql') 
+const { GraphQLScalarType, buildSchema } = require('graphql') 
 const { Kind } = require('graphql/language')
+const { DateTime } = require('luxon')
 
 async function fetchSchema(axios) {
   let res = (await axios.get(`graphql/schema`)).data
@@ -11,8 +12,8 @@ async function fetchSchema(axios) {
   return typeDefs 
 }
 
-function createResolvers() {
-  return {
+function createResolvers({ typeDefs }) {
+  let standard = {
     Query: {
       find: createFindResolver(),
       findOne: createFindOneResolver()
@@ -32,6 +33,47 @@ function createResolvers() {
     Date: dateScalarType(),
     Datetime: datetimeScalarType()
   }
+  let dateFormatResolvers = createDateFormatResolvers(typeDefs)
+  return Object.assign(standard, dateFormatResolvers)
+}
+
+function getGraphQLFieldNameAndType(field) {
+  let name = field.name.value
+  let type = field.type && field.type.name && field.type.name.value || null
+  return { name, type }
+}
+
+// typeDefs {
+//   kind: "Document",
+//   definitions: [ ... ],
+//   loc: {
+//     start: 0
+//     end: 2858
+//   }
+// }
+function createDateFormatResolvers(typeDefs) {
+  let resolvers = { }
+  let objectTypes = typeDefs.definitions.filter(def => def.kind == "ObjectTypeDefinition")
+  let objectTypesWithDateFields = objectTypes.filter(def => {
+    let types = def.fields.map(field => getGraphQLFieldNameAndType(field).type)
+    return types.includes("Date") || types.includes("Datetime") || false
+  })
+  for (let def of objectTypesWithDateFields) {
+    let fieldName = def.name.value
+    if (!resolvers[fieldName]) {
+      resolvers[fieldName] = { }
+    }
+    for (let field of def.fields) {
+      let { name, type } = getGraphQLFieldNameAndType(field)
+      console.log("name", name, "type", type)
+      if (type == "Date" || type == "Datetime") {
+        resolvers[fieldName][name] = createDateFormatResolver()
+        console.log('added date resolver', name, resolvers[fieldName][name])
+      }
+    }
+  }
+  console.log("resolvers", JSON.stringify(resolvers, null, 2))
+  return resolvers
 }
 
 function createFindResolver() {
@@ -60,6 +102,34 @@ function createRowConnectionEdgesResolver() {
   }
 }
 
+function createDateFormatResolver() {
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    let key = path.key
+    let opts = { 
+      zone: args.zone || 'utc'
+    }
+    if (args.locale) {
+      opts.locale = args.locale
+    }
+    let d = DateTime.fromISO(parent[key].toISOString(), opts)
+    if (args.formatString) {
+      value = d.toFormat(args.formatString)
+    } else if (args.fromNow) {
+      value = d.toRelative()
+    } else if (args.difference) {
+      value = d.diff(args.difference).toISO()
+    } else {
+      value = d.toISO()
+      if (returnType == "Date") {
+        value = value.split("T")[0]
+      }
+    }
+    console.log("dateformatresolver", value, parent[key], args, { key, returnType, parentType })
+    return value
+  }
+}
+
+
 function createRowConnectionTotalCountResolver() {
   return async ({ query, options }, args, context, info) => {
     let collection = context.collection
@@ -72,7 +142,9 @@ function createQuery(args) {
   let query = { }
   let options = { }
   if (args.filter) {
+    //console.log('args.filter', JSON.stringify(args.filter, null, 2))
     query = formatFieldNames(formatOperators(args.filter))
+    //console.log('query', JSON.stringify(query, null, 2))
   }
   if (args.skip) {
     options.skip = args.skip
@@ -102,7 +174,9 @@ function dateScalarType() {
       return value // value from the client
     },
     serialize(value) {
-      return value && value.toISOString().split('T')[0] || null; // "2019-08-01"  // value sent to the client
+      console.log('date serialize', JSON.stringify(value, null, 2))
+      return value
+      // return value && value.toISOString().split('T')[0] || null; // "2019-08-01"  // value sent to the client
     },
     parseLiteral(ast) {
       if (ast.kind === Kind.STRING) {

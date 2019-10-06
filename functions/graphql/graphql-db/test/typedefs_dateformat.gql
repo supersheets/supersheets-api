@@ -1,0 +1,184 @@
+schema {
+  query: Query
+}
+
+type Query {
+  find(filter: RowFilterInput, limit: Int, skip: Int, sort: SortInput): RowConnection
+  findOne(filter: RowFilterInput, limit: Int, skip: Int, sort: SortInput): Row
+}
+
+type Row {
+  _id: ID!
+  _sheet: String
+  _row: Int
+  _errors: [String]
+  letter: String
+  value: Int
+  number: Int
+  float: Float
+  boolean: Boolean
+  list: [String]
+  date(
+    formatString: String
+    fromNow: Boolean
+    difference: String
+    locale: String
+  ): Date
+  datetime(
+    formatString: String
+    fromNow: Boolean
+    difference: String
+    locale: String
+  ): Datetime
+  googledoc: googledocDoc
+}
+
+type RowConnection {
+  edges: [RowEdge!]
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+
+type RowEdge {
+  node: Row!
+}
+
+type googledocDoc {
+  title: String
+  body: String
+}
+
+enum RowFieldsEnum {
+  _id
+  _sheet
+  _row
+  _errors
+  letter
+  value
+  number
+  float
+  boolean
+  list
+  date
+  datetime
+  googledoc
+}
+
+input RowFilterInput {
+  _id: StringQueryOperatorInput
+  _sheet: StringQueryOperatorInput
+  _row: IntQueryOperatorInput
+  _errors: StringArrayQueryOperatorInput
+  letter: StringQueryOperatorInput
+  value: IntQueryOperatorInput
+  number: IntQueryOperatorInput
+  float: FloatQueryOperatorInput
+  boolean: BooleanQueryOperatorInput 
+  list: StringArrayQueryOperatorInput
+  date: DateQueryOperatorInput
+  datetime: DateQueryOperatorInput
+  googledoc: googledocDocFilterInput
+  googledoc___title: StringQueryOperatorInput
+  googledoc___body: StringQueryOperatorInput
+}
+
+input googledocDocFilterInput {
+  title: StringQueryOperatorInput
+  body: StringQueryOperatorInput
+}
+
+input SortInput {
+  fields: [RowFieldsEnum]
+  order: [SortOrderEnum]
+}
+
+
+
+scalar Date
+scalar Datetime
+
+enum SortOrderEnum {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+input StringArrayQueryOperatorInput {
+  eq: String
+  ne: String
+  in: [String]
+  nin: [String]
+  all: [String]
+  elemMatch: [StringQueryOperatorInput]
+  size: Int
+}
+
+input StringQueryOperatorInput {
+  eq: String
+  gt: String
+  gte: String
+  lt: String
+  lte: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+  options: String
+}
+
+input IntQueryOperatorInput {
+  eq: Int
+  gt: Int
+  gte: Int
+  in: [Int]
+  lt: Int
+  lte: Int
+  ne: Int
+  nin: [Int]
+}
+
+input FloatQueryOperatorInput {
+  eq: Float
+  gt: Float
+  gte: Float
+  in: [Float]
+  lt: Float
+  lte: Float
+  ne: Float
+  nin: [Float]
+}
+
+input BooleanQueryOperatorInput {
+  eq: Boolean
+  ne: Boolean
+  in: [ Boolean ]
+  nin: [ Boolean ]
+}
+
+input DateQueryOperatorInput {
+  eq: Date
+  no: Date
+  gt: Date
+  gte: Date
+  lt: Date
+  lte: Date
+  in: [ Date ]
+  nin: [ Date ]
+}
+
+input DatetimeQueryOperatorInput {
+  eq: Datetime
+  no: Datetime
+  gt: Datetime
+  gte: Datetime
+  lt: Datetime
+  lte: Datetime
+  in: [ Datetime ]
+  nin: [ Datetime ]
+}
