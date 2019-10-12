@@ -36,13 +36,16 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "@funcmaticjs/package": "0.0.2",
+    "@funcmaticjs/package": "0.0.3",
     "@funcmaticjs/pretty-logs": "0.0.3",
-    "aws-sdk": "^2.535.0",
+    "aws-sdk": "^2.543.0",
     "dotenv": "^8.1.0",
     "jest": "^24.9.0"
   },
   "jest": {
     "testEnvironment": "node"
+  },
+  "@funcmaticjs/package": {
+    "exclude": [ "test", "scripts", ".env", "docs" ]
   }
 }
