@@ -2,9 +2,13 @@ require('dotenv').config()
 // Supersheets Public GraphQL Test
 // https://docs.google.com/spreadsheets/d/1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI/edit#gid=0
 const SPREADSHEETID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
+const fs = require('fs')
+const path = require('path')
+const { gql } = require('apollo-server-lambda')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const { createResolvers } = require('../lib/schema')
 const NOOP = async () => { }
+const SCHEMA_TEST_FILE = 'typedefs_dateformat.gql'
 
 describe('createResolvers', () => {
   let plugin = new MongoDBPlugin()
@@ -28,7 +32,8 @@ describe('createResolvers', () => {
     //await deleteTestMetadata(db)
   })
   it ('should create resolver map', async () => {
-    let map = createResolvers(db, SPREADSHEETID)
+    let typeDefs = gql(fs.readFileSync(path.join(__dirname, SCHEMA_TEST_FILE)).toString('utf8'))
+    let map = createResolvers({ typeDefs })
     expect(map).toMatchObject({
       'Query': {
         find: expect.anything(),

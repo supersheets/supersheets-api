@@ -207,6 +207,36 @@ describe('find', () => {
       }
     })
   }, 30 * 1000)
+    it ('should match on an in (array) query', async () => {
+    let query =  `{ 
+      find (filter: { letter: { in: [ "C", "D" ] } }) { 
+        edges {
+          node {
+            letter
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ {
+            node: {
+              "letter": "C"
+            },
+          }, {
+            node: {
+              "letter": "D"
+            }
+          } ]
+        }
+      }
+    })
+  })
   it("should sort, limit, and skip", async () => {
     let query = `{ 
       find (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
@@ -453,52 +483,6 @@ describe('date and datetime', () => {
     })
   }, 30 * 1000)
 })
-
-//   it ('should match on an array value', async () => {
-//     let query = `{ find (filter: { list: { in: [ "foo", "world" ] } }) { letter } }`
-//     let ctx = createTestEvent(SPREADSHEETID, query)
-//     await func.invoke(ctx)
-//     expect(ctx.response.statusCode).toBe(200)
-//     let body = JSON.parse(ctx.response.body)
-//     expect(body).toEqual({
-//       data: {
-//         find: [ 
-//           { "letter": "A" },
-//           { "letter": "B" }
-//         ]
-//       }
-//     })
-//   })
-//   it ('should run a graphql findOne query for a specific schema', async () => {
-//     let query = `{ find (filter: { letter: { eq: "A" } } ) { letter } }`
-//     let ctx = createTestEvent(SPREADSHEETID, query)
-//     await func.invoke(ctx)
-//     expect(ctx.response.statusCode).toBe(200)
-//     let body = JSON.parse(ctx.response.body)
-//     expect(body).toEqual({
-//       data: {
-//         find: [ { "letter": "A" } ]
-//       }
-//     })
-//   })
-//   it ('should filter on a nested parameter', async () => {
-//     let query = `{ find (filter: { googledoc___title: { eq: "Song of Solomon" } } ) { letter, googledoc { title } } }`
-//     let ctx = createTestEvent(SPREADSHEETID, query)
-//     await func.invoke(ctx)
-//     expect(ctx.response.statusCode).toBe(200)
-//     let body = JSON.parse(ctx.response.body)
-//     expect(body).toEqual({
-//       data: {
-//         find: [ {
-//           "letter": "B",
-//           "googledoc": {
-//             "title": "Song of Solomon"
-//           }
-//         } ]
-//       }
-//     })
-//   })
-// })
 
 function createTestEvent(id, query, variables) {
   variables = variables || null;
