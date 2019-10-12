@@ -23,12 +23,14 @@ type Row {
     fromNow: Boolean
     difference: String
     locale: String
+    zone: String
   ): Date
   datetime(
     formatString: String
     fromNow: Boolean
     difference: String
     locale: String
+    zone: String
   ): Datetime
   googledoc: googledocDoc
 }

@@ -219,7 +219,6 @@ describe('find', () => {
     }`
     let ctx = createTestEvent(SPREADSHEETID, query)
     await func.invoke(ctx)
-    console.log("response", JSON.stringify(ctx.response, null, 2))
     expect(ctx.response.statusCode).toBe(200)
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
@@ -334,7 +333,6 @@ describe('date and datetime', () => {
     })
   }, 30 * 1000)
   it("should take date and datetime formatting arguments", async () => {
-    console.log("DATEFORMATS------------------------------")
     let query = `{ 
       find (filter: { letter: { eq: "A" } }) { 
         edges {
@@ -348,7 +346,6 @@ describe('date and datetime', () => {
     }`
     let ctx = createTestEvent(SPREADSHEETID, query)
     await func.invoke(ctx)
-    console.log("DATEFORMATS END ------------------------------")
     expect(ctx.response.statusCode).toBe(200)
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
@@ -359,6 +356,96 @@ describe('date and datetime', () => {
               letter: "A",
               date: "Wednesday, May 16, 1979",
               datetime: "Wednesday, May 16, 1979 9:01:23 PM UTC" 
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it ("should not throw if date and datime are null", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "E" } }) { 
+        edges {
+          node {
+            letter
+            date(formatString: "DDDD")
+            datetime(formatString: "DDDD ttt")
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              letter: "E",
+              date: null,
+              datetime: null
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it ("should accept timezone", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        edges {
+          node {
+            letter
+            date(formatString: "DDDD ttt", zone: "America/Los_Angeles")
+            datetime(formatString: "DDDD ttt", zone: "America/Los_Angeles")
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              letter: "A",
+              date: "Wednesday, May 16, 1979 12:00:00 AM PDT",
+              datetime: "Wednesday, May 16, 1979 2:01:23 PM PDT"
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it ("should noop on locale (to be supported later)", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        edges {
+          node {
+            letter
+            date(locale: "fr")
+            datetime(locale: "fr")
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          edges: [ { 
+            node: { 
+              letter: "A",
+              date: "1979-05-16",
+              datetime: "1979-05-16T21:01:23.000Z"
             } 
           } ]
         }

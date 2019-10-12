@@ -65,14 +65,13 @@ function createDateFormatResolvers(typeDefs) {
     }
     for (let field of def.fields) {
       let { name, type } = getGraphQLFieldNameAndType(field)
-      console.log("name", name, "type", type)
-      if (type == "Date" || type == "Datetime") {
+      if (type == "Date") {
         resolvers[fieldName][name] = createDateFormatResolver()
-        console.log('added date resolver', name, resolvers[fieldName][name])
+      } else if (type == "Datetime") {
+        resolvers[fieldName][name] = createDatetimeFormatResolver()
       }
     }
   }
-  console.log("resolvers", JSON.stringify(resolvers, null, 2))
   return resolvers
 }
 
@@ -102,30 +101,59 @@ function createRowConnectionEdgesResolver() {
   }
 }
 
+function createDatetimeFormatResolver() {
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    let key = path.key
+    let jsdate = parent[key]
+    if (!jsdate) return null
+
+    let { formatString, fromNow, locale, zone, difference } = args
+    let opts = { 
+      zone: (zone || 'utc'),
+      locale: locale || 'en-US'  // noop for now: luxon locale support seems to need additional setup
+    }
+    
+    let d = DateTime.fromISO(jsdate.toISOString(), opts)
+
+    if (formatString) {
+      return d.toFormat(formatString)
+    } else if (fromNow) {
+      return d.toRelative()
+    } else if (difference) {
+      return d.diff(args.difference).toISO()
+    } else {
+      return d.toISO()
+    }
+  }
+}
+
 function createDateFormatResolver() {
   return async (parent, args, context, { returnType, parentType, path }) => {
     let key = path.key
+    let jsdate = parent[key]
+    if (!jsdate) return null
+
+    let { formatString, fromNow, locale, zone, difference } = args
     let opts = { 
-      zone: args.zone || 'utc'
+      zone: zone || 'utc',
+      setZone: true,
+      locale: locale || 'en-US'  // noop for now: luxon locale support seems to need additional setup
     }
-    if (args.locale) {
-      opts.locale = args.locale
-    }
-    let d = DateTime.fromISO(parent[key].toISOString(), opts)
-    if (args.formatString) {
-      value = d.toFormat(args.formatString)
-    } else if (args.fromNow) {
-      value = d.toRelative()
-    } else if (args.difference) {
-      value = d.diff(args.difference).toISO()
+
+    // very hacky: we strip the 'Z' so that Luxon 
+    // won't set to UTC and use opts.zone instead 
+    // and opts.setZone so that it doesn't convert
+    let d = DateTime.fromISO(jsdate.toISOString().replace("Z", ""), opts)
+
+    if (formatString) {
+      return d.toFormat(formatString)
+    } else if (fromNow) {
+      return d.toRelative()
+    } else if (difference) {
+      return d.diff(difference).toISO()
     } else {
-      value = d.toISO()
-      if (returnType == "Date") {
-        value = value.split("T")[0]
-      }
+      return d.toISO().split("T")[0]
     }
-    console.log("dateformatresolver", value, parent[key], args, { key, returnType, parentType })
-    return value
   }
 }
 
@@ -174,9 +202,7 @@ function dateScalarType() {
       return value // value from the client
     },
     serialize(value) {
-      console.log('date serialize', JSON.stringify(value, null, 2))
       return value
-      // return value && value.toISOString().split('T')[0] || null; // "2019-08-01"  // value sent to the client
     },
     parseLiteral(ast) {
       if (ast.kind === Kind.STRING) {
