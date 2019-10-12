@@ -142,6 +142,7 @@ function generateGraphQLDateField(field) {
   s += `    fromNow: Boolean\n`
   s += `    difference: String\n`
   s += `    locale: String\n`
+  s += `    zone: String\n`
   s += `  ): ${convertToGraphQLType(field)}\n`
   return s
 }
