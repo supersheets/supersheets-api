@@ -9,6 +9,8 @@ const { findStatus } = require('../lib/status')
 
 // Supersheets Public View GoogleDoc Test
 const GOOGLESPREADSHEET_DOCS_ID = "1xyhRUvGTAbbOPFPNB-05Xn6rUT60wNUXJxtGY5RWzpU"
+// Supersheets Public View Test
+const GOOGLESHEET_PUBLIC_VIEW_ID = '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I'
 
 describe('Load', () => {
   let token = null
@@ -22,6 +24,7 @@ describe('Load', () => {
   })
   afterAll(async () => {
     await deletestatus(db, GOOGLESPREADSHEET_DOCS_ID)
+    await deletestatus(db, GOOGLESHEET_PUBLIC_VIEW_ID)
     if (client) {
       await client.close()
       client = null
@@ -34,6 +37,26 @@ describe('Load', () => {
     await loadHandler(ctx)
     expect(ctx.state.metadata).toMatchObject({
       id: GOOGLESPREADSHEET_DOCS_ID
+    })
+  })
+  it ('should load a spreadsheet that has empty sheet', async () => {
+    let ctx = createCtx({ mongodb: db, token })
+    ctx.state.metadata.id = GOOGLESHEET_PUBLIC_VIEW_ID
+    ctx.state.metadata.sheets = [ { title: "Empty" } ]
+    ctx.state.mongodb = db
+    await loadHandler(ctx)
+    expect(ctx.state.metadata).toMatchObject({
+      id: GOOGLESHEET_PUBLIC_VIEW_ID
+    })
+  })
+  it ('should load a spreadsheet that has nodata sheet', async () => {
+    let ctx = createCtx({ mongodb: db, token })
+    ctx.state.metadata.id = GOOGLESHEET_PUBLIC_VIEW_ID
+    ctx.state.metadata.sheets = [ { title: "NoData" } ]
+    ctx.state.mongodb = db
+    await loadHandler(ctx)
+    expect(ctx.state.metadata).toMatchObject({
+      id: GOOGLESHEET_PUBLIC_VIEW_ID
     })
   })
 })

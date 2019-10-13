@@ -4,6 +4,8 @@ const awsParamStore = require('aws-param-store')
 const { convertToPlainText } = require('../lib/convert')
 
 
+// Supersheets Public View Test
+const GOOGLESHEET_PUBLIC_VIEW_ID = '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I'
 // Supersheets Public View GoogleDoc Test
 const GOOGLESHEET_ID = '1xyhRUvGTAbbOPFPNB-05Xn6rUT60wNUXJxtGY5RWzpU'
 // Supersheets Public Doc Test
@@ -39,6 +41,99 @@ describe('loadSheet', () => {
       nrows: 3
     })
     expect(docs.length).toEqual(3)
+  })
+  it ('should load a totally empty sheet', async () => {
+    ctx.state.metadata = createTestMetadata()
+    ctx.state.metadata.id = GOOGLESHEET_PUBLIC_VIEW_ID
+    let { sheet, docs } = await loadSheet(ctx, { title: "Empty" })
+    expect(sheet).toEqual({
+      "title": "Empty",
+      "cols": [],
+      "schema": {
+        "columns": [
+          {
+            "name": "_id",
+            "datatype": "String",
+            "sample": "5d6b2f2f0c6d3f00074ad599",
+            "reserved": true
+          },
+          {
+            "name": "_sheet",
+            "datatype": "String",
+            "sample": "Sheet1",
+            "reserved": true
+          },
+          {
+            "name": "_row",
+            "datatype": "Int",
+            "sample": 1,
+            "reserved": true
+          },
+          {
+            "name": "_errors",
+            "datatype": "StringList",
+            "sample": [],
+            "reserved": true
+          }
+        ],
+        "docs": {}
+      },
+      "ncols": 0,
+      "nrows": 0
+    })
+    expect(docs).toEqual([])
+  })
+  it ('should load a sheet with columns but no data', async () => {
+    ctx.state.metadata = createTestMetadata()
+    ctx.state.metadata.id = GOOGLESHEET_PUBLIC_VIEW_ID
+    let { sheet, docs } = await loadSheet(ctx, { title: "NoData" })
+    expect(sheet).toMatchObject({
+      title: "NoData",
+      cols: [ "Col1", "Col2" ],
+      schema: {
+        columns: [
+          {
+            "name": "_id",
+            "datatype": "String",
+            "sample": "5d6b2f2f0c6d3f00074ad599",
+            "reserved": true
+          },
+          {
+            "name": "_sheet",
+            "datatype": "String",
+            "sample": "Sheet1",
+            "reserved": true
+          },
+          {
+            "name": "_row",
+            "datatype": "Int",
+            "sample": 1,
+            "reserved": true
+          },
+          {
+            "name": "_errors",
+            "datatype": "StringList",
+            "sample": [],
+            "reserved": true
+          },
+          {
+            "name": "Col1",
+            "datatype": "String",
+            "sample": null
+          },
+          {
+            "name": "Col2",
+            "datatype": "String",
+            "sample": null
+          }
+        ],
+        docs: { },
+        excluded: [ ]
+      },
+      ncols: 2,
+      nrows: 0
+    })
+    expect(docs).toEqual([])
   })
 })
 
@@ -189,6 +284,32 @@ describe('fetchDoc', () => {
   })
 })
 
+
+describe('fetch bad sheets', () => {
+  let token = null
+  let sheetsapi = null
+  beforeAll(async () => {
+    token = (await awsParamStore.getParameter(process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH)).Value
+    sheetsapi = axios.create({
+      baseURL: process.env.GOOGLESHEETS_BASE_URL
+    })
+    sheetsapi.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  })
+  it ('should fetch a totally empty sheet', async () => {
+    let sheet = { title: "Empty" }
+    let options = { mode: "FORMATTED" }
+    let { cols, docs } = await fetchSheetData(sheetsapi, GOOGLESHEET_PUBLIC_VIEW_ID, sheet, options)
+    expect(cols).toEqual([])
+    expect(docs).toEqual([])
+  }, 30 * 1000)
+  it ('should fetch a sheet with columns but no data', async () => {
+    let sheet = { title: "NoData" }
+    let options = { mode: "FORMATTED" }
+    let { cols, docs } = await fetchSheetData(sheetsapi, GOOGLESHEET_PUBLIC_VIEW_ID, sheet, options)
+    expect(cols).toEqual([ 'Col1', 'Col2' ])
+    expect(docs).toEqual([])
+  })
+})
 
 function createTestCtx({ token }) {
   let sheetsapi = axios.create({

@@ -29,6 +29,7 @@ async function loadHandler(ctx) {
 }
 
 async function insertDocs(db, collection, docs) {
+  if (!docs || docs.length == 0) return
   return await db.collection(collection).insertMany(docs, { w: 1 })
 }
 

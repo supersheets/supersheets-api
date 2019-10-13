@@ -8,6 +8,10 @@ function isValidColumnName(name) {
 function constructDocs(sheetDoc, data) {
   var cols = [ ]
   var docs = [ ]
+  if (!data) {
+    // totally empty sheet
+    return { cols, docs }
+  }
   if (data.length > 0) {
     cols = data[0]
   }
