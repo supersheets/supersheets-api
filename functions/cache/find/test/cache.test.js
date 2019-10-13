@@ -47,7 +47,7 @@ describe('Valid Access', () => {
     expect(body).toMatchObject({
       query: { "Col1": "v1" },
       one: false,
-      count: 1
+      count: 2
     })
     expect(body.result[0]).toMatchObject({
       "Col1":"v1"

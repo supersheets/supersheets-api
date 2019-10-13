@@ -18,11 +18,11 @@
   "dependencies": {
     "@funcmaticjs/bodyparser-plugin": "~0.0.1",
     "@funcmaticjs/contextlogger-plugin": "0.0.2",
-    "@funcmaticjs/correlation-plugin": "~0.0.2",
+    "@funcmaticjs/correlation-plugin": "0.0.4",
     "@funcmaticjs/event-plugin": "0.0.2",
     "@funcmaticjs/forcecoldstart": "0.0.1",
-    "@funcmaticjs/funcmatic": "0.0.6",
-    "@funcmaticjs/loglevel-plugin": "~0.0.4",
+    "@funcmaticjs/funcmatic": "0.0.8",
+    "@funcmaticjs/loglevel-plugin": "0.0.5",
     "@funcmaticjs/parameterstore-plugin": "0.0.2",
     "@funcmaticjs/redis-objectcache": "0.0.1",
     "@funcmaticjs/redis-plugin": "0.0.1",
@@ -32,11 +32,11 @@
     "node-gzip": "^1.1.2"
   },
   "devDependencies": {
-    "@funcmaticjs/package": "0.0.2",
+    "@funcmaticjs/package": "0.0.3",
     "@funcmaticjs/pretty-logs": "0.0.3",
-    "aws-sdk": "^2.493.0",
-    "dotenv": "^8.0.0",
-    "jest": "^24.8.0"
+    "aws-sdk": "^2.548.0",
+    "dotenv": "^8.1.0",
+    "jest": "^24.9.0"
   },
   "jest": {
     "testEnvironment": "node"
