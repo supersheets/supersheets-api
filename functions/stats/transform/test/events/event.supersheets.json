@@ -1,0 +1,12 @@
+{
+  "invocationId": "a1c704a7-4799-471c-af5d-dca5dc1dde0f",
+  "deliveryStreamArn": "arn:aws:firehose:us-west-2:233748856986:deliverystream/supersheets-stats-stream",
+  "region": "us-west-2",
+  "records": [
+      {
+          "recordId": "49600040360416080619090264506781604020990689323830476802000000",
+          "approximateArrivalTimestamp": 1570930940572,
+          "data": "H4sIAAAAAAAAAJVSy27bMBD8F6LHqCZFkSIF9OA28iNOk/pRt0gUBLRI20z0ikg7dQL/eynZBppe2pwIze7Ozs7oFeTKGLFSs12lQATOu7Pu/dd4Ou32Y3AGyudC1Q72MQ4DxgjljDo4K1f9utxUrtIRz6aTiXwhRcdsKlWbtVLWeKLS3hZ7q1pU66fMS0W6VofJqa2VyBtSiHgHwQ7CndsPl91ZPJ3dBT5OJUQSCR4GglOOEYP+Ai445kRi5ijMZmHSWldWl0VPZ9atBNEtmFphwV27Id6qwjbgK9DSLcIEYp9jSBHkiGIGGQ6CgFJCOKWIQogI5pgh7GO3PwwZQcgnYXOp1c4fK3J3KiIhdCROSAjZ2cm34x0egh7CM4iiwI8Q/+habhKLaEiE8JGH0CL1AsqVx5jinuDOLiKkJBQndnjVu07sawJMnSYgSkDX7Iq0tynS5sSotW4gCpmpOgFnCcj0UqW7NFNtc62eNk5iW1keZ65Efij+K5E3U3PX6p528JhHW9fFtnxUcrwRbrNuRLiG83jeFtMyk86g2gmIbL1RDnJ/xOQgaijb3v+yoSHLVV7Wu0udazssvn52wwT5Dv/lpWVdq0w0Mj39TtYmw+RtfmFjo9qqzOEYnj7ui5NvuliWB0Vm1QLTWfdgxtG2qImrcj+ybN09SVp/ySdypX50i29x/DLy+oORvDi/epjcyPX3gRiNRxf+8Ge4nM2HLduj2v2dU9Q+0XuooqUu5CFKrbKDFA7H2SUzD3P7OOn3Bg/yOr4M6XQ8IuZT27rWTWRLkZkmM/unQYxg5DDnd2VUQ4dQSB1g9EtzOmFov08KsL/b/wbISD1gPwQAAA=="
+      }
+  ]
+}

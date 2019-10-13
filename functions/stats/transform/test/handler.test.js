@@ -2,10 +2,9 @@ require('dotenv').config()
 
 const path = require('path')
 const fs = require('fs')
-const { gzip } = require('node-gzip')
-let { handler } = require('../index')
+let { handler } = require('../lib/handler')
 
-describe('Handler', () => {
+describe('Generic Data', () => {
   it ('should return all records with no reingestion', async () => {
     let event = await createTestEvent()
     let result = await handler(event, { })
@@ -34,11 +33,12 @@ describe('Handler', () => {
     })
   })
   it ('should return all records with 1 batch reingestion', async () => {
-    process.env['MAX_LAMBDA_SIZE'] = "500"
-    process.env['MAX_FIREHOSE_SIZE'] = "4000000"
-    process.env['MAX_FIREHOSE_RECORDS'] = "500"
+    let options = { }
+    options['MAX_LAMBDA_SIZE'] = 500
+    options['MAX_FIREHOSE_SIZE'] = 4000000
+    options['MAX_FIREHOSE_RECORDS'] = 500
     let event = await createTestEvent()
-    let result = await handler(event, { })
+    let result = await handler(event, { }, options)
     expect(result.records.map(r => r.result)).toEqual([
       "Dropped",
       "Ok",
@@ -47,11 +47,12 @@ describe('Handler', () => {
     ])
   })
   it ('should return all records with 2 batches of reingestion', async () => {
-    process.env['MAX_LAMBDA_SIZE'] = "500"
-    process.env['MAX_FIREHOSE_SIZE'] = "4000000"
-    process.env['MAX_FIREHOSE_RECORDS'] = "1"
+    let options = { }
+    options['MAX_LAMBDA_SIZE'] = 500
+    options['MAX_FIREHOSE_SIZE'] = 4000000
+    options['MAX_FIREHOSE_RECORDS'] = 1
     let event = await createTestEvent()
-    let result = await handler(event, { })
+    let result = await handler(event, { }, options)
     expect(result.records.map(r => r.result)).toEqual([
       "Dropped",
       "Ok",

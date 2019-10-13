@@ -1,0 +1,5 @@
+{
+  "id": "35032930610916380834446655966160015393813234237785112576",
+  "timestamp": 1570930939708,
+  "message": "2019-10-13T01:42:19.708Z\t1675aa21-11bc-469e-88e9-a9bda5add563\tINFO\t{\"src\":\"AsyncFunction:cacheHandler\",\"lifecycle\":\"request\",\"functionName\":\"supersheets-api-v3-graphql-cache\",\"functionVersion\":\"$LATEST\",\"invokedQualifier\":\"DEV\",\"coldstart\":true,\"awsRequestId\":\"1675aa21-11bc-469e-88e9-a9bda5add563\",\"memoryLimitInMB\":512,\"x-correlation-id\":\"1675aa21-11bc-469e-88e9-a9bda5add563\",\"time\":1570930939707,\"level\":30,\"level_name\":\"info\",\"msg\":\"STAT\",\"cache\":{\"spreadsheetid\":\"1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI\",\"key\":\"supersheets:sheet:1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI:find\",\"field\":\"90QlL8sjVtkRGFHjdOEL76SQK5s=\",\"hit\":false,\"t\":1570930938531,\"elapsed\":1176,\"size\":581}}\n"
+}

@@ -1,47 +1,16 @@
 const AWS = require('aws-sdk')
-const eventlib = require('./lib/event')
-const { 
-  getPutRecordBatch, 
-  processForReingestion, 
-  batchReingestionRecords, 
-  reingestRecords } = require('./lib/firehose')
-
-const MAX_LAMBDA_SIZE = 6000000    // ~6MB
-const MAX_FIREHOSE_SIZE = 4000000  // ~4MB
-const MAX_FIREHOSE_RECORDS = 500   
+const { transform } = require('./lib/transform')
+const firehose = require('./lib/handler')
 
 async function handler(event, context) {
-  const streamARN = event.deliveryStreamArn
-  const region = streamARN.split(':')[3]
-  const streamName = streamARN.split('/')[1]
-
-  const firehose = new AWS.Firehose({ region })
-  const putRecordBatch = getPutRecordBatch(firehose)
-
-  // Service limits
-  // We let these be specified in env variables for testing
-  const limit_lambda_size = process.env.MAX_LAMBDA_SIZE && parseInt(process.env.MAX_LAMBDA_SIZE) || MAX_LAMBDA_SIZE
-  const limit_firehose_n = process.env.MAX_LAMBDA_SIZE && parseInt(process.env.MAX_FIREHOSE_RECORDS) || MAX_FIREHOSE_RECORDS
-  const limit_firehose_size = process.env.MAX_LAMBDA_SIZE && parseInt(process.env.MAX_FIREHOSE_SIZE) || MAX_FIREHOSE_SIZE
-  console.debug(`limit_lambda_size=${limit_lambda_size},limit_firehose_n=${limit_firehose_n}`,`limit_firehose_size=${limit_firehose_size}`)
-
-  let processed = eventlib.process(event)
-  let { records, reingest } = processForReingestion(processed, { limit: limit_lambda_size })
-  if (reingest.length > 0) {
-    console.warn(`Need to reingest ${reingest.length} records`)
-    let batches = batchReingestionRecords(reingest, { 
-      limit_n: limit_firehose_n, 
-      limit_size: limit_firehose_size 
-    })
-    console.log(`Reingesting ${batches.length} batches`)
-    let nbatch = 1
-    for (let batch of batches) {
-      console.log(`Reingesting batch ${nbatch} (${batch.length} records)`)
-      await reingestRecords(putRecordBatch, streamName, batch, { })
-      nbatch += 1
-    }
+  console.log('EVENT', JSON.stringify(event, null, 2))
+  let options = { 
+    transform,
+    MAX_LAMBDA_SIZE: process.env.MAX_LAMBDA_SIZE && parseInt(process.env.MAX_LAMBDA_SIZE) || null,
+    MAX_FIREHOSE_RECORDS: process.env.MAX_FIREHOSE_RECORDS && parseInt(process.env.MAX_FIREHOSE_RECORDS) || null,
+    MAX_FIREHOSE_SIZE: process.env.MAX_FIREHOSE_SIZE && parseInt(process.env.MAX_FIREHOSE_SIZE) || null
   }
-  return { records } 
+  return await firehose.handler(event, context, options) 
 }
 
 module.exports = {

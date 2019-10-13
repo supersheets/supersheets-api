@@ -1,8 +1,9 @@
 const zlib = require('zlib')
 
-function process(event) {
+function process(event, options) {
+  options = options || { }
   let records = decompressRecords(event)
-  return encodeData(processRecords(records))
+  return encodeData(processRecords(records, options))
 }
 
 function decompressRecords(event) {
@@ -13,11 +14,13 @@ function decompressRecords(event) {
   })
 }
 
-function processRecords(records) {
-  return records.map(r => processRecord(r))
+function processRecords(records, options) {
+  return records.map(r => processRecord(r, options))
 }
 
-function processRecord(record) {
+function processRecord(record, options) {
+  options = options || { }
+  let transform = options.transform || defaultTransform
   switch(record.data.messageType) {
     case "CONTROL_MESSAGE":
       return {
@@ -28,7 +31,7 @@ function processRecord(record) {
       return {
         recordId: record.recordId,
         result: 'Ok',
-        data: record.data.logEvents.map(transform).reduce((a, v) => a + v, '')
+        data: record.data.logEvents.map(transform).filter(r => r).join('\n').concat('\n')
       }
     default:
       return {
@@ -60,8 +63,8 @@ function encodeData(records) {
  *
  * The result must be returned in a Promise.
  */
-function transform(logEvent) {
-  return `${logEvent.message}\n`
+function defaultTransform(logEvent) {
+  return logEvent.message
 }
 
 module.exports = {
@@ -69,6 +72,6 @@ module.exports = {
   decompressRecords,
   processRecords,
   processRecord,
-  transform,
+  defaultTransform,
   encodeData
 }

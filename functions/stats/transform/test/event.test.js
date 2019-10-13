@@ -6,8 +6,17 @@ const EVENT_COMPRESSED = 'event.compressed.json'
 const RECORDS_DECOMPRESSED = 'records.decompressed.json'
 const EVENT_PROCESSED = 'event.processed.json'
 const EVENT_PROCESSED_ENCODED = 'event.processed.encoded.json'
+const EVENT_SUPERSHEETS = 'event.supersheets.json'
 
 const { process, decompressRecords, processRecords } = require('../lib/event')
+
+describe('Supersheets Data', () => {
+  it ('should process event', async () => {
+    let event = getTestEvent(EVENT_SUPERSHEETS)
+    let records = decompressRecords(event)
+    console.log(JSON.stringify(records, null, 2))
+  })
+})
 
 describe('decompressRecords', () => {
   it ('should decompress events', async () => {
