@@ -1,0 +1,142 @@
+{
+  "Rows": [
+    {
+      "Data": [
+        {
+          "VarCharValue": "spreadsheetid"
+        },
+        {
+          "VarCharValue": "date"
+        },
+        {
+          "VarCharValue": "reads"
+        },
+        {
+          "VarCharValue": "hits"
+        },
+        {
+          "VarCharValue": "hit_rate"
+        },
+        {
+          "VarCharValue": "elapsed"
+        },
+        {
+          "VarCharValue": "elapsed_avg"
+        }
+      ]
+    },
+    {
+      "Data": [
+        {
+          "VarCharValue": "1Li6CHJtW5ShwzVDRFRMCjhYPfmNNWRamquW4S_EaCck"
+        },
+        {
+          "VarCharValue": "2019-10-01 00:00:00.000"
+        },
+        {
+          "VarCharValue": "25"
+        },
+        {
+          "VarCharValue": "23"
+        },
+        {
+          "VarCharValue": "0.92"
+        },
+        {
+          "VarCharValue": "9266"
+        },
+        {
+          "VarCharValue": "370.64"
+        }
+      ]
+    }
+  ],
+  "ResultSetMetadata": {
+    "ColumnInfo": [
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "spreadsheetid",
+        "Label": "spreadsheetid",
+        "Type": "varchar",
+        "Precision": 2147483647,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": true
+      },
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "date",
+        "Label": "date",
+        "Type": "timestamp",
+        "Precision": 3,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": false
+      },
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "reads",
+        "Label": "reads",
+        "Type": "bigint",
+        "Precision": 19,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": false
+      },
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "hits",
+        "Label": "hits",
+        "Type": "bigint",
+        "Precision": 19,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": false
+      },
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "hit_rate",
+        "Label": "hit_rate",
+        "Type": "double",
+        "Precision": 17,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": false
+      },
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "elapsed",
+        "Label": "elapsed",
+        "Type": "bigint",
+        "Precision": 19,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": false
+      },
+      {
+        "CatalogName": "hive",
+        "SchemaName": "",
+        "TableName": "",
+        "Name": "elapsed_avg",
+        "Label": "elapsed_avg",
+        "Type": "double",
+        "Precision": 17,
+        "Scale": 0,
+        "Nullable": "UNKNOWN",
+        "CaseSensitive": false
+      }
+    ]
+  }
+}
