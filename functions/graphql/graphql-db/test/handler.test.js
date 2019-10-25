@@ -15,14 +15,15 @@ const SCHEMA_TEST_FILE = 'typedefs_dateformat.gql'
 let plugin = new MongoDBPlugin()
 let client = null
 let db = null
+let metadata = null
 beforeAll(async () => {
   client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
   db = client.db()
-  await createTestMetadata(db)
+  metadata = await createTestMetadata(db)
 })
 afterAll(async () => {
   if (db) {
-    await deleteTestMetadata(db)
+    await deleteTestMetadata(db, metadata)
   }
   if (client) {
     await client.close()
@@ -30,7 +31,6 @@ afterAll(async () => {
   client = null
   db = null
 })
-
 
 describe('findMetadata', () => {
   let ctx = null
@@ -60,7 +60,7 @@ describe('findMetadata', () => {
     await findMetadata(ctx, NOOP) 
     expect(ctx.state.metadata).toMatchObject({
       id: SPREADSHEETID,
-      datauuid: 'DATAUUID'
+      datauuid: 'TEST-DATA-UUID'
     })
   }, 30 * 1000)
 })
@@ -82,6 +82,7 @@ describe('findOne', () => {
     }`
     let ctx = createTestEvent(SPREADSHEETID, query)
     await func.invoke(ctx)
+    console.log(ctx.response)
     expect(ctx.response.statusCode).toBe(200)
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
@@ -124,8 +125,8 @@ describe('find', () => {
   it ('should run a basic find all query', async () => {
     let query = `{ 
       find { 
-        edges {
-          node {
+        rows {
+          row {
             letter 
           } 
         }
@@ -140,12 +141,12 @@ describe('find', () => {
       data: {
         find: {
           totalCount: 5,
-          edges: [
-            { node: { "letter": "A" } },
-            { node: { "letter": "B" } },
-            { node: { "letter": "C" } },
-            { node: { "letter": "D" } },
-            { node: { "letter": "E" } }
+          rows: [
+            { row: { "letter": "A" } },
+            { row: { "letter": "B" } },
+            { row: { "letter": "C" } },
+            { row: { "letter": "D" } },
+            { row: { "letter": "E" } }
           ]
         }
       }
@@ -154,8 +155,8 @@ describe('find', () => {
   it ('should run a find all with filter', async () => {
     let query = `{ 
       find (filter: { letter: { eq: "B" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter 
           } 
         }
@@ -170,8 +171,8 @@ describe('find', () => {
       data: {
         find: {
           totalCount: 1,
-          edges: [
-            { node: { "letter": "B" } }
+          rows: [
+            { row: { "letter": "B" } }
           ]
         }
       }
@@ -180,8 +181,8 @@ describe('find', () => {
   it("should filter using regex", async () => {
     let query = `{ 
       find (filter: { googledoc___title: { regex: "^Song", options: "i" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             googledoc {
               title
             }
@@ -196,8 +197,8 @@ describe('find', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               googledoc: {
                 title: "Song of Solomon"
               }
@@ -210,8 +211,8 @@ describe('find', () => {
     it ('should match on an in (array) query', async () => {
     let query =  `{ 
       find (filter: { letter: { in: [ "C", "D" ] } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
           }
         } 
@@ -224,12 +225,12 @@ describe('find', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ {
-            node: {
+          rows: [ {
+            row: {
               "letter": "C"
             },
           }, {
-            node: {
+            row: {
               "letter": "D"
             }
           } ]
@@ -240,8 +241,8 @@ describe('find', () => {
   it("should sort, limit, and skip", async () => {
     let query = `{ 
       find (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
           }
         } 
@@ -254,12 +255,12 @@ describe('find', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ {
-            node: { 
+          rows: [ {
+            row: { 
               letter: "D"
             }
           }, { 
-            node: {
+            row: {
               letter: "C"
             }
           } ]
@@ -282,8 +283,8 @@ describe('date and datetime', () => {
   it("should serialize date and datetime correctly", async () => {
     let query = `{ 
       find (filter: { letter: { eq: "A" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date
             datetime 
@@ -298,8 +299,8 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               letter: "A",
               date: "1979-05-16",
               datetime: "1979-05-16T21:01:23.000Z" 
@@ -312,8 +313,8 @@ describe('date and datetime', () => {
   it("should filter query date and datetime", async () => {
     let query = `{ 
       find (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:23.000Z" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date
             datetime 
@@ -328,8 +329,8 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               letter: "A",
               date: "1979-05-16",
               datetime: "1979-05-16T21:01:23.000Z" 
@@ -341,8 +342,8 @@ describe('date and datetime', () => {
     // Time just barely missing by a second
     query = `{ 
       find (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:22.000Z" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date
             datetime 
@@ -357,7 +358,7 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ ]
+          rows: [ ]
         }
       }
     })
@@ -365,8 +366,8 @@ describe('date and datetime', () => {
   it("should take date and datetime formatting arguments", async () => {
     let query = `{ 
       find (filter: { letter: { eq: "A" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date(formatString: "DDDD")
             datetime(formatString: "DDDD ttt")
@@ -381,8 +382,8 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               letter: "A",
               date: "Wednesday, May 16, 1979",
               datetime: "Wednesday, May 16, 1979 9:01:23 PM UTC" 
@@ -395,8 +396,8 @@ describe('date and datetime', () => {
   it ("should not throw if date and datime are null", async () => {
     let query = `{ 
       find (filter: { letter: { eq: "E" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date(formatString: "DDDD")
             datetime(formatString: "DDDD ttt")
@@ -411,8 +412,8 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               letter: "E",
               date: null,
               datetime: null
@@ -425,8 +426,8 @@ describe('date and datetime', () => {
   it ("should accept timezone", async () => {
     let query = `{ 
       find (filter: { letter: { eq: "A" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date(formatString: "DDDD ttt", zone: "America/Los_Angeles")
             datetime(formatString: "DDDD ttt", zone: "America/Los_Angeles")
@@ -441,8 +442,8 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               letter: "A",
               date: "Wednesday, May 16, 1979 12:00:00 AM PDT",
               datetime: "Wednesday, May 16, 1979 2:01:23 PM PDT"
@@ -455,8 +456,8 @@ describe('date and datetime', () => {
   it ("should noop on locale (to be supported later)", async () => {
     let query = `{ 
       find (filter: { letter: { eq: "A" } }) { 
-        edges {
-          node {
+        rows {
+          row {
             letter
             date(locale: "fr")
             datetime(locale: "fr")
@@ -471,8 +472,8 @@ describe('date and datetime', () => {
     expect(body).toEqual({
       data: {
         find: {
-          edges: [ { 
-            node: { 
+          rows: [ { 
+            row: { 
               letter: "A",
               date: "1979-05-16",
               datetime: "1979-05-16T21:01:23.000Z"
@@ -501,19 +502,26 @@ function createTestEvent(id, query, variables) {
     },
     state: { 
       mongodb: db,
-      typeDefs: gql(fs.readFileSync(path.join(__dirname, SCHEMA_TEST_FILE)).toString('utf8'))
+      //typeDefs: gql(fs.readFileSync(path.join(__dirname, SCHEMA_TEST_FILE)).toString('utf8'))
     },
     logger: new LoggerWrapper({ prettify })
   }
 }
 
+function getTestMetadata() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'metadata.json')).toString('utf8'))
+}
+
 async function createTestMetadata(db, options) {
   options = options || { }
-  let id = options.id || SPREADSHEETID
-  let datauuid = options.datauuid || 'DATAUUID'
-  await db.collection('spreadsheets').updateOne({ id }, { "$set": { id, datauuid } }, { upsert: true })
-  await createTestData(db, { datauuid })
-  return { id, datauuid }
+  let metadata = getTestMetadata()
+  metadata.id = options.id || metadata.id
+  metadata.datauuid = options.datauuid || metadata.datauuid
+
+  await db.collection('spreadsheets').deleteOne({ id: metadata.id })
+  await db.collection('spreadsheets').updateOne({ id: metadata.id }, { "$set": metadata }, { upsert: true })
+  await createTestData(db, { datauuid: metadata.datauuid })
+  return metadata
 }
 
 async function createTestData(db, options) {

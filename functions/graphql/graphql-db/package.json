@@ -19,16 +19,16 @@
     "@funcmaticjs/contextlogger-plugin": "0.0.2",
     "@funcmaticjs/correlation-plugin": "0.0.2",
     "@funcmaticjs/forcecoldstart": "0.0.1",
-    "@funcmaticjs/funcmatic": "0.0.6",
+    "@funcmaticjs/funcmatic": "0.0.8",
     "@funcmaticjs/loglevel-plugin": "0.0.4",
-    "@funcmaticjs/mongodb-plugin": "0.0.5",
+    "@funcmaticjs/mongodb-plugin": "~0.0.5",
     "@funcmaticjs/parameterstore-plugin": "0.0.3",
     "@funcmaticjs/response-plugin": "^1.1.1",
     "@funcmaticjs/stagevars-plugin": "0.0.1",
     "apollo-server-lambda": "^2.9.6",
-    "axios": "^0.19.0",
     "graphql": "^14.5.8",
-    "luxon": "^1.19.3"
+    "luxon": "^1.19.3",
+    "pluralize": "^8.0.0"
   },
   "devDependencies": {
     "@funcmaticjs/package": "0.0.3",
@@ -36,8 +36,9 @@
     "apollo-cache-inmemory": "^1.6.3",
     "apollo-client": "^2.6.4",
     "apollo-link-http": "^1.5.15",
-    "aws-sdk": "^2.547.0",
-    "dotenv": "^8.0.0",
+    "aws-sdk": "^2.553.0",
+    "axios": "^0.19.0",
+    "dotenv": "^8.2.0",
     "graphql-tag": "^2.10.1",
     "jest": "^24.8.0",
     "node-fetch": "^2.6.0"

@@ -1,4 +1,3 @@
-const axios = require('axios')
 const func = require('@funcmaticjs/funcmatic')
 const ContextLoggerPlugin = require('@funcmaticjs/contextlogger-plugin')
 const StageVarsPlugin = require('@funcmaticjs/stagevars-plugin')
@@ -8,7 +7,7 @@ const LogLevelPlugin = require('@funcmaticjs/loglevel-plugin')
 const ResponsePlugin = require('@funcmaticjs/response-plugin')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const coldHandler = require('@funcmaticjs/forcecoldstart')
-const { handler, setupSupersheetsApi, findMetadata } = require('./lib/handler')
+const { handler, findMetadata } = require('./lib/handler')
 
 func.use(new ContextLoggerPlugin())
 func.use(new StageVarsPlugin())
@@ -21,8 +20,6 @@ func.use(new MongoDBPlugin())
 func.error(async (ctx, next) => {
   ctx.logger.error(ctx.error)
 })
-
-func.request(setupSupersheetsApi)
 func.request(findMetadata)
 func.request(handler)
 

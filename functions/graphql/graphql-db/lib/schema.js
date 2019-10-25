@@ -1,350 +1,441 @@
-const path = require('path')
-const fs = require('fs')
+const pluralize = require('pluralize')
 const { gql } = require('apollo-server-lambda')
-const { GraphQLScalarType, buildSchema } = require('graphql') 
-const { Kind } = require('graphql/language')
-const { DateTime } = require('luxon')
+const { buildSchema, printSchema } = require('graphql');
 
-async function fetchSchema(axios) {
-  let res = (await axios.get(`graphql/schema`)).data
-  const schemastr = res.schema
-  let typeDefs =  gql`${schemastr}`
-  return typeDefs 
+const SEP = "___"
+const SPACES = "    "
+
+const indent = (n) => {
+  return SPACES.repeat(n)
 }
 
-function createResolvers({ typeDefs }) {
-  let standard = {
-    Query: {
-      find: createFindResolver(),
-      findOne: createFindOneResolver()
-    },
-    RowConnection: {
-      edges: createRowConnectionEdgesResolver(),
-      totalCount: createRowConnectionTotalCountResolver(),
-      pageInfo: async () => {
-        return {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null
-        }
-      }
-    },
-    Date: dateScalarType(),
-    Datetime: datetimeScalarType()
+const capitalize = (s) => {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+const uncapitalize = (s) => {
+  return s.charAt(0).toLowerCase() + s.slice(1)
+}
+
+function generate(metadata, options) {
+  options = options || { }
+  return gql(generateSDL(metadata, options))
+}
+
+function generateSDL(metadata, options) {
+  options = options || { }
+  let s = `schema {\n  query: Query\n}\n`
+  let sheets = getSheetSchemas(metadata)
+  s += `\n`
+  s += generateQuery(sheets, options)
+  s += `\n\n`
+  for (let sheet of sheets) {
+    s += generateSheetSchema(sheet)
+    s += `\n`
   }
-  let dateFormatResolvers = createDateFormatResolvers(typeDefs)
-  return Object.assign(standard, dateFormatResolvers)
+  s += generateStaticTypeDefs()
+  s += `\n`
+  return s
 }
 
-function getGraphQLFieldNameAndType(field) {
-  let name = field.name.value
-  let type = field.type && field.type.name && field.type.name.value || null
-  return { name, type }
+function getSheetSchemas(metadata) {
+  // construct 
+  let schemas = metadata.sheets && metadata.sheets.map(sheet => { return { 
+    title: sheet.title,
+    schema: sheet.schema,
+    options: { }
+  } }) || [ ]
+  return [ {
+    title: "Rows",
+    schema: metadata.schema,
+    options: { names: { find: 'find', findOne: 'findOne' } }
+  } ].concat(schemas)
 }
 
-// typeDefs {
-//   kind: "Document",
-//   definitions: [ ... ],
-//   loc: {
-//     start: 0
-//     end: 2858
-//   }
-// }
-function createDateFormatResolvers(typeDefs) {
-  let resolvers = { }
-  let objectTypes = typeDefs.definitions.filter(def => def.kind == "ObjectTypeDefinition")
-  let objectTypesWithDateFields = objectTypes.filter(def => {
-    let types = def.fields.map(field => getGraphQLFieldNameAndType(field).type)
-    return types.includes("Date") || types.includes("Datetime") || false
-  })
-  for (let def of objectTypesWithDateFields) {
-    let fieldName = def.name.value
-    if (!resolvers[fieldName]) {
-      resolvers[fieldName] = { }
-    }
-    for (let field of def.fields) {
-      let { name, type } = getGraphQLFieldNameAndType(field)
-      if (type == "Date") {
-        resolvers[fieldName][name] = createDateFormatResolver()
-      } else if (type == "Datetime") {
-        resolvers[fieldName][name] = createDatetimeFormatResolver()
-      }
-    }
+function generateQuery(sheets, options) {
+  options = options || { }
+  let s = `type Query {\n`
+  for (let sheet of sheets) {
+    s += generateFindQuery(sheet, Object.assign({ level: 1 }, sheet.options))
+    s += '\n\n'
+    s += generateFindOneQuery(sheet, Object.assign({ level: 1 }, sheet.options))
+    s += `\n`
   }
-  return resolvers
+  s += `}`
+  return s
 }
 
-function createFindResolver() {
-  return async (parent, args, context, info) => {
-    context.logger.info(`find args: ${JSON.stringify(args, null, 2)}`)
-    let { query, options } = createQuery(args)
-    context.logger.info(`findOne query: ${JSON.stringify(query, null, 2)}`)
-    return { query, options }
+function generateGraphQLNames(sheet, options) {
+  options = options || { }
+  let name = sheet.title
+  let typeSingular = capitalize(pluralize.singular(name))
+  let typePlural = capitalize(pluralize.plural(name))
+  
+  let type = typeSingular
+  let input = `${typeSingular}FilterInput`
+  let sort = `${typeSingular}SortInput`
+  let enumfields = `${typeSingular}FieldsEnum`
+  let connection = `${typeSingular}Connection`
+  let edge = `${typeSingular}Edge`
+  let find = `find${typePlural}`
+  let findOne = `findOne${typeSingular}`
+
+  let docs = { }
+  for (let name in sheet.schema.docs) {
+    let type = `${typeSingular}${capitalize(pluralize.singular(name))}Doc`
+    let input = `${type}FilterInput`
+    let sort = `${type}SortInput`
+    docs[name] = { name, type, input, sort }
   }
-}
-
-function createFindOneResolver() {
-  return async (parent, args, context, info) => {
-    context.logger.info(`findOne args: ${JSON.stringify(args, null, 2)}`)
-    let { query } = createQuery(args)
-    context.logger.info(`findOne query: ${JSON.stringify(query, null, 2)}`)
-    return await context.collection.findOne(query)
-  }
-}
-
-function createRowConnectionEdgesResolver() {
-  return async ({ query, options }, args, context, info) => {
-    let collection = context.collection
-    let data = await collection.find(query, options).toArray()
-    return data.map(node => ({ node }))
-  }
-}
-
-function createDatetimeFormatResolver() {
-  return async (parent, args, context, { returnType, parentType, path }) => {
-    let key = path.key
-    let jsdate = parent[key]
-    if (!jsdate) return null
-
-    let { formatString, fromNow, locale, zone, difference } = args
-    let opts = { 
-      zone: (zone || 'utc'),
-      locale: locale || 'en-US'  // noop for now: luxon locale support seems to need additional setup
-    }
-    
-    let d = DateTime.fromISO(jsdate.toISOString(), opts)
-
-    if (formatString) {
-      return d.toFormat(formatString)
-    } else if (fromNow) {
-      return d.toRelative()
-    } else if (difference) {
-      return d.diff(args.difference).toISO()
-    } else {
-      return d.toISO()
-    }
+  return {
+    name,
+    type,
+    connection,
+    enumfields,
+    edge,
+    input,
+    sort,
+    find,
+    findOne,
+    docs
   }
 }
 
-function createDateFormatResolver() {
-  return async (parent, args, context, { returnType, parentType, path }) => {
-    let key = path.key
-    let jsdate = parent[key]
-    if (!jsdate) return null
+function generateFindQuery(sheet, { level, names }) {
+  names = Object.assign(generateGraphQLNames(sheet), names || { })
+  let s = `${indent(level)}${names['find']}(\n`
+  s += `${indent(level+1)}filter: ${names['input']}\n`
+  s += `${indent(level+1)}limit: Int\n`
+  s += `${indent(level+1)}skip: Int\n`
+  s += `${indent(level+1)}sort: ${names['sort']}\n`
+  s += `${indent(level)}): ${names['connection']}`
+  return s
+}
+  // s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}\n`
 
-    let { formatString, fromNow, locale, zone, difference } = args
-    let opts = { 
-      zone: zone || 'utc',
-      setZone: true,
-      locale: locale || 'en-US'  // noop for now: luxon locale support seems to need additional setup
-    }
-
-    // very hacky: we strip the 'Z' so that Luxon 
-    // won't set to UTC and use opts.zone instead 
-    // and opts.setZone so that it doesn't convert
-    let d = DateTime.fromISO(jsdate.toISOString().replace("Z", ""), opts)
-
-    if (formatString) {
-      return d.toFormat(formatString)
-    } else if (fromNow) {
-      return d.toRelative()
-    } else if (difference) {
-      return d.diff(difference).toISO()
-    } else {
-      return d.toISO().split("T")[0]
-    }
-  }
+function generateFindOneQuery(sheet, { level, names }) {
+  names = Object.assign(generateGraphQLNames(sheet), names || { })
+  let s = `${indent(level)}${names['findOne']}(\n`
+  s += `${indent(level+1)}filter: ${names['input']}\n`
+  s += `${indent(level+1)}limit: Int\n`
+  s += `${indent(level+1)}skip: Int\n`
+  s += `${indent(level+1)}sort: ${names['sort']}\n`
+  s += `${indent(level)}): ${names['type']}`
+  return s
 }
 
+function generateSheetSchema(sheet, options) {
+  options = options || { }
+  options.names = Object.assign(generateGraphQLNames(sheet), options.names || { })
+  options.level = options.level || 0
+  let names = options.names 
+  let s = generateTypeFromSchema(names['type'], sheet.schema, options)
+  s += '\n\n'
+  s += generateConnectionType(names['connection'], options)
+  s += '\n\n'
+  s += generateEdgeType(names['edge'], options)
+  s += '\n\n'
+  s += generateEnumFromSchema(names['enumfields'], sheet.schema, options)
+  s += '\n\n'
+  s += generateInputFromSchema(names['input'], sheet.schema, options)
+  s += '\n\n'
+  s += generateSortInput(names['sort'], options)
+  s += '\n\n'
+  s += generateGoogleDocTypes(sheet.schema.docs, options)
+  s += '\n\n'
+  s += generateGoogleDocFilterInputs(sheet.schema.docs, options)
+  s += '\n\n'
+  s += generateGoogleDocSortInputs(sheet.schema.docs, options)
+  s += '\n'
+  return s
+} 
 
-function createRowConnectionTotalCountResolver() {
-  return async ({ query, options }, args, context, info) => {
-    let collection = context.collection
-    let n = await collection.countDocuments(query)
-    return n
+function generateTypeFromSchema(name, schema, { level, names }) {
+  level = level || 0
+  let s = `type ${name} {\n`
+  for (let col of schema.columns) {
+    s += `${generateTypeField(col, { level: level+1, names })}\n`
   }
+  s += `}`
+  return s
 }
 
-function createQuery(args) {
-  let query = { }
-  let options = { }
-  if (args.filter) {
-    //console.log('args.filter', JSON.stringify(args.filter, null, 2))
-    query = formatFieldNames(formatOperators(args.filter))
-    //console.log('query', JSON.stringify(query, null, 2))
+function generateEnumFromSchema(name, schema, { level }) {
+  let s = `enum ${name} {\n`
+  for (let col of schema.columns) {
+    s += `${indent(level+1)}${col.name}\n`
   }
-  if (args.skip) {
-    options.skip = args.skip
-  }
-  if (args.limit) {
-    options.limit = args.limit
-  }
-  if (args.sort) {
-    options.sort = formatSort(args.sort)
-  }
-  if (args.projection) {
-    options.projection = args.projection
-  }
-  return { query, options }
+  s += `}`
+  return s
 }
 
-async function makeRequest(axios, query) {
-  let data = (await axios.post(`find`, query)).data
-  return data.result
-}
-
-function dateScalarType() {
-  return new GraphQLScalarType({
-    name: 'Date',
-    description: 'Date custom scalar type',
-    parseValue(value) {
-      return value // value from the client
-    },
-    serialize(value) {
-      return value
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.STRING) {
-        return ast.value && new Date(ast.value) || null // ast value is always in string format
-      }
-      return null;
-    },
-  })
-}
-
-function datetimeScalarType() {
-  return new GraphQLScalarType({
-    name: 'Datetime',
-    description: 'Datetime custom scalar type',
-    parseValue(value) {
-      return value // value from the client
-    },
-    serialize(value) {
-      return value
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.STRING) {
-        return ast.value && new Date(ast.value) || null // ast value is always in string format
-      }
-      return null;
-    },
-  })
-}
-
-// https://docs.mongodb.com/manual/reference/operator/query/
-const OPERATORS = [
-  // Comparison
-  'eq', 'gt', 'gte', 'in', 'lt', 'lte', 'ne', 'nin',
-  // Logical
-  'and', 'not', 'nor', 'or',
-  // Element
-  'exists', 'type',
-  // Evaluation
-  'expr', 'jsonSchema', 'mod', 'regex', 'options', 'text', 'where',
-  // Geospatial
-  'geoIntersects', 'geoWithin', 'near', 'nearSphere',
-  // Array
-  'all', 'elemMatch', 'size',
-  // Bitwise
-  'bitsAllClear', 'bitsAllSet$bitsAnyClear$bitsAnySet',
-  // Comments
-  'comment',
-  // Projection
-  // '$' not sure how to support his
-  'elemMatch', 'meta', 'slice'
-]
-
-function addDollarIfOperator(k) {
-  return OPERATORS.includes(k) && `$${k}` || k
-}
-
-function formatOperators(filter) {
-  let formatted = { }
-  for (let k in filter) {
-    switch (typeof filter[k]) {
-      case "object": 
-        if (isDateObject(filter[k])) {
-          formatted[addDollarIfOperator(k)] = filter[k]
-        } else if (Array.isArray(filter[k])) {
-          formatted[addDollarIfOperator(k)] = filter[k]
-        } else {
-          formatted[addDollarIfOperator(k)] = formatOperators(filter[k])
-        }
-        break
-      default:
-        formatted[addDollarIfOperator(k)] = filter[k]
+function generateInputFromSchema(name, schema, { level, names }) {
+  let s = `${indent(level)}input ${name} {\n`
+  for (let col of schema.columns) {
+    s += `${generateInputField(col, { level: level+1, names })}\n`
+  }
+  for (let col in schema.docs) {
+    let docschema = schema.docs[col]
+    for (let field of docschema.fields) {
+      s += `${generateInputField({ name: `${col}${SEP}${field.name}`, datatype: field.datatype }, { level: level+1, names })}\n`
     }
   }
-  return formatted
+  s += `${indent(level)}}`
+  return s
 }
 
-function formatFieldNames(filter) {
-  let formatted = { }
-  for (let k in filter) {
-    switch (typeof filter[k]) {
-      case "object": 
-        if (isDateObject(filter[k])) {
-          formatted[dotNotation(k)] = filter[k]
-        } else if (Array.isArray(filter[k])) {
-          formatted[dotNotation(k)] = filter[k]
-        } else {
-          formatted[dotNotation(k)] = formatFieldNames(filter[k])
-        }
-        break
-      default:
-        formatted[dotNotation(k)] = filter[k]
-    }
+function generateGoogleDocTypes(docs, { level, names }) {
+  let s = ''
+  for (let col in docs) {
+    let name = names.docs[col]['type']
+    let schema = docs[col]
+    schema.columns = schema.fields // doc schemas use 'fields' rather than 'columns'
+    s += generateTypeFromSchema(name, schema, { level, names })
+    s += `\n\n`
+  } 
+  return s
+}
+
+function generateGoogleDocFilterInputs(docs, { level, names }) {
+  let s = ''
+  for (let col in docs) {
+    let name = names.docs[col]['input']
+    let schema = docs[col]
+    schema.columns = schema.fields // doc schemas use 'fields' rather than 'columns'
+    s += generateInputFromSchema(name, schema, { level, names })
+    s += `\n\n`
+  } 
+  return s
+}
+
+function generateGoogleDocSortInputs(docs, { level, names }) {
+  let s = ''
+  for (let col in docs) {
+    let name = names.docs[col]['sort']
+    s += generateSortInput(name, { level, names })
+    s += `\n\n`
   }
-  return formatted
+  return s
 }
 
-function dotNotation(k) {
-  if (k && k.includes("___")) {
-    return k.replace(/___/g, '.')
+function generateInputField(field, { level, names }) {
+  return `${indent(level)}${field.name}: ${convertToQueryOperator(field, { names })}`
+}
+
+function generateConnectionType(name, { level, names }) {
+  let s = `${indent(level)}type ${name} {\n`
+  s += `${indent(level+1)}rows: [${names['edge']}!]\n`
+  s += `${indent(level+1)}totalCount: Int!\n`
+  s += `${indent(level+1)}pageInfo: PageInfo!\n` 
+  // Not supported yet
+  // s += `  distinct: Boolean\n` 
+  // s += `  group [${name}GroupConnection]\n`
+  s += `${indent(level)}}`
+  return s
+}
+
+function generateEdgeType(name, { level, names }) {
+  let s = `${indent(level)}type ${name} {\n`
+  s += `${indent(level+1)}row: ${names['type']}!\n`
+  // Not supported yet
+  // s += `  next: ...?!\n`
+  // s += `  previous: ...?!\n`
+  s += `${indent(level)}}`
+  return s
+}
+
+function generateSortInput(name, { level, names }) {
+  let s = `${indent(level)}input ${name} {\n`
+  s += `${indent(level+1)}fields: [${names['enumfields']}]\n`
+  s += `${indent(level+1)}order: [SortOrderEnum]\n`
+  s += `${indent(level)}}`
+  return s
+}
+
+
+function generateTypeField(field, { level, names }) {
+  let gqlType = convertToGraphQLType(field, { names })
+  switch(gqlType) {
+    case "Date":
+    case "Datetime":
+      return generateGraphQLDateField(field, { level, names })
+    default:
+      return `${indent(level)}${field.name}: ${gqlType}`
   }
-  return k
 }
 
-function isDateObject(obj) {
-  return obj instanceof Date
+function generateGraphQLDateField({ name, datatype, sample }, { level, names }) {
+  let s = `${indent(level)}${name}(\n`
+  s += `${indent(level+1)}formatString: String\n`
+  s += `${indent(level+1)}fromNow: Boolean\n`
+  s += `${indent(level+1)}difference: String\n`
+  s += `${indent(level+1)}locale: String\n`
+  s += `${indent(level+1)}zone: String\n`
+  s += `${indent(level)}): ${convertToGraphQLType({ name, datatype, sample }, { names })}`
+  return s
 }
 
-// { fields: [ ], order: [ 'ASC', 'DESC' ] } => [ [ field1, asc ], [ field2, desc ] ]
-function formatSort(sort) {
-  let formatted = [ ]
-  for (let i = 0; i<sort.fields.length; i++) {
-    formatted.push([ sort.fields[i], (sort.order[i] || 'ASC') ])
+function convertToGraphQLType({ name, datatype }, { names }) {
+  // kind of hacky. load should actually set the datatype to be ID
+  if (name == "_id") {
+    return 'ID!'
   }
-  return formatted
+  switch(datatype) {
+    case "String":
+      return 'String'
+    case "Int":
+      return 'Int'
+    case "Float":
+      return 'Float'
+    case "Boolean":
+      return "Boolean"
+    case "Date":
+      return "Date"
+    case "Datetime":
+      return "Datetime"
+    case "StringList":
+      return "[String]"
+    case "GoogleDoc":
+      return `${names.docs[name]['type']}`
+    case "PlainText": 
+      return 'String'
+    case "Markdown":
+      return 'String'
+    case "GoogleJSON":
+      return 'String'
+  }
+}
+
+function convertToQueryOperator({ name, datatype }, { names }) {
+  switch(datatype) {
+    case "String":
+      return 'StringQueryOperatorInput'
+    case "Int":
+      return 'IntQueryOperatorInput'
+    case "Float":
+      return 'FloatQueryOperatorInput'
+    case "Boolean":
+      return "BooleanQueryOperatorInput "
+    case "Date":
+      return "DateQueryOperatorInput"
+    case "Datetime":
+      return "DatetimeQueryOperatorInput"
+    case "StringList":
+      return "StringArrayQueryOperatorInput"
+    case "GoogleDoc":
+      return `${names.docs[name]['input']}`
+    case "PlainText": 
+      return 'StringQueryOperatorInput'
+    case "Markdown":
+      return 'StringQueryOperatorInput'
+    case "GoogleJSON":
+      return 'StringQueryOperatorInput'
+  }
+}
+
+function generateStaticTypeDefs() {
+  return `scalar Date
+scalar Datetime
+
+enum SortOrderEnum {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+input StringArrayQueryOperatorInput {
+  eq: String
+  ne: String
+  in: [String]
+  nin: [String]
+  all: [String]
+  elemMatch: [StringQueryOperatorInput]
+  size: Int
+}
+
+input StringQueryOperatorInput {
+  eq: String
+  gt: String
+  gte: String
+  lt: String
+  lte: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+  options: String
+}
+
+input IntQueryOperatorInput {
+  eq: Int
+  gt: Int
+  gte: Int
+  in: [Int]
+  lt: Int
+  lte: Int
+  ne: Int
+  nin: [Int]
+}
+
+input FloatQueryOperatorInput {
+  eq: Float
+  gt: Float
+  gte: Float
+  in: [Float]
+  lt: Float
+  lte: Float
+  ne: Float
+  nin: [Float]
+}
+
+input BooleanQueryOperatorInput {
+  eq: Boolean
+  ne: Boolean
+  in: [ Boolean ]
+  nin: [ Boolean ]
+}
+
+input DateQueryOperatorInput {
+  eq: Date
+  no: Date
+  gt: Date
+  gte: Date
+  lt: Date
+  lte: Date
+  in: [ Date ]
+  nin: [ Date ]
+}
+
+input DatetimeQueryOperatorInput {
+  eq: Datetime
+  no: Datetime
+  gt: Datetime
+  gte: Datetime
+  lt: Datetime
+  lte: Datetime
+  in: [ Datetime ]
+  nin: [ Datetime ]
+}
+`
 }
 
 module.exports = {
-  fetchSchema,
-  createResolvers
+  generateGraphQLNames,
+  getSheetSchemas,
+  generateFindQuery,
+  generateFindOneQuery,
+  generate,
+  generateSDL,
+  generateSheetSchema,
+  generateTypeFromSchema,
+  generateEnumFromSchema,
+  generateTypeField,
+  generateInputField
 }
 
-// All the resolvers need to do is translate the query to
-// something we can use to make a http find request 
-// const resolvers = {
-//   Query: {
-//     find: findResolver,
-//     findOne: findOneResolver
-//   },
-//   Date: dateScalarType()
-// }
-
-// async function findResolver(parent, args, context, info) {
-//   let id = context.event.pathParameters.spreadsheetid
-//   let query = createQuery(args)
-//   console.log(`find: ${JSON.stringify(query, null, 2)}`)
-//   return await makeRequest(id, query)
-// }
-
-// async function findOneResolver(parent, args, context, info) {
-//   let id = context.event.pathParameters.spreadsheetid
-//   let query = createQuery(args)
-//   query.one = true
-//   console.log(`findOne: ${JSON.stringify(query, null, 2)}`)
-//   return await makeRequest(id, query)
-// }

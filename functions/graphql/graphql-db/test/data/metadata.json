@@ -1,0 +1,256 @@
+{
+  "id": "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI",
+  "datauuid": "TEST-DATA-UUID",
+  "title": "Supersheets Public GraphQL Test",
+  "schema": {
+    "columns": [
+      {
+        "name": "_id",
+        "datatype": "String",
+        "sample": "5d6b2f2f0c6d3f00074ad599",
+        "reserved": true
+      },
+      {
+        "name": "_sheet",
+        "datatype": "String",
+        "sample": "data",
+        "reserved": true
+      },
+      { "name": "_row", "datatype": "Int", "sample": 2, "reserved": true },
+      {
+        "name": "_errors",
+        "datatype": "StringList",
+        "sample": [],
+        "reserved": true
+      },
+      { "name": "letter", "datatype": "String", "sample": "A" },
+      { "name": "value", "datatype": "Int", "sample": 65 },
+      { "name": "number", "datatype": "Int", "sample": 1 },
+      { "name": "float", "datatype": "Float", "sample": 1 },
+      { "name": "boolean", "datatype": "Boolean", "sample": true },
+      {
+        "name": "list",
+        "datatype": "StringList",
+        "sample": ["hello", "world"]
+      },
+      {
+        "name": "date",
+        "datatype": "Date",
+        "sample": "1979-05-16T00:00:00.000Z"
+      },
+      {
+        "name": "datetime",
+        "datatype": "Datetime",
+        "sample": "1979-05-16T21:01:23.000Z"
+      },
+      {
+        "name": "googledoc",
+        "datatype": "GoogleDoc",
+        "sample": {
+          "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+          "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit",
+          "title": "The Gettysburg Address",
+          "body": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+          "markdown": "The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."
+        },
+        "fields": [
+          {
+            "name": "_docid",
+            "datatype": "String",
+            "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+            "reserved": true
+          },
+          {
+            "name": "_url",
+            "datatype": "String",
+            "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit",
+            "reserved": true
+          },
+          {
+            "name": "title",
+            "datatype": "String",
+            "sample": "The Gettysburg Address",
+            "reserved": false
+          },
+          {
+            "name": "body",
+            "datatype": "String",
+            "sample": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+            "reserved": false
+          },
+          {
+            "name": "markdown",
+            "datatype": "String",
+            "sample": "The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+            "reserved": false
+          }
+        ]
+      }
+    ],
+    "docs": {
+      "googledoc": {
+        "name": "googledoc",
+        "fields": [
+          {
+            "name": "_docid",
+            "datatype": "String",
+            "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+            "reserved": true
+          },
+          {
+            "name": "_url",
+            "datatype": "String",
+            "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit",
+            "reserved": true
+          },
+          {
+            "name": "title",
+            "datatype": "String",
+            "sample": "The Gettysburg Address",
+            "reserved": false
+          },
+          {
+            "name": "body",
+            "datatype": "String",
+            "sample": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+            "reserved": false
+          },
+          {
+            "name": "markdown",
+            "datatype": "String",
+            "sample": "The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+            "reserved": false
+          }
+        ]
+      }
+    }
+  },
+  "sheets": [
+    {
+      "title" :"Posts",
+      "schema": {
+        "columns": [
+          {
+            "name": "_id",
+            "datatype": "String",
+            "sample": "5d6b2f2f0c6d3f00074ad599",
+            "reserved": true
+          },
+          {
+            "name": "_sheet",
+            "datatype": "String",
+            "sample": "data",
+            "reserved": true
+          },
+          { "name": "_row", "datatype": "Int", "sample": 2, "reserved": true },
+          {
+            "name": "_errors",
+            "datatype": "StringList",
+            "sample": [],
+            "reserved": true
+          },
+          { "name": "letter", "datatype": "String", "sample": "A" },
+          { "name": "value", "datatype": "Int", "sample": 65 },
+          { "name": "number", "datatype": "Int", "sample": 1 },
+          { "name": "float", "datatype": "Float", "sample": 1 },
+          { "name": "boolean", "datatype": "Boolean", "sample": true },
+          {
+            "name": "list",
+            "datatype": "StringList",
+            "sample": ["hello", "world"]
+          },
+          {
+            "name": "date",
+            "datatype": "Date",
+            "sample": "1979-05-16T00:00:00.000Z"
+          },
+          {
+            "name": "datetime",
+            "datatype": "Datetime",
+            "sample": "1979-05-16T21:01:23.000Z"
+          },
+          {
+            "name": "googledoc",
+            "datatype": "GoogleDoc",
+            "sample": {
+              "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+              "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit",
+              "title": "The Gettysburg Address",
+              "body": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+              "markdown": "The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."
+            },
+            "fields": [
+              {
+                "name": "_docid",
+                "datatype": "String",
+                "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+                "reserved": true
+              },
+              {
+                "name": "_url",
+                "datatype": "String",
+                "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit",
+                "reserved": true
+              },
+              {
+                "name": "title",
+                "datatype": "String",
+                "sample": "The Gettysburg Address",
+                "reserved": false
+              },
+              {
+                "name": "body",
+                "datatype": "String",
+                "sample": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+                "reserved": false
+              },
+              {
+                "name": "markdown",
+                "datatype": "String",
+                "sample": "The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+                "reserved": false
+              }
+            ]
+          }
+        ],
+        "docs": {
+          "googledoc": {
+            "name": "googledoc",
+            "fields": [
+              {
+                "name": "_docid",
+                "datatype": "String",
+                "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
+                "reserved": true
+              },
+              {
+                "name": "_url",
+                "datatype": "String",
+                "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit",
+                "reserved": true
+              },
+              {
+                "name": "title",
+                "datatype": "String",
+                "sample": "The Gettysburg Address",
+                "reserved": false
+              },
+              {
+                "name": "body",
+                "datatype": "String",
+                "sample": "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+                "reserved": false
+              },
+              {
+                "name": "markdown",
+                "datatype": "String",
+                "sample": "The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
+                "reserved": false
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

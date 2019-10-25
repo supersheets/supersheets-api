@@ -1,20 +1,7 @@
-const axios = require('axios')
 const { ApolloServer } = require('apollo-server-lambda')
 const { promisify } = require('util')
-const { fetchSchema, createResolvers } = require('./schema')
-
-async function setupSupersheetsApi(ctx, next) {
-  let id = ctx.event.pathParameters && ctx.event.pathParameters.spreadsheetid
-  if (!ctx.state.axios) {
-    ctx.state.axios = axios.create({
-      baseURL: `${ctx.env.SUPERSHEETS_BASE_URL}${id}`,
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-  }
-  return await next()
-}
+const { generate } = require('./schema')
+const { createResolvers } = require('./resolvers')
 
 async function findMetadata(ctx, next) {
   if (ctx.state.metadata) {
@@ -38,11 +25,11 @@ async function handler(ctx) {
   let resolvers = null
   let db = ctx.state.mongodb
   try {
-    typeDefs = ctx.state.typeDefs || await fetchSchema(ctx.state.axios)  // so we can inject typeDefs in unit testing
+    typeDefs = ctx.state.typeDefs || generate(metadata) // await fetchSchema(ctx.state.axios)  // so we can inject typeDefs in unit testing
     if (!typeDefs) {
       return ctx.response.httperror(404, `Could not find schema for id=${metadata.id}`) 
     }
-    resolvers = createResolvers({ typeDefs })
+    resolvers = createResolvers({ typeDefs, metadata })
   } catch (err) {
     ctx.logger.error(err)
     return ctx.response.httperror(500, `Error fetching schema for id=${metadata.id}: ${err.message}`) 
@@ -86,6 +73,6 @@ function createApolloHandler(event, context, { typeDefs, resolvers, collection, 
 
 module.exports = {
   handler,
-  setupSupersheetsApi,
+  //setupSupersheetsApi,
   findMetadata
 }
