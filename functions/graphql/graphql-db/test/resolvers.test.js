@@ -26,14 +26,14 @@ describe('createResolvers', () => {
         find: expect.anything(),
         findOne: expect.anything(),
         findPosts: expect.anything(),
-        findOnePost: expect.anything()
+        findOnePosts: expect.anything()
       },
-      'RowConnection': {
+      'RowsConnection': {
         rows: expect.anything(),
         totalCount: expect.anything(),
         pageInfo: expect.anything()
       },
-      'PostConnection': {
+      'PostsConnection': {
         rows: expect.anything(),
         totalCount: expect.anything(),
         pageInfo: expect.anything()
@@ -92,7 +92,7 @@ describe('createSheetFieldResolvers', () => {
     let names = generateGraphQLNames(sheet)
     let resolvers = createSheetFieldResolvers(sheet, { names })
     expect(resolvers).toEqual({
-      "Row": {
+      "Rows": {
         "date": expect.anything(),
         "datetime": expect.anything()
       }
@@ -112,7 +112,7 @@ describe('createSheetFieldResolvers', () => {
     let names = generateGraphQLNames(sheet)
     let resolvers = createSheetFieldResolvers(sheet, { names })
     expect(resolvers).toEqual({
-      "Post": {
+      "Posts": {
         "published": expect.anything(),
         "published_at": expect.anything()
       }

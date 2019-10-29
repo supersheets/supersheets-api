@@ -68,8 +68,13 @@ function generateQuery(sheets, options) {
 function generateGraphQLNames(sheet, options) {
   options = options || { }
   let name = sheet.title
-  let typeSingular = capitalize(pluralize.singular(name))
-  let typePlural = capitalize(pluralize.plural(name))
+  // Too smart. Don't auto pluralize/singularize for the user
+  // Just use the capitalized version of wahtever sheet name they use
+  // let typeSingular = capitalize(pluralize.singular(name))
+  // let typePlural = capitalize(pluralize.plural(name))
+
+  let typeSingular = capitalize(name)
+  let typePlural = typeSingular
   
   let type = typeSingular
   let input = `${typeSingular}FilterInput`
@@ -82,7 +87,8 @@ function generateGraphQLNames(sheet, options) {
 
   let docs = { }
   for (let name in sheet.schema.docs) {
-    let type = `${typeSingular}${capitalize(pluralize.singular(name))}Doc`
+    //let type = `${typeSingular}${capitalize(pluralize.singular(name))}Doc`
+    let type = `${typeSingular}${capitalize(name)}Doc`
     let input = `${type}FilterInput`
     let sort = `${type}SortInput`
     docs[name] = { name, type, input, sort }

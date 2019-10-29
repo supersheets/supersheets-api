@@ -19,22 +19,22 @@ describe('generateGraphQLNames', () => {
   let s = generateGraphQLNames(sheet)
   expect(s).toEqual({ 
     name: 'Posts',
-    type: 'Post',
+    type: 'Posts',
     docs: { 
       "googledoc": { 
         name: 'googledoc',
-        type: 'PostGoogledocDoc',
-        input: 'PostGoogledocDocFilterInput',
-        sort: 'PostGoogledocDocSortInput'
+        type: 'PostsGoogledocDoc',
+        input: 'PostsGoogledocDocFilterInput',
+        sort: 'PostsGoogledocDocSortInput'
       } 
     },
-    connection: 'PostConnection',
-    enumfields: 'PostFieldsEnum',
-    edge: 'PostEdge',
-    input: 'PostFilterInput',
+    connection: 'PostsConnection',
+    enumfields: 'PostsFieldsEnum',
+    edge: 'PostsEdge',
+    input: 'PostsFilterInput',
     find: 'findPosts',
-    findOne: 'findOnePost',
-    sort: 'PostSortInput'
+    findOne: 'findOnePosts',
+    sort: 'PostsSortInput'
   })
 })
 
@@ -117,22 +117,22 @@ describe('generate queries', () => {
     let names = generateGraphQLNames(sheet)
     let s = generateFindQuery(sheet, { level: 0, names })
     expect(s).toEqual(`findPosts(
-    filter: PostFilterInput
+    filter: PostsFilterInput
     limit: Int
     skip: Int
-    sort: PostSortInput
-): PostConnection`)
+    sort: PostsSortInput
+): PostsConnection`)
   })
   it('should generate a findOne query', async () => {
     let sheet = getTestSheet()
     let names = generateGraphQLNames(sheet)
     let s = generateFindOneQuery(sheet, { level: 0, names })
-    expect(s).toEqual(`findOnePost(
-    filter: PostFilterInput
+    expect(s).toEqual(`findOnePosts(
+    filter: PostsFilterInput
     limit: Int
     skip: Int
-    sort: PostSortInput
-): Post`)
+    sort: PostsSortInput
+): Posts`)
   })
 })
 

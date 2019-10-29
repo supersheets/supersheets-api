@@ -155,7 +155,7 @@ function createResolvers() {
         return query
       }
     },
-    RowConnection: {
+    RowsConnection: {
       pageInfo: async(query) => {
         return {
           hasNextPage: false,
@@ -174,7 +174,7 @@ function createResolvers() {
         ]
       }
     },
-    PostConnection: {
+    PostsConnection: {
       rows: async (query) => {
         return [
           { row: { title: "Hello World" } }
