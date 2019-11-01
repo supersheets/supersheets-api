@@ -86,13 +86,15 @@ function invocationType(ctx) {
 function createPayload(ctx, metadata, status, user) {
   let headers = Object.assign({ "Content-Type": "application/json", "x-cold-start": "true" }, ctx.state.correlation)
   let env = Object.assign({ }, ctx.env, { "FUNC_MONGODB_CACHE_CONNECTION": "false" })
+  let token = getIDPAuthorizationToken(ctx)
   return { 
     stageVariables: env,
     headers,
     body: JSON.stringify({
       user,
       spreadsheetid: metadata.id,
-      statusid: status.uuid
+      statusid: status.uuid,
+      token
     })
   }
 }
@@ -116,8 +118,10 @@ function getOrgFromEmail(email) {
 }
 
 function getIDPAuthorizationToken(ctx) {
-  return ctx.event.queryStringParameters && ctx.event.queryStringParameters['idptoken'] || null
+  return ctx.event && ctx.event.body && ctx.event.body.token || null
 }
+
+
 
 module.exports = {
   loadHandler

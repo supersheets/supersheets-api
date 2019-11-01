@@ -248,6 +248,16 @@ describe('Reload', () => {
       }
     })
   })
+  it ('should set the idp token in the payload body', async () => {
+    let ctx = createCtx()
+    ctx.event.body.token = 'my.google.token' 
+    ctx.event.queryStringParameters = { "dryrun": "true" }
+    await func.invoke(ctx)
+    let payload = JSON.parse(ctx.state.lambdaparams["Payload"])
+    expect(JSON.parse(payload.body)).toMatchObject({
+      token: 'my.google.token'
+    })
+  })
   it ('should invoke the loader lambda', async () => {
     let ctx = createCtx()
     await func.invoke(ctx)
@@ -270,7 +280,8 @@ function createCtx() {
       },
       headers: {
         'Authorization': TOKEN
-      }
+      },
+      body: { }
     },
     env: {
       GOOGLESHEETS_BASE_URL: process.env.GOOGLESHEETS_BASE_URL,

@@ -23,9 +23,8 @@ async function setAuthorizationToken(ctx, next) {
   return await next()
 }
 
-// NOT IMPLEMENTED
 function getUserOAuthToken(ctx) {
-  return null
+  return ctx.event && ctx.event.body && ctx.event.body.token || null
 }
 
 async function fetchServiceAccountOAuthToken(ctx) {

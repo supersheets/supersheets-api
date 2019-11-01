@@ -60,6 +60,12 @@ describe('setAuthorizationToken', () => {
     await setAuthorizationToken(ctx, NOOP)
     expect(ctx.state.oauthtoken).toEqual(expect.stringContaining("ya29.c."))
   })
+  it ('should set the users google oauth token if sent from start load', async () => {
+    let ctx = createTestCtx()
+    ctx.event.body.token = 'my.google.token'
+    await setAuthorizationToken(ctx, NOOP)
+    expect(ctx.state.oauthtoken).toEqual('my.google.token')
+  })
 })
 
 describe('setSheetsAPI', () => {
