@@ -1,34 +1,36 @@
 // Based on Gatsby
 // https://www.gatsbyjs.org/docs/schema-connections/
+const sheetschema = require('./sheet')
 
 const SEP = "___"
+const SPACES = "    "
+
+function getSheetSchemas(metadata) {
+  // construct 
+  let schemas = metadata.sheets && metadata.sheets.map(sheet => { return { 
+    title: sheet.title,
+    schema: sheet.schema,
+    options: { }
+  } }) || [ ]
+  schemas.push({
+    title: "Row",
+    schema: metadata.schema,
+    options: { names: { find: 'find', findOne: 'findOne' } }
+  })
+  return schemas 
+}
 
 function generate(metadata, options) {
   options = options || { }
-  // var schema = new GraphQLSchema({
-  //   query: generateQuery(metadata, options)
-  // })
-  // return printSchema(schema)
   let s = `schema {\n  query: Query\n}\n`
+  let sheets = getSheetSchemas(metadata)
   s += `\n`
-  s += generateQuery(metadata, options)
-  s += `\n`
-  s += generateRow(metadata, options)
-  s += `\n`
-  s += generateRowConnection(metadata, options)
-  s += `\n`
-  s += generateRowEdge(metadata, options)
-  s += `\n`
-  s += generateGoogleDocTypes(metadata, options)
-  s += `\n`
-  s += generateFieldsEnum(metadata, options)
-  s += `\n`
-  s += generateFilterInput(metadata, options)
-  s += `\n`
-  s += generateGoogleDocFilterInputs(metadata, options)
-  s += `\n`
-  s += generateSortInput(metadata, options)
-  s += `\n`
+  s += generateQuery(sheets, options)
+  s += `\n\n`
+  for (let sheet of sheets) {
+    s += sheetschema.generate(sheet)
+    s += `\n`
+  }
   s += generateStaticTypeDefs()
   s += `\n`
   return s
@@ -40,13 +42,16 @@ type Query {
   findOne(filter: FilterInput, limit: Int, skip: Int, sort: SortInput): Doc
 }
 */
-function generateQuery(metadata, options) {
+function generateQuery(sheets, options) {
   options = options || { }
-  let name = options.name || "Row"
   let s = `type Query {\n`
-  s += `  find(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}Connection\n`
-  s += `  findOne(filter: ${name}FilterInput, limit: Int, skip: Int, sort: SortInput): ${name}\n`
-  s += `}\n`
+  for (let sheet of sheets) {
+    s += sheetschema.generateFindQuery(sheet, Object.assign({ level: 1 }, sheet.options))
+    s += '\n\n'
+    s += sheetschema.generateFindOneQuery(sheet, Object.assign({ level: 1 }, sheet.options))
+    s += `\n`
+  }
+  s += `}`
   return s
 }
 
@@ -83,6 +88,7 @@ function generateRowConnection(metadata, options) {
   options = options || { }
   let name = options.name || "Row"
   let s = `type ${name}Connection {\n`
+  s += `  rows: [${name}Edge!]\n`
   s += `  edges: [${name}Edge!]\n`
   s += `  totalCount: Int!\n`
   s += `  pageInfo: PageInfo!\n` 
@@ -98,6 +104,7 @@ function generateRowEdge(metadata, options) {
   let name = options.name || "Row"
   let s = `type ${name}Edge {\n`
   s += `  node: ${name}!\n`
+  s += `  row: ${name}!\n`
   // Not supported yet
   // s += `  next: ...?!\n`
   // s += `  previous: ...?!\n`
@@ -105,6 +112,9 @@ function generateRowEdge(metadata, options) {
   return s
 }
 
+function generateGoogleSheetTypes(metadata, options) {
+
+}
 
 // function generateRowGroupConnection(metadata, options) {
 //   options = options || { }
@@ -295,9 +305,7 @@ function generateSortInput(metadata, options) {
 // https://graphql.org/swapi-graphql/
 
 function generateStaticTypeDefs() {
-  return `
-
-scalar Date
+  return `scalar Date
 scalar Datetime
 
 enum SortOrderEnum {

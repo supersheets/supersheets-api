@@ -67,8 +67,8 @@ describe('Function', () => {
       statusCode: 200
     })
     let body = JSON.parse(ctx.response.body)
-    console.log("Schema", body.schema)
-    console.log("metadata", JSON.stringify(body.metadata.schema, null, 2))
+    //console.log("Schema", body.schema)
+    //console.log("metadata", JSON.stringify(body.metadata.schema, null, 2))
   })
 })
 

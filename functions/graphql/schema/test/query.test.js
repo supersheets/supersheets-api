@@ -7,26 +7,55 @@ let metadata = {
   schema: {
     columns: [
       {"name":"letter","datatype":"String","sample":"A","sheets":["data"]},
-      {"name":"value","datatype":"Number","sample":65,"sheets":["data"]},
-      {"name":"doc","datatype":"GoogleDoc","sample":{ hello: "world" },"sheets":["data"]}
+      {"name":"value","datatype":"Int","sample":65,"sheets":["data"]},
+      {"name":"content","datatype":"GoogleDoc","sample":{ hello: "world" },"sheets":["data"]}
     ],
     docs: {
-      doc: {
-        name: "doc",
+      "content": {
+        name: "content",
         fields: [ 
           { name: "hello", datatype: "String", sample: "world" }
         ]
       }
     }
-  }
+  },
+  sheets: [ {
+    title: "Posts",
+    schema: {
+      columns: [
+        { name: "_id", datatype: "String" },
+        { name: "title", datatype: "String" },
+        { name: "content", datatype: "GoogleDoc" },
+        { name: "published", datatype: "Datetime" },
+        { name: "author_email", datatype: "String" }
+      ],
+      docs: {
+        'content': {
+          fields: [ 
+            { name: "body", datatype: "String" },
+            { name: "description", datatype: "String" } 
+          ]
+        }
+      }
+    }
+  }, {
+    title: "Authors",
+    schema: {
+      columns: [
+        { name: "_id", datatype: "String" },
+        { name: "name", datatype: "String" },
+        { name: "email", datatype: "String" }
+      ]
+    }
+  } ]
 }
 
 describe('Query', () => {
-  it ('should exec a query', async () => {
+  it ('should exec a Row query', async () => {
     let query = `
     { find (filter: { letter: { eq: "A" } } ) { 
-      edges {
-        node {
+      rows {
+        row {
           letter
         }
       } 
@@ -39,13 +68,65 @@ describe('Query', () => {
       }
     } }
     `
-    //let typeDefs = generate(metadata, { name: "Letter" })
     let typeDefs = generate(metadata)
     let handler = createApolloHandler({ 
       typeDefs, 
       resolvers: createResolvers() })
-    let data = await execQuery(handler, query)
-    console.log("Data", JSON.stringify(data, null, 2))
+    let data = JSON.parse((await execQuery(handler, query)).body)
+    expect(data).toEqual({
+      "data": {
+        "find": {
+          "rows": [
+            {
+              "row": {
+                "letter": "a"
+              }
+            },
+            {
+              "row": {
+                "letter": "a"
+              }
+            }
+          ],
+          "totalCount": 2,
+          "pageInfo": {
+            "hasNextPage": false,
+            "hasPreviousPage": false,
+            "startCursor": null,
+            "endCursor": null
+          }
+        }
+      }
+    })
+  })
+  it ('should exec a sheet specific query', async () => {
+    let query = `
+    { findPosts (filter: { title: { eq: "Hello World" } } ) { 
+      rows {
+        row {
+          title
+        }
+      } 
+    } }
+    `
+    let typeDefs = generate(metadata)
+    let handler = createApolloHandler({ 
+      typeDefs, 
+      resolvers: createResolvers() })
+    let data = JSON.parse((await execQuery(handler, query)).body)
+    expect(data).toEqual({
+      "data": {
+        "findPosts": {
+          "rows": [
+            {
+              "row": {
+                "title": "Hello World"
+              }
+            }
+          ]
+        }
+      }
+    })
   })
 })
 
@@ -62,20 +143,21 @@ function createResolvers() {
   return {
     Query: {
       find: async (parent, args, context, info) => {
-        console.log("RESOLVER: PARENT", JSON.stringify(parent, null , 2))
-        console.log("RESOLVER: ARGS", JSON.stringify(args, null , 2))
-        console.log("RESOLVER: CONTEXT", JSON.stringify(context, null , 2))
         // should execute the mongo query 
         let query = args
         return query
       },
       findOne: async (parent, args, context, info) => {
         return { letter: 'a', value: 1 }
+      },
+      findPosts: async (parent, args, context, info) => {
+        let query = args
+        query["_sheet"] = "Posts"
+        return query
       }
     },
     RowConnection: {
       pageInfo: async(query) => {
-        console.log("RowConnection.pageInfo", JSON.stringify(query))
         return {
           hasNextPage: false,
           hasPreviousPage: false,
@@ -84,14 +166,19 @@ function createResolvers() {
         }
       },
       totalCount: async(query) => {
-        console.log("RowConnection.totalCount", JSON.stringify(query))
         return 2
       },
-      edges: async (query) => {
-        console.log("RowConnection.edges", JSON.stringify(query))
+      rows: async (query) => {
         return [ 
-            { node: { letter: 'a', value: 1 } },
-            { node: { letter: 'a', value: 1 } }
+          { row: { letter: 'a', value: 1 } },
+          { row: { letter: 'a', value: 1 } }
+        ]
+      }
+    },
+    PostConnection: {
+      rows: async (query) => {
+        return [
+          { row: { title: "Hello World" } }
         ]
       }
     }

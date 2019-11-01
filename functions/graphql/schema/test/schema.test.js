@@ -6,12 +6,12 @@ let metadata = {
   schema: {
     columns: [
       {"name":"letter","datatype":"String","sample":"A","sheets":["data"]},
-      {"name":"value","datatype":"Number","sample":65,"sheets":["data"]},
-      {"name":"doc","datatype":"GoogleDoc","sample":{ hello: "world" },"sheets":["data"]}
+      {"name":"value","datatype":"Int","sample":65,"sheets":["data"]},
+      {"name":"content","datatype":"GoogleDoc","sample":{ hello: "world" },"sheets":["data"]}
     ],
     docs: {
-      doc: {
-        name: "doc",
+      "content": {
+        name: "content",
         fields: [ 
           { name: "hello", datatype: "String", sample: "world" }
         ]
@@ -22,7 +22,8 @@ let metadata = {
 
 describe('Generate', () => {
   it ('should parse valid schema', async () => {
-    let sdl = generate(metadata, { name: "Letter" })
+    let sdl = generate(metadata)
+    //console.log(sdl)
     let error = null
     try {
       let parsed = gql`${sdl}`
