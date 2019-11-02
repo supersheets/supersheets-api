@@ -75,7 +75,7 @@ async function fetchDoc(axios, url) {
 }
 
 function getLoadMode(metadata) {
-  return metadata.config && metadata.config.mode || 'FORMATTED'
+  return metadata.config && metadata.config.mode || 'UNFORMATTED' 
 }
 
 function hasDataTypes(metadata) {

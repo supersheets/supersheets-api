@@ -13,15 +13,16 @@ function convertValues(cols, docs, datatypes, options) {
   options = options || { }
   for (let doc of docs) {
     for (let col of cols) {
-      if (conv[col]) {
-        try {
-          doc[col] = conv[col](doc[col], options)
-        } catch (err) {
-          doc[col] = null 
-          doc["_errors"].push(JSON.stringify({
-            field: col, message: err.message
-          }))
-        }
+      // 1) initial load where user has no datatypes
+      // 2) reload and sheet has new cols which don't have configured datatype
+      let f = conv[col] || convertToString  
+      try {
+        doc[col] = f(doc[col], options)
+      } catch (err) {
+        doc[col] = null 
+        doc["_errors"].push(JSON.stringify({
+          field: col, message: err.message
+        }))
       }
       if (datatypes[col] == "GoogleDoc" && doc[col] && (typeof doc[col] == 'object')) {
         let obj = doc[col]

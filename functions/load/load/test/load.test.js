@@ -8,11 +8,12 @@ const { loadHandler } = require('../lib/load')
 const { findStatus } = require('../lib/status')
 
 // Supersheets Public View GoogleDoc Test
+// https://docs.google.com/spreadsheets/d/1xyhRUvGTAbbOPFPNB-05Xn6rUT60wNUXJxtGY5RWzpU/edit#gid=0
 const GOOGLESPREADSHEET_DOCS_ID = "1xyhRUvGTAbbOPFPNB-05Xn6rUT60wNUXJxtGY5RWzpU"
 // Supersheets Public View Test
 const GOOGLESHEET_PUBLIC_VIEW_ID = '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I'
 
-describe('Load', () => {
+describe.only('Load', () => {
   let token = null
   let plugin = new MongoDBPlugin()
   let client = null
@@ -35,6 +36,22 @@ describe('Load', () => {
     let ctx = createCtx({ mongodb: db, token })
     ctx.state.mongodb = db
     await loadHandler(ctx)
+    expect(ctx.state.metadata).toMatchObject({
+      id: GOOGLESPREADSHEET_DOCS_ID
+    })
+  })
+  it ('should do a reload with no datatypes and UNFORMATTED mode', async () => {
+    let ctx = createCtx({ mongodb: db, token })
+    ctx.state.metadata.config = { mode: 'UNFORMATTED' }
+    ctx.state.mongodb = db
+    await loadHandler(ctx)
+    console.log(JSON.stringify(ctx.state.metadata, null, 2))
+    let col = ctx.state.metadata.sheets[0].schema.columns.find(col => col.name == "id")
+    expect(col).toMatchObject({
+      name: "id",
+      datatype: "String",
+      sample: "123"  // this should be a string and not the number 123
+    })
     expect(ctx.state.metadata).toMatchObject({
       id: GOOGLESPREADSHEET_DOCS_ID
     })

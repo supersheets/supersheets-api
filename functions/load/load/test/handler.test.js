@@ -82,6 +82,7 @@ describe('Load', () => {
     await initstatus(db, statusuuid)
     let ctx = createCtx()
     await func.invoke(ctx)
+    console.log(ctx.error)
     expect(ctx.error).toBeFalsy()
     let metadata = await getmeta(db, GOOGLESPREADSHEET_ID)
     expect(metadata).toMatchObject({

@@ -1,7 +1,7 @@
 const uuidV4 = require('uuid/v4')
 const COLLECTION = 'spreadsheets'
 const IGNORE_PREFIX = "_"
-const { constructSchema } = require('./schema')
+const { constructSchema, updateConfig } = require('./schema')
 
 async function metaHandler(ctx, next) {
   await initOrFindMetadata(ctx)
@@ -68,6 +68,7 @@ function updateSpreadsheetMetadata(ctx) {
   let metadata = ctx.state.metadata
   updateSpreadsheetCountsFromSheets(metadata)
   metadata.schema = constructSchema(metadata)
+  metadata.config = updateConfig(metadata)
 }
 
 async function createOrUpdateMetadata(ctx) {

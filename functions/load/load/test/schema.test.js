@@ -5,7 +5,8 @@ const {
   mergeSheetSchemaColumns,
   mergeSheetSchemaDocs,
   constructSheetSchema,
-  constructDocSchemas
+  constructDocSchemas,
+  updateConfig
 } = require('../lib/schema')
 
 describe('constructSchemna', () => {
@@ -384,162 +385,42 @@ describe('constructSheetSchema', () => {
   ])
 })
 
-// From old doc.test.js
-// 
-// describe('Doc Schema', () => {
-//   it ('should create a schema for a single google doc column', async () => {
-//     let docs = [ { 
-//       "passage": {
-//         hello: "world",
-//         foo: "bar"
-//       }
-//     } ]
-//     let datatypes = { 
-//       "passage": "GoogleDoc"
-//     } 
-//     let schema = createGoogleDocSchemas(docs, datatypes)
-//     expect(schema).toMatchObject({
-//       passage: {
-//         name: "passage",
-//         columns: [
-//           {
-//             "name": "hello",
-//             "datatype": "String",
-//             "sample": "world"
-//           },
-//           {
-//             "name": "foo",
-//             "datatype": "String",
-//             "sample": "bar"
-//           }
-//         ]
-//       }
-//     })
-//   })
-//   it ('should create a schema for a multiple google doc columns', async () => {
-//     let docs = [ { 
-//       "passage": {
-//         hello: "world",
-//         foo: "bar"
-//       },
-//       "author": {
-//         first: "daniel",
-//         last: "yoo"
-//       }
-//     } ]
-//     let datatypes = { 
-//       "passage": "GoogleDoc",
-//       "author": "GoogleDoc"
-//     } 
-//     let schema = createGoogleDocSchemas(docs, datatypes)
-//     expect(schema['passage']).toMatchObject({
-//       "name": "passage",
-//       "columns": [
-//         {
-//           "name": "hello",
-//           "datatype": "String",
-//           "sample": "world"
-//         },
-//         {
-//           "name": "foo",
-//           "datatype": "String",
-//           "sample": "bar"
-//         }
-//       ]
-//     })
-//     expect(schema['author']).toMatchObject({
-//       "name": "author",
-//       "columns": [
-//         {
-//           "name": "first",
-//           "datatype": "String",
-//           "sample": "daniel"
-//         },
-//         {
-//           "name": "last",
-//           "datatype": "String",
-//           "sample": "yoo"
-//         }
-//       ]
-//     })
-//   })
-//   it ('should set all falsy sample values as null', async () => {
-//     let docs = [ 
-//       { 
-//         "passage": {
-//           hello: "",
-//           foo: null
-//         }
-//       }
-//     ]
-//     let datatypes = { 
-//       "passage": "GoogleDoc"
-//     } 
-//     let schema = createGoogleDocSchemas(docs, datatypes)
-//     expect(schema.passage.columns[0]).toMatchObject({
-//       "name": "hello",
-//       "datatype": "String",
-//       "sample": null
-//     })
-//     expect(schema.passage.columns[1]).toMatchObject({
-//       "name": "foo",
-//       "datatype": "String",
-//       "sample": null
-//     })
-//   })
-//   it ('should find a non null sample if it exists', async () => {
-//     let docs = [ 
-//       { 
-//         "passage": {
-//           hello: "",
-//           foo: null
-//         }
-//       }, 
-//       {
-//         "passage": {
-//           hello: "world",
-//           foo: "bar"
-//         }
-//       }
-//     ]
-//     let datatypes = { 
-//       "passage": "GoogleDoc"
-//     } 
-//     let schema = createGoogleDocSchemas(docs, datatypes)
-//     expect(schema.passage.columns[0]).toMatchObject({
-//       "name": "hello",
-//       "datatype": "String",
-//       "sample": "world"
-//     })
-//     expect(schema.passage.columns[1]).toMatchObject({
-//       "name": "foo",
-//       "datatype": "String",
-//       "sample": "bar"
-//     })
-//     docs = [ 
-//       {
-//         "passage": {
-//           hello: "world",
-//           foo: "bar"
-//         }
-//       },
-//       { 
-//         "passage": {
-//           hello: null,
-//           foo: ""
-//         }
-//       }
-//     ]
-//     schema = createGoogleDocSchemas(docs, datatypes)
-//     expect(schema.passage.columns[0]).toMatchObject({
-//       "name": "hello",
-//       "datatype": "String",
-//       "sample": "world"
-//     })
-//     expect(schema.passage.columns[1]).toMatchObject({
-//       "name": "foo",
-//       "datatype": "String",
-//       "sample": "bar"
-//     })
-//   })
-// })
+describe('updateConfig', () => {
+  it ('should init config for new metadata as UNFORMATTED', async () => {
+    let metadata = { }
+    let config = updateConfig(metadata)
+    expect(config).toMatchObject({
+      mode: "UNFORMATTED"
+    })
+  })
+  it ('should use existing datatypes', async () => {
+    let metadata = { config: { datatypes: { "col1": "Int" } } }
+    let config = updateConfig(metadata)
+    expect(config).toMatchObject({
+      datatypes: {
+        "col1": "Int"
+      }
+    })
+  })
+  it ('should init config.datatypes with column schema si.e. new columns', async () => {
+    let metadata = { 
+      config: { 
+        datatypes: { "col1": "Int" } 
+      },
+      schema: {
+        columns: [ 
+          { name: "_id", datatype: "String" },
+          { name: "col1", datatype: "String" },
+          { name: "col2", datatype: "Int" }
+        ]
+      }
+    }
+    let config = updateConfig(metadata)
+    expect(config).toMatchObject({
+      datatypes: {
+        "col1": "Int",
+        "col2": "Int"
+      }
+    })
+  })
+})

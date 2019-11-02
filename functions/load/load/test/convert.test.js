@@ -10,6 +10,21 @@ const {
   createConverter
 } = require('../lib/convert')
 
+describe("convertValues", () => {
+  it ('should convert to String if there is not user configured datatype', async () => {
+    let cols = [ "Number", "String" ]
+    let docs = [ { "Number": 1, "String": "hello" } ] 
+    let datatypes = {
+      "String": "String"
+    }
+    let converted = convertValues(cols, docs, datatypes)
+    expect(converted.docs[0]).toEqual({
+      "Number": "1",
+      "String": "hello"
+    })
+  })
+})
+
 describe("GoogleDoc", () => {
   let googledoc = testdocs["testdoc.json"]
   let cols = null
@@ -27,7 +42,6 @@ describe("GoogleDoc", () => {
       "GoogleDoc": "GoogleDoc"
     }
     let converted = convertValues(cols, docs, datatypes)
-    console.log(JSON.stringify(converted.docs[0], null, 2))
     expect(converted.docs[0]).toMatchObject({
       "GoogleDoc": {
         "name": "body",

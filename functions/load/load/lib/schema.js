@@ -151,11 +151,23 @@ function createdReservedSchemaColumns(doc) {
   } ]
 }
 
+function updateConfig(metadata) {
+  let config = JSON.parse(JSON.stringify(metadata.config || { mode: "UNFORMATTED", datatypes: { } }))
+  config.mode = config.mode || "UNFORMATTED"
+  config.datatypes = config.datatypes || { }
+  metadata.schema && metadata.schema.columns.filter(col => !col.reserved).forEach(col => {
+    if (!config.datatypes[col.name]) {
+      config.datatypes[col.name] = col.datatype
+    }
+  })
+  return config
+}
 
 module.exports = {
   constructSchema,
   mergeSheetSchemaColumns,
   mergeSheetSchemaDocs,
   constructSheetSchema,
-  constructDocSchemas
+  constructDocSchemas,
+  updateConfig
 }
