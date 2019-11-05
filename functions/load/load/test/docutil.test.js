@@ -2,7 +2,7 @@ require('dotenv').config()
 const path = require('path')
 const fs = require("fs")
 const testdocs = initTestDocs([ "testdoc.json"])
-const { isGoogleDoc, extractData, isFieldName, isFieldNameValid  } = require('../lib/docutil')
+const { isGoogleDoc, extractData, isFieldName, isFieldNameValid  } = require('../lib/docs')
 
 describe('isGoogleDoc', () => {
   it ('should match if any docid is found', async () => {

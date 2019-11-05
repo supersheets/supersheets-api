@@ -1,29 +1,67 @@
-// THIS FILE IS GOING TO BE DEPRECATED 
-// docs.js is the new file
-
 const { JSONPath } = require('jsonpath-plus')
 const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
 const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/
 const KEY_PREFIX = "$"
 const IGNORE_PREFIX = "_"
+const docmatter = require('@supersheets/docmatter')
+
+async function fetchDocsData(axios, metadata, cols, docs) {
+  if (!hasGoogleDocDataTypes(metadata)) return
+  let doccols = filterGoogleDocColumns(metadata, cols)
+  await fetchDocsForColumns(axios, doccols, docs)
+}
+
+async function fetchDocsForColumns(axios, cols, docs) {
+  for (let doc of docs) {
+    for (let col of cols) {
+      if (doc[col] && isGoogleDoc(doc[col])) {
+        doc[col] = await fetchDoc(axios, doc[col])
+      }
+    }
+  }
+}
+
+function hasGoogleDocDataTypes(metadata) {
+  if (!hasDataTypes(metadata)) return false
+  let datatypes = metadata.config.datatypes
+  for (let col in datatypes) {
+    if (datatypes[col] == "GoogleDoc") return true
+  }
+  return false
+}
+
+function hasDataTypes(metadata) {
+  return metadata && metadata.config && metadata.config.datatypes || null
+}
+
+function filterGoogleDocColumns(metadata, cols) {
+  let datatypes = metadata.config && metadata.config.datatypes || { }
+  return cols.filter(col => datatypes[col] == "GoogleDoc")
+}
 
 function isGoogleDoc(url) {
   let match = docidRegex.exec(url)
   return match && match[1] || false
 }
 
-// Basically how this works
-// 1) Find all the 2 column tables in the doc (extractTables)
-// - 2 column format could be relaxed. we just need cell order to be key,val,key,val
-// 2) We get a list of all cells in the table
-// - if the first line in the cell starts with '$' is a key
-// - otherwise it is a value { text: , content: }
-// 3) We match key and value based on cell order
-// 4) We mash all tables key-values together and return
-
-//let path = "$..table[?(@.columns === 2)]"
-// I think the above doesn't work as advertized because table
-// isn't in an array like the "books" example in the doc
+async function fetchDoc(axios, url) {
+  let docid = isGoogleDoc(url)
+  if (!docid) {
+    throw new Error(`Invalid Google Doc URL: ${url}`)
+  }
+  let doc = (await axios.get(`${docid}`)).data
+  let reserved = { '_docid': docid, '_url': url }
+  // this is where we us docmatter and format new data
+  // {
+  //   ...data
+  //   _content: <compressed doc>
+  //   _text: <uncompressed text>
+  // }
+  // actually should put the logic above in extractData
+  // because it needs to filter for names etc.
+  let data = extractData(doc)
+  return Object.assign(reserved, data) // ensures that reserved keys sorted first
+}
 
 function extractData(doc) {
   let tables = extractTables(doc)
@@ -92,43 +130,13 @@ function matchKeysAndValues(cells) {
   return values
 }
 
-// function extractTextContent(cell) {
-//   let path = "$..elements..textRun..content"
-//   let lines = JSONPath(path, cell)
-//   return lines.join('').trim()
-// }
 
 module.exports = {
   isGoogleDoc,
+  extractData,
+  fetchDocsData,
+  fetchDocsForColumns,
+  fetchDoc,
   isFieldName,
-  isFieldNameValid,
-  extractData
+  isFieldNameValid
 }
-
-
-// Images
-
-// We need to keep some kind of image index so we know what we've uploaded and what we haven't
-// We create a new metadata property called images
-// images {
-// //    documentid: {
-//           objid: {
-//             uri: ...
-//             ...
-//           }
-// }
-// if we have the image and obj id already we replace with the google doc with the id we haves
-// if we don't then we need to upload it to s3, add it to the index, and update the doc with the images
-// 
-
-// docname: {
-//   _id: 
-//   _docid: 
-//   ...data:
-//   content: <Google Doc object>
-//   text: 
-//   html
-//   excerpt
-
-// }
-

@@ -1,6 +1,8 @@
 const uuidV4 = require('uuid/v4')
 const COLLECTION = 'spreadsheets'
 const IGNORE_PREFIX = "_"
+const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/
+
 const { constructSchema, updateConfig } = require('./schema')
 
 async function metaHandler(ctx, next) {
@@ -63,6 +65,12 @@ function createMetadataFromGoogleSpreadsheet(doc) {
   metadata.sheets = sheets
   return metadata
 }
+
+
+// This needs to wait until all Goalbook google sheets use graphql compatible sheet names
+// function isValidSheetTitle(title) {
+//   return title && !title.startsWith(IGNORE_PREFIX) && title.match(GRAPHQL_NAME_REGEX) && true || false
+// }
 
 function updateSpreadsheetMetadata(ctx) {
   let metadata = ctx.state.metadata
