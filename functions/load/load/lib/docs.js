@@ -1,7 +1,8 @@
 const { JSONPath } = require('jsonpath-plus')
 const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
 const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/
-const KEY_PREFIX = "$"
+//const KEY_PREFIX = "$"
+const KEY_PREFIX = ''
 const IGNORE_PREFIX = "_"
 const docmatter = require('@supersheets/docmatter')
 
@@ -51,54 +52,26 @@ async function fetchDoc(axios, url) {
   }
   let doc = (await axios.get(`${docid}`)).data
   let reserved = { '_docid': docid, '_url': url }
-  // this is where we us docmatter and format new data
-  // {
-  //   ...data
-  //   _content: <compressed doc>
-  //   _text: <uncompressed text>
-  // }
-  // actually should put the logic above in extractData
-  // because it needs to filter for names etc.
   let data = extractData(doc)
   return Object.assign(reserved, data) // ensures that reserved keys sorted first
 }
 
 function extractData(doc) {
-  let tables = extractTables(doc)
-  let values = tables.map(cells => matchKeysAndValues(cells))
-  let data = Object.assign({}, ...values)
-  data["_doc"] = doc
+  let { data, content } = docmatter(doc)
+  data = filterValidFields(data)
+  data["_doc"] = doc // leave this in for backward compatibility (for now)
+  data["_content"] = content
   return data
 }
 
-function extractTables(doc) {
-  let path = "$..table"
-  let tables = JSONPath(path, doc)
-  return tables.filter(table => table.columns == 2).map(table => extractCells(table))
-}
-
-function extractCells(table) {
-  let path = "$..tableCells[*][content]"
-  let cells = JSONPath(path, table)
-  return cells.map(cell => extractParagraphs(cell))
-}
-
-function extractParagraphs(cell) {
-  if (isFieldName(cell)) {
-    return extractFieldName(cell)
-  } 
-  return cell
-  // return { 
-  //   text: extractTextContent(cell),
-  //   content: cell
-  // } 
-}
-
-function isFieldName(cell) {
-  let path = "$..elements..textRun..content"
-  let paragraphs = JSONPath(path, cell)
-  let name = paragraphs[0].trim()
-  return isFieldNameValid(name) 
+function filterValidFields(data) {
+  let filtered = { }
+  for (let field in data) {
+    if (isFieldNameValid(field)) {
+      filtered[field] = data[field]
+    }
+  }
+  return filtered
 }
 
 function isFieldNameValid(name) {
@@ -107,36 +80,11 @@ function isFieldNameValid(name) {
   return field && !field.startsWith(IGNORE_PREFIX) && name.substring(KEY_PREFIX.length).match(GRAPHQL_NAME_REGEX) || false
 }
 
-function extractFieldName(cell) {
-  let path = "$..elements..textRun..content"
-  let paragraphs = JSONPath(path, cell)
-  return paragraphs[0].trim()
-}
-
-function matchKeysAndValues(cells) {
-  let values = { }
-  let key = null
-  for (let cell of cells) {
-    if (typeof cell === "string" && cell.startsWith("$")) {
-      key = cell
-      continue
-    }
-    if (key) {
-      //values[key.substring(1)] = cell.text
-      values[key.substring(1)] = cell
-      key = null
-    }
-  }
-  return values
-}
-
-
 module.exports = {
   isGoogleDoc,
   extractData,
   fetchDocsData,
   fetchDocsForColumns,
   fetchDoc,
-  isFieldName,
   isFieldNameValid
 }

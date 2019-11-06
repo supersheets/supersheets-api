@@ -1,18 +1,8 @@
-const {
-  constructDocs,
-} = require('./sheetutil')
-
-const {
-  fetchDocsData
-} = require('./docs')
-
-const {
-  constructSheetSchema,
-} = require('./schema')
-
-const {
-  convertValues
-} = require('./convert')
+const { constructDocs } = require('./sheetutil')
+const { fetchDocsData } = require('./docs')
+const { fetchImages } = require('./images')
+const { constructSheetSchema } = require('./schema')
+const { convertValues } = require('./convert')
 
 async function loadSheet(ctx, sheet) {
   let metadata = ctx.state.metadata
@@ -22,8 +12,6 @@ async function loadSheet(ctx, sheet) {
     tz: metadata.tz,
     locale: metadata.locale
   })
-  // load all images here
-  // loadImages(cols, docs, datatypes)
   let schema = constructSheetSchema(cols, docs, datatypes)
   schema.excluded = excluded
   sheet.cols = cols
@@ -36,10 +24,7 @@ async function loadSheet(ctx, sheet) {
 async function fetchData(ctx, metadata, sheet) {
   let { cols, docs, excluded } = await fetchSheetData(ctx.state.sheetsapi, metadata.id, sheet, { mode: getLoadMode(metadata) })
   await fetchDocsData(ctx.state.docsapi, metadata, cols, docs)
-  // if (hasGoogleDocDataTypes(metadata)) {
-  //   let doccols = filterGoogleDocColumns(metadata, cols)
-  //   await fetchDocsData(ctx.state.docsapi, doccols, docs)
-  // }
+  await fetchImages(ctx.state.docsapi, metadata, cols, docs)
   return { cols, docs, excluded }
 }
 
@@ -59,59 +44,8 @@ function getLoadMode(metadata) {
   return metadata.config && metadata.config.mode || 'UNFORMATTED' 
 }
 
-
-// async function fetchDocsData(axios, cols, docs) {
-//   for (let doc of docs) {
-//     for (let col of cols) {
-//       if (doc[col] && isGoogleDoc(doc[col])) {
-//         doc[col] = await fetchDoc(axios, doc[col])
-//       }
-//     }
-//   }
-// }
-
-// async function fetchDoc(axios, url) {
-//   let docid = isGoogleDoc(url)
-//   if (!docid) {
-//     throw new Error(`Invalid Google Doc URL: ${url}`)
-//   }
-//   let doc = (await axios.get(`${docid}`)).data
-//   let reserved = { '_docid': docid, '_url': url }
-//   // this is where we us docmatter and format new data
-//   // {
-//   //   ...data
-//   //   _content: <compressed doc>
-//   //   _text: <uncompressed text>
-//   // }
-//   // actually should put the logic above in extractData
-//   // because it needs to filter for names etc.
-//   let data = extractData(doc)
-//   return Object.assign(reserved, data) // ensures that reserved keys sorted first
-// }
-
-
-// function hasDataTypes(metadata) {
-//   return metadata && metadata.config && metadata.config.datatypes || null
-// }
-
-// function hasGoogleDocDataTypes(metadata) {
-//   if (!hasDataTypes(metadata)) return false
-//   let datatypes = metadata.config.datatypes
-//   for (let col in datatypes) {
-//     if (datatypes[col] == "GoogleDoc") return true
-//   }
-//   return false
-// }
-
-// function filterGoogleDocColumns(metadata, cols) {
-//   let datatypes = metadata.config && metadata.config.datatypes || { }
-//   return cols.filter(col => datatypes[col] == "GoogleDoc")
-// }
-
 module.exports = {
   loadSheet,
   fetchData,
-  fetchSheetData,
-  // fetchDocsData,
-  // fetchDoc
+  fetchSheetData
 }

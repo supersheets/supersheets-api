@@ -10,7 +10,14 @@ const GOOGLEDOC2_URL = 'https://docs.google.com/document/d/1ej3jkUeP433331cMnt-L
 // Supersheets Inaccessible Doc Test
 const INACCESSIBLE_URL = 'https://docs.google.com/document/d/1rdezdce_i3Oj_vpERMA9BLsQcue1yD5jTcneS6LuzN8/edit'
 
+// Supersheets Public Doc Test v2
+const GOOGLEDOC_URL_V2 = 'https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit'
+// Supersheets Public Doc Test 2 v2
+const GOOGLEDOC2_URL_V2 = 'https://docs.google.com/document/d/1LCvn6UXzgadxwf9v98JXsoyGYhRSNUdR1gooOp2D7MA/edit'
+
 const {
+  isGoogleDoc,
+  isFieldNameValid,
   fetchDocsData,
   fetchDocsForColumns,
   fetchDoc
@@ -32,31 +39,33 @@ describe('fetchDocsData', () => {
     let docs = [ 
       {
         "name": "hello",
-        "doc1": GOOGLEDOC_URL,
-        "doc2": GOOGLEDOC2_URL
+        "doc1": GOOGLEDOC_URL_V2,
+        "doc2": GOOGLEDOC2_URL_V2
       },
       {
         "name": "world",
-        "doc1": GOOGLEDOC_URL,
-        "doc2": GOOGLEDOC2_URL
+        "doc1": GOOGLEDOC_URL_V2,
+        "doc2": GOOGLEDOC2_URL_V2
       }
     ]
     await fetchDocsForColumns(docsapi, cols, docs)
     expect(docs[0]).toMatchObject({
       "name": "hello",
       "doc1": {
-        "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
-        "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+        "_docid": "1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8",
+        "_url": "https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit"
       },
       "doc2": {
-        "_docid": "1ej3jkUeP433331cMnt-LMXQ4HzC8Kk4Dw1UeL-UW8z8",
-        "_url": "https://docs.google.com/document/d/1ej3jkUeP433331cMnt-LMXQ4HzC8Kk4Dw1UeL-UW8z8/edit"
+        "_docid": "1LCvn6UXzgadxwf9v98JXsoyGYhRSNUdR1gooOp2D7MA",
+        "_url": "https://docs.google.com/document/d/1LCvn6UXzgadxwf9v98JXsoyGYhRSNUdR1gooOp2D7MA/edit"
       }
     })
-    expect(convertToPlainText(docs[0]["doc1"].title)).toEqual(`The Gettysburg Address`)
-    expect(convertToPlainText(docs[0]["doc1"].body)).toEqual(`Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
-    expect(convertToPlainText(docs[0]["doc2"].title)).toEqual(`Song of Solomon`)
-    expect(convertToPlainText(docs[0]["doc2"].body)).toEqual(`The North Carolina Mutual life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`)
+    expect(docs[0]["doc1"].title).toEqual(`The Gettysburg Address`)
+    expect(docs[0]["doc1"].description).toEqual(`Four score and seven years ago our fathers brought forth on this continent ...`)
+    expect(convertToPlainText(docs[0]["doc1"]["_content"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
+    expect(docs[0]["doc2"].title).toEqual(`Song of Solomon`)
+    expect(docs[0]["doc2"].description).toEqual(`The North Carolina Mutual Life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`)
+    expect(convertToPlainText(docs[0]["doc2"]["_content"])).toEqual(`Song of Solomon\nThe North Carolina Mutual Life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`)
   })
 })
 
@@ -71,13 +80,14 @@ describe('fetchDoc', () => {
     docsapi.defaults.headers.common['Authorization'] = `Bearer ${token}`
   })
   it ('should fetch a doc and extract data', async () => {
-    let data = await fetchDoc(docsapi, GOOGLEDOC_URL)
+    let data = await fetchDoc(docsapi, GOOGLEDOC_URL_V2)
     expect(data).toMatchObject({
-      "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
-      "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+      "_docid": "1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8",
+      "_url": "https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit"
     })
-    expect(convertToPlainText(data.title)).toEqual('The Gettysburg Address')
-    expect(convertToPlainText(data.body)).toEqual(`Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
+    expect(data.title).toEqual('The Gettysburg Address')
+    expect(data.description).toEqual(`Four score and seven years ago our fathers brought forth on this continent ...`)
+    expect(convertToPlainText(data["_content"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
   })
   it ('should throw if given invalid googel doc url', async () => {
     let error = null 
@@ -98,5 +108,37 @@ describe('fetchDoc', () => {
     }
     expect(error).toBeTruthy()
     expect(error.message).toEqual(`Request failed with status code 403`)
+  })
+})
+
+
+describe('isGoogleDoc', () => {
+  it ('should match if any docid is found', async () => {
+    let url = "https://docs.google.com/document/d/1JGLoOUVoF5LA1f463b2MhwOUAKMDSnuPTuVR6yksS4E/edit?usp=sharing"
+    expect(isGoogleDoc(url)).toBeTruthy()
+    expect(isGoogleDoc(url)).toEqual("1JGLoOUVoF5LA1f463b2MhwOUAKMDSnuPTuVR6yksS4E")
+  })
+})
+
+describe('isFieldNameValid', () => {
+  it ('should not accept just "" null field name', async () => {
+    let n = ""
+    expect(isFieldNameValid(n)).toBe(false)
+  })
+  it ('should not accept invalid GraphQL field names', async () => {
+    let n = 'in.valid'
+    expect(isFieldNameValid(n)).toBe(false)
+  })
+  it ('should not accept with leading _ names', async () => {
+    let n = '_invalid'
+    expect(isFieldNameValid(n)).toBe(false)
+  })
+  it ('should accept valid GraphQL field names', async () => {
+    let n = 'validName'
+    expect(isFieldNameValid(n)).toBeTruthy()
+    n = 'valid_name'
+    expect(isFieldNameValid(n)).toBeTruthy()
+    n = 'V123'
+    expect(isFieldNameValid(n)).toBeTruthy()
   })
 })

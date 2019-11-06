@@ -147,12 +147,13 @@ describe('fetchData', () => {
       "id": 123,
       "writer": "danieljyoo@goalbookapp.com",
       "passage": {
-        "_docid": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0",
-        "_url": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+        "_docid": "1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8",
+        "_url": "https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit"
       }
     })
-    expect(convertToPlainText(docs[0].passage.title)).toEqual(`The Gettysburg Address`)
-    expect(convertToPlainText(docs[0].passage.body)).toEqual(`Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
+    expect(docs[0].passage.title).toEqual(`The Gettysburg Address`)
+    expect(docs[0].passage.description).toEqual(`Four score and seven years ago our fathers brought forth on this continent ...`)
+    expect(convertToPlainText(docs[0].passage["_content"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
   })
 })
 
@@ -175,7 +176,7 @@ describe('fetchSheetData', () => {
     expect(docs[0]).toMatchObject({
       "id": "123",
       "writer": "danieljyoo@goalbookapp.com",
-      "passage": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+      "passage": "https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit"
     })
   })
   it ('should fetch sheet data in unformatted mode', async () => {
@@ -187,7 +188,7 @@ describe('fetchSheetData', () => {
     expect(docs[0]).toMatchObject({
       "id": 123,
       "writer": "danieljyoo@goalbookapp.com",
-      "passage": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+      "passage": "https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit"
     })
   })
 })
