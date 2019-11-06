@@ -57,11 +57,12 @@ async function fetchDoc(axios, url) {
 }
 
 function extractData(doc) {
-  let { data, content, text } = docmatter(doc, { text: true })
+  let { title, data, content, text } = docmatter(doc, { text: true })
   data = filterValidFields(data)
   data["_doc"] = doc // leave this in for backward compatibility (for now)
   data["_content"] = content
   data["_text"] = text
+  data["_title"] = title
   return data
 }
 

@@ -60,10 +60,12 @@ describe('fetchDocsData', () => {
         "_url": "https://docs.google.com/document/d/1LCvn6UXzgadxwf9v98JXsoyGYhRSNUdR1gooOp2D7MA/edit"
       }
     })
+    expect(docs[0]["doc1"]["_title"]).toEqual("Supersheets Public Doc Test v2")
     expect(docs[0]["doc1"].title).toEqual(`The Gettysburg Address`)
     expect(docs[0]["doc1"].description).toEqual(`Four score and seven years ago our fathers brought forth on this continent ...`)
     expect(convertToPlainText(docs[0]["doc1"]["_content"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
     expect(convertToPlainText(docs[0]["doc1"]["_text"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
+    expect(docs[0]["doc2"]["_title"]).toEqual("Supersheets Public Doc Test 2 v2")
     expect(docs[0]["doc2"].title).toEqual(`Song of Solomon`)
     expect(docs[0]["doc2"].description).toEqual(`The North Carolina Mutual Life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`)
     expect(convertToPlainText(docs[0]["doc2"]["_content"])).toEqual(`Song of Solomon\nThe North Carolina Mutual Life Insurance agent promised to fly from Mercy to the other side of Lake Superior at three o'clock.`)
