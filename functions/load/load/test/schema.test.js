@@ -6,7 +6,8 @@ const {
   mergeSheetSchemaDocs,
   constructSheetSchema,
   constructDocSchemas,
-  updateConfig
+  updateConfig,
+  DOC_RESERVED_FIELDS
 } = require('../lib/schema')
 
 describe('constructSchemna', () => {
@@ -190,7 +191,7 @@ describe('constructDocSchemas', () => {
     let schemas = constructDocSchemas(cols, docs, datatypes)
     expect(schemas["doc1"]).toEqual({
       "name": "doc1",
-      "fields": [
+      "fields": DOC_RESERVED_FIELDS.concat([ 
         {
           "name": "hello",
           "datatype": "String",
@@ -203,11 +204,11 @@ describe('constructDocSchemas', () => {
           "sample": "value",
           "reserved": false
         }
-      ]
+      ])
     })
     expect(schemas["doc2"]).toEqual({
       "name": "doc2",
-      "fields": [
+      "fields": DOC_RESERVED_FIELDS.concat([
         {
           "name": "foo",
           "datatype": "Int",
@@ -220,7 +221,7 @@ describe('constructDocSchemas', () => {
           "sample": "value",
           "reserved": false
         }
-      ]
+      ])
     })
   })
   // check "title.0" bug
@@ -240,7 +241,7 @@ describe('constructDocSchemas', () => {
     expect(schema).toEqual({
       "doc": {
         "name": "doc",
-        "fields": [
+        "fields": DOC_RESERVED_FIELDS.concat([
           {
             "name": "hello",
             "datatype": "StringList",
@@ -249,11 +250,11 @@ describe('constructDocSchemas', () => {
             ],
             "reserved": false
           }
-        ]
+        ])
       }
     })
   })
-  it ('should create reserved fields', async () => {
+  it ('should create reserved fields and samples', async () => {
     let cols = [ 'doc' ]
     let docs = [ {
         'doc': {
@@ -271,20 +272,32 @@ describe('constructDocSchemas', () => {
     expect(schema).toEqual({
       "doc": {
         "name": "doc",
-        "fields": [
-          {
-            "name": "_docid",
-            "datatype": "String",
-            "sample": "my-google-doc-id",
-            "reserved": true
-          },
-          {
+        "fields": [ {
             "name": "_url",
             "datatype": "String",
             "sample": "https://link.to.google.doc",
             "reserved": true
-          },
-          {
+          }, {
+            "name": "_docid",
+            "datatype": "String",
+            "sample": "my-google-doc-id",
+            "reserved": true
+          }, {
+            name: "_title", 
+            datatype: "String",
+            reserved: true,
+            sample: null
+          }, {
+            name: "_text",
+            datatype: "String",
+            reserved: true,
+            sample: null, // needs to be the text version clipped
+          }, {
+            name: "_content",
+            datatype: "String",
+            reserved: true,
+            sample: null  // needs to be the compressed version clipped
+          }, {
             "name": "hello",
             "datatype": "StringList",
             "sample": [
@@ -341,10 +354,8 @@ describe('constructSheetSchema', () => {
     {
       "name": "doc1",
       "datatype": "GoogleDoc",
-      "sample": {
-        "hello": "world"
-      },
-      "fields": [ {
+      // "sample":, // GoogleDoc have no samples because they are huge (Google JSON)
+      "fields": DOC_RESERVED_FIELDS.concat([ {
         "name": "hello",
         "datatype": "String",
         "sample": "world",
@@ -354,7 +365,7 @@ describe('constructSheetSchema', () => {
         "datatype": "Int",
         "sample": 123,
         "reserved": false
-      } ]
+      } ])
     } ])
 
   expect(reserved).toEqual([

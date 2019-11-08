@@ -1,5 +1,5 @@
 const { constructDocs } = require('./sheetutil')
-const { fetchDocsData } = require('./docs')
+const { fetchDocsData, compressGoogleDocContent } = require('./docs')
 const { fetchImages } = require('./images')
 const { constructSheetSchema } = require('./schema')
 const { convertValues } = require('./convert')
@@ -25,6 +25,8 @@ async function fetchData(ctx, metadata, sheet) {
   let { cols, docs, excluded } = await fetchSheetData(ctx.state.sheetsapi, metadata.id, sheet, { mode: getLoadMode(metadata) })
   await fetchDocsData(ctx.state.docsapi, metadata, cols, docs)
   await fetchImages(ctx.state.docsapi, metadata, cols, docs)
+  await compressGoogleDocContent(metadata, docs)
+  // compress all doc[_content]
   return { cols, docs, excluded }
 }
 

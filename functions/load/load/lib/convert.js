@@ -1,8 +1,4 @@
-
 const { DateTime } = require('luxon')
-const allkeys = require('all-object-keys')
-const { JSONPath } = require('jsonpath-plus')
-const { markdown } = require('@supersheets/docdown')
 
 function isNullOrUndefined(v) {
   return v === null || v === undefined
@@ -26,17 +22,16 @@ function convertValues(cols, docs, datatypes, options) {
       }
       if (datatypes[col] == "GoogleDoc" && doc[col] && (typeof doc[col] == 'object')) {
         let obj = doc[col]
-        let googledoc = obj["_doc"]
-        delete obj["_doc"]
-        let fields = Object.getOwnPropertyNames(obj) // allkeys(obj)
+        let fields = Object.getOwnPropertyNames(obj).filter(field => !field.startsWith("_")) 
         for (let field of fields) {
           let full = `${col}.${field}`
           let f = conv[full]
           if (!f) {
-            f = convertToPlainText  // default googledoc field converter
+            // f = convertToPlainText  // default googledoc field converter
+            f = convertNoop // docsmatter by default has all values as strings
           }
           try {
-            obj[field] = f(obj[field], { doc: googledoc })
+            obj[field] = f(obj[field], { })
           } catch (err) {
             obj[field] = null 
             doc["_errors"].push(JSON.stringify({
@@ -54,11 +49,11 @@ function createConverter(datatypes) {
   let conv = { }
   for (let col in datatypes) {
     let f = null
-    if (col.includes('.')) {
-      f = getDocValueConv(datatypes[col], col, datatypes)
-    } else {
+    // if (col.includes('.')) {
+    //   f = getDocValueConv(datatypes[col], col, datatypes)
+    // } else {
       f = getConv(datatypes[col], col, datatypes)
-    }
+    // }
     if (!f) {
       throw new Error(`Unknown type ${datatypes[col]}`)
     }
@@ -93,25 +88,6 @@ function getConv(datatype, col, datatypes) {
       return convertNoop
     default:
       return null
-  }
-}
-
-function getDocValueConv(datatype, col, datatypes) {
-  let conv = getConv(datatype, col, datatypes)
-  if (conv) {
-    return (v, options) => {
-      return conv(convertToPlainText(v), options)
-    }
-  }
-  switch(datatype) {
-    case "PlainText": 
-      return convertToPlainText
-    case "GoogleJSON": 
-      return convertToGoogleJSON
-    case "Markdown":
-      return convertToMarkdown
-    default:
-      return convertToPlainText
   }
 }
 
@@ -174,6 +150,7 @@ const convertToBoolean = (v) => {
     case "boolean": 
       return v
     case "string":
+      if ([ "FALSE", "false"].includes(v.trim())) return false
       return v.trim() && true || false
     case "number":
       return (v !== 0) && true || false
@@ -255,29 +232,6 @@ const convertNoop = (v) => {
   return v
 }
 
-// Google Doc Converters 
-
-const convertToPlainText = (v) => {
-  if (typeof v === 'string') {
-    if (v.trim() === "") return null
-    return v
-  }
-  let path = "$..elements..textRun..content"
-  let lines = JSONPath(path, v)
-  let val = lines.join('').trim()
-  if (val === "") return null
-  return val
-}
-
-const convertToGoogleJSON = (v) => {
-  return JSON.stringify(v)
-}
-
-const convertToMarkdown = (v, { doc }) => {
-  return markdown(doc, { content: v })
-}
-
-
 function getISOStringFromExcel(excelDate, tz) {
   let d = getJsDateFromExcel(excelDate)
   let str = d.toISOString().slice(0, -1) // remove 'Z' so we have a tz agnostic date
@@ -331,6 +285,5 @@ function parseDateFromString(str, fmt, tz) {
 
 module.exports = {
   convertValues,
-  createConverter,
-  convertToPlainText
+  createConverter
 }

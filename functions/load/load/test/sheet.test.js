@@ -1,8 +1,7 @@
 require('dotenv').config()
 const axios = require('axios')
 const awsParamStore = require('aws-param-store')
-const { convertToPlainText } = require('../lib/convert')
-
+const { convertToPlainText } = require('./util')
 
 // Supersheets Public View Test
 const GOOGLESHEET_PUBLIC_VIEW_ID = '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2I'

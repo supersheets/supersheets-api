@@ -1,12 +1,8 @@
 require('dotenv').config()
 const axios = require('axios')
 const awsParamStore = require('aws-param-store')
-const { convertToPlainText } = require('../lib/convert')
+const { convertToPlainText } = require('./util')
 
-// Supersheets Public Doc Test
-const GOOGLEDOC_URL = 'https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit'
-// Supersheets Public Doc Test 2
-const GOOGLEDOC2_URL = 'https://docs.google.com/document/d/1ej3jkUeP433331cMnt-LMXQ4HzC8Kk4Dw1UeL-UW8z8/edit'
 // Supersheets Inaccessible Doc Test
 const INACCESSIBLE_URL = 'https://docs.google.com/document/d/1rdezdce_i3Oj_vpERMA9BLsQcue1yD5jTcneS6LuzN8/edit'
 
@@ -146,3 +142,4 @@ describe('isFieldNameValid', () => {
     expect(isFieldNameValid(n)).toBeTruthy()
   })
 })
+

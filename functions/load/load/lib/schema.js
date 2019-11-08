@@ -1,4 +1,30 @@
-const DOC_RESERVED_FIELDS = [ "_url", "_docid" ]
+const DOC_RESERVED_FIELD_NAMES = [ "_url", "_docid", "_title", "_text", "_content" ]
+const DOC_RESERVED_FIELDS = [ { 
+    name: "_url",
+    datatype: "String",
+    reserved: true,
+    sample: null 
+  }, { 
+    name: "_docid", 
+    datatype: "String",
+    reserved: true,
+    sample: null,
+  }, {
+    name: "_title", 
+    datatype: "String",
+    reserved: true,
+    sample: null
+  }, {
+    name: "_text",
+    datatype: "String",
+    reserved: true,
+    sample: null, // needs to be the text version clipped
+  }, {
+    name: "_content",
+    datatype: "String",
+    reserved: true,
+    sample: null  // needs to be the compressed version clipped
+} ]
 
 /**
  * Metadata Level Schema Construction
@@ -54,7 +80,7 @@ function mergeSheetSchemaDocs(schemas) {
 function constructSheetSchema(cols, docs, datatypes) {
   let doccols = cols.filter(col => datatypes[col] == "GoogleDoc")
   let docSchemas = constructDocSchemas(doccols, docs, datatypes)
-  let samples = getSampleColumnValues(cols, docs)
+  let samples = getSampleColumnValues(cols.filter(col => datatypes[col] != "GoogleDoc"), docs, datatypes)
   let columns = [ ]
   for (let col of cols) {
     let column = {
@@ -71,21 +97,27 @@ function constructSheetSchema(cols, docs, datatypes) {
   return { columns: reserved.concat(columns), docs: docSchemas }
 }
 
+// This can do a better job in handling the reserved 
+// fields which we know are going to be a part of every doc schema
 function constructDocSchemas(cols, docs, datatypes) {
   if (cols.length == 0) return { }
   let schemas = { }
   let index = { }
   for (let col of cols) {
+    let reserved = JSON.parse(JSON.stringify(DOC_RESERVED_FIELDS))
     schemas[col] = { 
       name: col,
-      fields: [ ]
+      fields: reserved
     }
+    reserved.forEach(field => {
+      index[`${col}.${field.name}`] = field
+    })
   }
   for (let doc of docs) {
     for (let col of cols) {
       let obj = doc[col]
       if (!obj || (typeof obj != 'object')) continue
-      let fields = Object.getOwnPropertyNames(obj) // allkeys(obj) will traverse StringList array values aka "title.0" bug
+      let fields = Object.getOwnPropertyNames(obj).filter(field => field != "_content")
       for (let name of fields) {
         let full = `${col}.${name}`
         if (!index[full]) {
@@ -93,7 +125,7 @@ function constructDocSchemas(cols, docs, datatypes) {
             name,
             datatype: datatypes[full] || "String",
             sample: obj[name] || null,
-            reserved: DOC_RESERVED_FIELDS.includes(name) || false
+            reserved: DOC_RESERVED_FIELD_NAMES.includes(name) || false
           }
           schemas[col].fields.push(c)
           index[full] = c
@@ -169,5 +201,6 @@ module.exports = {
   mergeSheetSchemaDocs,
   constructSheetSchema,
   constructDocSchemas,
-  updateConfig
+  updateConfig,
+  DOC_RESERVED_FIELDS
 }

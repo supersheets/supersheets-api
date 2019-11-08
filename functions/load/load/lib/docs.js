@@ -59,7 +59,7 @@ async function fetchDoc(axios, url) {
 function extractData(doc) {
   let { title, data, content, text } = docmatter(doc, { text: true })
   data = filterValidFields(data)
-  data["_doc"] = doc // leave this in for backward compatibility (for now)
+  //data["_doc"] = doc // leave this in for backward compatibility (for now)
   data["_content"] = content
   data["_text"] = text
   data["_title"] = title
@@ -80,6 +80,10 @@ function isFieldNameValid(name) {
   if (!name || !name.startsWith(KEY_PREFIX)) return false
   let field = name.substring(KEY_PREFIX.length)
   return field && !field.startsWith(IGNORE_PREFIX) && name.substring(KEY_PREFIX.length).match(GRAPHQL_NAME_REGEX) || false
+}
+
+async function compressGoogleDocContent(metadata, docs) {
+  return
 }
 
 module.exports = {

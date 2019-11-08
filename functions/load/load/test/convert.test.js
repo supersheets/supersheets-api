@@ -1,9 +1,9 @@
 require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
-const testdocs = initTestDocs([ "testdoc.json"])
+const testdocs = initTestDocs([ "normal.test.json"])
 const { DateTime } = require('luxon')
-const { extractData  } = require('../lib/docutil')
+const { extractData  } = require('../lib/docs')
 
 const {
   convertValues,
@@ -26,7 +26,7 @@ describe("convertValues", () => {
 })
 
 describe("GoogleDoc", () => {
-  let googledoc = testdocs["testdoc.json"]
+  let googledoc = testdocs["normal.test.json"]
   let cols = null
   let docs = null
   beforeEach(async () => {
@@ -35,76 +35,84 @@ describe("GoogleDoc", () => {
       "GoogleDoc": extractData(googledoc),
       "_errors": [ ]
     } ]
-
+    let copy = extractData(googledoc)
+    delete copy["_content"]
+    delete copy["_doc"]
   })
-  it ('should convert GoogleDoc default field types', async () => {
+  it ('should leave data values as strings by default', async () => {
     let datatypes = {
       "GoogleDoc": "GoogleDoc"
     }
     let converted = convertValues(cols, docs, datatypes)
     expect(converted.docs[0]).toMatchObject({
       "GoogleDoc": {
-        "name": "body",
-        "type": "string",
-        "value": expect.stringMatching(/^Four score and seven years ago/)
+        "title": "A post with a cover image",
+        "date": "2019-01-07",
+        "published": "true",
+        "tags": "Markdown",
+        "series": "false",
+        "cover_image": "./images/alexandr-podvalny-220262-unsplash.jpg",
+        "canonical_url": "false",
+        "description": "Markdown is intended to be as easy-to-read and easy-to-write as is feasible. Readability, however, is emphasized above all else. A Markdown-formatted document should be publishable as-is, as plain text, without looking like it's been marked up with tags or formatting instructions.",
+        "_content": expect.anything(),
+        "_text": expect.anything()
       }
     })
   })
-  it ('should convert GoogleDoc standard field types', async () => {
+  it ('should convert GoogleDoc data field types', async () => {
     let datatypes = {
       "GoogleDoc": "GoogleDoc",
-      "GoogleDoc.name": "String",
-      "GoogleDoc.type": "String",
-      "GoogleDoc.value": "String"
+      "GoogleDoc.date": "Date",
+      "GoogleDoc.series": "Boolean",
     }
     let converted = convertValues(cols, docs, datatypes)
     expect(converted.docs[0]).toMatchObject({
       "GoogleDoc": {
-        "name": "body",
-        "type": "string",
-        "value": expect.stringMatching(/^Four score and seven years ago/)
+        "date": expect.anything(),
+        "series": false
       }
     })
+    expect(converted.docs[0].GoogleDoc.date.toISO()).toEqual("2019-01-07T00:00:00.000Z")
   })
-  it ('should convert GoogleDoc value field types', async () => {
-    let datatypes = {
-      "GoogleDoc": "GoogleDoc",
-      "GoogleDoc.name": "PlainText",
-      "GoogleDoc.type": "GoogleJSON",
-      "GoogleDoc.value": "Markdown"
-    }
-    let converted = convertValues(cols, docs, datatypes)
-    expect(converted.docs[0]).toMatchObject({
-      "GoogleDoc": {
-        "name": "body",
-        "type": JSON.stringify([
-          {
-            "startIndex": 218,
-            "endIndex": 225,
-            "paragraph": {
-              "elements": [
-                {
-                  "startIndex": 218,
-                  "endIndex": 225,
-                  "textRun": {
-                    "content": "string\n",
-                    "textStyle": {}
-                  }
-                }
-              ],
-              "paragraphStyle": {
-                "namedStyleType": "NORMAL_TEXT",
-                "lineSpacing": 100,
-                "direction": "LEFT_TO_RIGHT",
-                "avoidWidowAndOrphan": false
-              }
-            }
-          }
-        ]),
-        "value": expect.anything()
-      }
-    })
-  })
+  // it ('should convert GoogleDoc value field types', async () => {
+  //   let datatypes = {
+  //     "GoogleDoc": "GoogleDoc",
+  //     "GoogleDoc.name": "PlainText",
+  //     "GoogleDoc.type": "GoogleJSON",
+  //     "GoogleDoc.value": "Markdown"
+  //   }
+  //   let converted = convertValues(cols, docs, datatypes)
+  //   expect(converted.docs[0]).toMatchObject({
+  //     "GoogleDoc": {
+  //       "name": "body",
+  //       "type": JSON.stringify([
+  //         {
+  //           "startIndex": 218,
+  //           "endIndex": 225,
+  //           "paragraph": {
+  //             "elements": [
+  //               {
+  //                 "startIndex": 218,
+  //                 "endIndex": 225,
+  //                 "textRun": {
+  //                   "content": "string\n",
+  //                   "textStyle": {}
+  //                 }
+  //               }
+  //             ],
+  //             "paragraphStyle": {
+  //               "namedStyleType": "NORMAL_TEXT",
+  //               "lineSpacing": 100,
+  //               "direction": "LEFT_TO_RIGHT",
+  //               "avoidWidowAndOrphan": false
+  //             }
+  //           }
+  //         }
+  //       ]),
+  //       "value": expect.anything()
+  //     }
+  //   })
+  // })
 })
 
 describe('Datetime', () => {
@@ -172,7 +180,6 @@ describe('Datetime', () => {
     try {
       let str = "hello-world"
       let d = fconv(str, { tz })
-      console.log(d)
     } catch (err) {
       error = err
     }
@@ -237,7 +244,6 @@ describe('Date', () => {
     try {
       let str = "hello-world"
       let d = fconv(str, { tz })
-      console.log(d)
     } catch (err) {
       error = err
     }
@@ -481,7 +487,7 @@ describe('Float', () => {
 function initTestDocs(filenames) {
   let docs = { }
   for (let name of filenames) {
-    docs[name] = JSON.parse(fs.readFileSync(path.join(__dirname, name)))
+    docs[name] = JSON.parse(fs.readFileSync(path.join(__dirname, 'docs', name)))
   }
   return docs
 }

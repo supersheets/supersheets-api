@@ -198,7 +198,7 @@ describe('Load Spreadsheet with Google Docs', () => {
       nrows: 3,
       ncols: 3
     })
-    console.log("METADATA", JSON.stringify(metadata, null, 2))
+    //console.log("METADATA", JSON.stringify(metadata, null, 2))
     expect(metadata.schema.columns.filter(col => !col.reserved).map(col => col.name)).toEqual([ 
       "id",
       "writer",
@@ -220,15 +220,33 @@ describe('Load Spreadsheet with Google Docs', () => {
         "fields": [
           {
             "datatype": "String",
-            "name": "_docid",
+            "name": "_url",
             "reserved": true,
-            "sample": "1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0"
+            "sample": "https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit"
           },
           {
             "datatype": "String",
-            "name": "_url",
+            "name": "_docid",
             "reserved": true,
-            "sample": "https://docs.google.com/document/d/1wtTsHj_03WayP7uX0Xs0VXxdc7Torfh80ahYeMUTLe0/edit"
+            "sample": "1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8"
+          },
+          {
+            "datatype": "String",
+            "name": "_title",
+            "reserved": true,
+            "sample": "Supersheets Public Doc Test v2"
+          },
+          {
+            "datatype": "String",
+            "name": "_text",
+            "reserved": true,
+            "sample": expect.stringMatching(/^The Gettysburg Address/)
+          },
+          {
+            "datatype": "String",
+            "name": "_content",
+            "reserved": true,
+            "sample": null
           },
           {
             "name": "title",
@@ -237,16 +255,10 @@ describe('Load Spreadsheet with Google Docs', () => {
             "sample": "The Gettysburg Address"
           },
           {
-            "name": "body",
+            "name": "description",
             "datatype": "String",
             "reserved": false,
-            "sample": expect.anything()
-          },
-          {
-            "name": "markdown",
-            "datatype": "String",
-            "reserved": false,
-            "sample": expect.anything()
+            "sample": "Four score and seven years ago our fathers brought forth on this continent ..."
           }
         ]
       }
