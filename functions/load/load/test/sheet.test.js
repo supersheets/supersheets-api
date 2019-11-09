@@ -152,7 +152,7 @@ describe('fetchData', () => {
     })
     expect(docs[0].passage.title).toEqual(`The Gettysburg Address`)
     expect(docs[0].passage.description).toEqual(`Four score and seven years ago our fathers brought forth on this continent ...`)
-    expect(convertToPlainText(docs[0].passage["_content"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
+    expect(docs[0].passage["_content"]).toEqual(expect.stringMatching(/^H4sIAAAAAAAAE\+1YW0/))
   })
 })
 

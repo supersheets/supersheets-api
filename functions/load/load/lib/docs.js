@@ -1,3 +1,4 @@
+const zlib = require('zlib')
 const { JSONPath } = require('jsonpath-plus')
 const docidRegex = new RegExp("/document/d/([a-zA-Z0-9-_]+)")
 const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/
@@ -82,8 +83,19 @@ function isFieldNameValid(name) {
   return field && !field.startsWith(IGNORE_PREFIX) && name.substring(KEY_PREFIX.length).match(GRAPHQL_NAME_REGEX) || false
 }
 
-async function compressGoogleDocContent(metadata, docs) {
-  return
+async function compressGoogleDocContent(metadata, cols, docs) {
+  let doccols = filterGoogleDocColumns(metadata, cols)
+  for (let doc of docs) {
+    for (let col of doccols) {
+      if (doc[col] && doc[col]["_content"]) {
+        doc[col]["_content"] = compress(doc[col]["_content"])
+      }
+    }
+  }
+}
+
+function compress(obj) {
+  return zlib.gzipSync(Buffer.from(JSON.stringify(obj))).toString('base64')
 }
 
 module.exports = {
@@ -92,5 +104,6 @@ module.exports = {
   fetchDocsData,
   fetchDocsForColumns,
   fetchDoc,
-  isFieldNameValid
+  isFieldNameValid,
+  compressGoogleDocContent
 }
