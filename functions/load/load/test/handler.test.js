@@ -208,11 +208,12 @@ describe('Load Spreadsheet with Google Docs', () => {
     expect(samples).toEqual([ 
       123, 
       "danieljyoo@goalbookapp.com", 
-      expect.anything()
+      null
     ])
-    expect(samples[2]).toMatchObject({
-      title: "The Gettysburg Address"
-    })
+    // we return null now for GoogleDoc type samples
+    // expect(samples[2]).toMatchObject({
+    //   title: "The Gettysburg Address"
+    // })
     expect(metadata.schema.docs).toBeTruthy()
     expect(metadata.schema.docs).toMatchObject({
       "passage": {
@@ -287,7 +288,10 @@ function createCtx(id, statusuuid) {
         GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY,
         GOOGLEDOCS_BASE_URL: process.env.GOOGLEDOCS_BASE_URL,
         FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI,
-        FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH: process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH
+        FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH: process.env.FUNC_GOOGLE_SERVICE_ACCOUNT_TOKEN_PATH,
+        FUNC_S3_IMAGE_BUCKET: process.env.FUNC_S3_IMAGE_BUCKET,
+        FUNC_S3_IMAGE_PREFIX: process.env.FUNC_S3_IMAGE_PREFIX,
+        FUNC_CLOUDFRONT_IMAGE_BASE_URL: process.env.FUNC_CLOUDFRONT_IMAGE_BASE_URL
       },
       headers: {
         'Content-Type': "application/json"

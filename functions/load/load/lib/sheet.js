@@ -24,7 +24,7 @@ async function loadSheet(ctx, sheet) {
 async function fetchData(ctx, metadata, sheet) {
   let { cols, docs, excluded } = await fetchSheetData(ctx.state.sheetsapi, metadata.id, sheet, { mode: getLoadMode(metadata) })
   await fetchDocsData(ctx.state.docsapi, metadata, cols, docs)
-  await fetchImages(ctx.state.docsapi, metadata, cols, docs)
+  await fetchImages(ctx, metadata, cols, docs)
   await compressGoogleDocContent(metadata, cols, docs)
   // compress all doc[_content]
   return { cols, docs, excluded }
