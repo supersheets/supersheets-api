@@ -11,6 +11,7 @@ const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const { findMetadata } = require('../lib/handler')
 const NOOP = async () => { }
 const SCHEMA_TEST_FILE = 'typedefs_dateformat.gql'
+const COMPRESSED_GOOGLE_DOC = "H4sIAAAAAAAAE+1YW0/rOBD+K5afI9QbhcNbgQJZlRY1AVY6u6rceJp4Se2u7VB6UP/72kmv6YUgUbor7VvtGc/lm5nPTt8xFUEyBK5dii9w2WX341pv7P0Wsgq0RcBC9fjrUjTCOvX9J68b+rLiuz9u+PU5drBmOgZzzEtGIFUEoBV6SPoxC9C1CJAPSqPXilHsCzrBF+84EFwbX/ji5ztWmkjtcgpv+KJcLTkYOJ0vT6sOHhFJQklGkT0IMdggVaGTGt50N+FrDrEfAboFrSeqn8gQNSiVoNQfHGf6np7YVN6n0+mfK77n2zgCQhkPU5Sikxp5K52VzuhfQ6gbA5wMgaaq/mRkAblrNq7d9m2vbIQx4+CNSGBOm/hKJlzKJASaCRMhbjVv/J7f6XXd2zvfaJNXwegzo2Lc4LQjRxExWgMSKzCRObncbbLL3KsWioKo5U6WdqF2IxKJVCAkIMIpUvAKHE2ASIVIKJCVDoiOTPVRX4okjDQaCKkjJDjSEVPImjIAcO0ggjiMESc2c8cKAmCvQBHjqMX6IPXESZ1QoCwg2ki0MEYAjaQYCcXsObMmGm3WLIdMmtBKfpXzHfmROEYGIkRMgoGE1Cv8nZA458J0cGxKr2UCDmaamBbPVlt8W2e5qmz1fVK4+Tb6q93p3jdaPb/5u3/QDquuT1e1Wi7aYdtObkXhvwBCeT2VSnEQNk8eFITdKVuDU2fB9su+JsFLaCaX0yyiWMjUvXUeQjsZmsH0bEoGVAcPiQwZ98XIKg9JyJlOqLFzZhJLzMK4fTC+5oqXQmsxLKbbZYY8iqm2YPChpo3eY79m3L3N9o/8kTGjOspp1cvrWhaYZQ2U1VazXz8/rM4WQklbbskos6WpBkjb0IsdpSV7AR2lHLvcHRr+uiIjtdhZlvNqXkoHG0aG9c1FobEM+wvNaaprmmOG2woO5XIerBRToDdG/4YMWZze74OVFW5IlvLoeAZ/rVSa2ggV2NQ6g4ECnWLUbmYV+2SzG8hCPswGyPMb3U0WKJ/uZwGVad4LmyK+6rRajQev2Wu5nu/NxNDoi9c0mrX0U9ElxGK8IeoLaap3CXoMwNeGaqXFcr1KaRpwbp8SNQcDe52We700PxvBQ5heDu0hrM9n9xC2FxTytcaZmUbT1kwq3UpnMncok89IcqusmbHrmuQFYGTNKV+EYF9Qixm2kmemo7ahi8Xm1gsre46oiMyT2TL+2X2294W6xks7CKBSWufBL72c8qO2229+8lap2vkQ4AyvdXyzR9w+iCp7qXsXYdaPg1f5/Oh4VT/Aq9BlhCWYM6WTSr1yVjs1t08oUzpd2enHCaxs7L2+akeqRh7kndWoHaoatc0B/1QBaivQ15ag1/bCXTkS3HkUvx/u02PAXT4S3PkX9PfDXc/Dvfpt/mmy+R/8QuD7rt9qFn03fOc9WAyP6lfj4T1eboUk91X3Hc14+jWfaf+GMm3cnZ+qk/2zQyVhCMqGpJ4YjGefeQ/d5pPbfO49u/5d59HveY+3t03PdzttD0//Ab1vNlwQFwAA"
 
 let plugin = new MongoDBPlugin()
 let client = null
@@ -485,6 +486,55 @@ describe('date and datetime', () => {
   }, 30 * 1000)
 })
 
+
+describe('GoogleDoc content', () => {
+  let func = null
+  beforeEach(async () => {
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  }, 30 * 1000)
+  afterEach(async () => {
+    // await func.invokeTeardown()
+  }, 30 * 1000)
+  it("should get the html rendered google doc content", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        rows {
+          row {
+            googledoc {
+              excerpt(pruneLength: 11)
+              text
+              markdown
+              html
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    console.log(JSON.stringify(body, null, 2))
+    expect(body).toEqual({
+      data: {
+        find: {
+          rows: [ { 
+            row: { 
+              googledoc: {
+                excerpt: "Hello World",
+                text: "Hello World\nThis is a document\n",
+                markdown: expect.stringMatching(/^# The Gettysburg Address/),
+                html: expect.stringMatching(/^\<h1\>The Gettysburg Address\<\/h1\>/)
+              }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+})
+
 function createTestEvent(id, query, variables) {
   variables = variables || null;
   return {
@@ -526,8 +576,8 @@ async function createTestMetadata(db, options) {
 
 async function createTestData(db, options) {
   let data = [ 
-    { letter: "A", value: 65, date: new Date("1979-05-16"), datetime: new Date("1979-05-16T21:01:23.000Z"), googledoc: { title: "The Gettysburg Address" } },
-    { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z"), googledoc: { title: "Song of Solomon" } },
+    { letter: "A", value: 65, date: new Date("1979-05-16"), datetime: new Date("1979-05-16T21:01:23.000Z"), googledoc: { title: "The Gettysburg Address", "_text": "Hello World\nThis is a document\n", "_content": COMPRESSED_GOOGLE_DOC } },
+    { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z"), googledoc: { title: "Song of Solomon", "_text": "Song of Solomon\nThis is a document\n" } },
     { letter: "C", value: 66 },
     { letter: "D", value: 67 },
     { letter: "E", value: 68 }

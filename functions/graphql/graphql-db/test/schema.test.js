@@ -11,7 +11,8 @@ const {
   generateSDL,
   generateSheetSchema,
   generateTypeField,
-  generateInputField 
+  generateInputField,
+  generateGoogleDocTypes
 } = require('../lib/schema') 
 
 describe('generateGraphQLNames', () => {
@@ -88,6 +89,27 @@ describe('generateTypeField', () => {
     }
     let s = generateTypeField(field, { level: 0, names })
     expect(s).toEqual('content: ContentDoc')
+  })
+})
+
+describe('generateGoogleDocTypes', () => {
+  it ('should generate a type for a set of doc schemas without a data columns', async () => {
+    let docs = {
+      "content": {
+        fields: [ ]
+      }
+    }
+    let names = { docs: { "content": { type: 'ContentDoc' } } }
+    let s = generateGoogleDocTypes(docs, { names })
+    expect(s.trim()).toEqual(`type ContentDoc {
+    excerpt(
+        pruneLength: Int
+        format: String
+    ): String
+    text: String
+    markdown: String
+    html: String
+}`)
   })
 })
 

@@ -1,8 +1,13 @@
+const zlib = require('zlib')
 const { GraphQLScalarType } = require('graphql') 
 const { Kind } = require('graphql/language')
 const { DateTime } = require('luxon')
+const remark = require('remark')
+const html = require('remark-html')
+const { markdown } = require('@supersheets/docdown')
 const { getSheetSchemas, generateGraphQLNames } = require('./schema')
 const { createQuery } = require('./mongodb')
+const DEFAULT_LENGTH = 128
 
 function createResolvers({ metadata }) {
   let sheetschemas = getSheetSchemas(metadata)
@@ -21,7 +26,8 @@ function createSheetResolvers(sheet, { names }) {
   return Object.assign(
     createSheetQueryResolvers(sheet, { names }),
     createSheetConnectionResolvers(sheet, { names }),
-    createSheetFieldResolvers(sheet, { names })
+    createSheetFieldResolvers(sheet, { names }),
+    createGoogleDocResolvers(sheet, { names })
   )
 }
 
@@ -64,6 +70,22 @@ function createSheetFieldResolvers(sheet, { names }) {
     }
   }
   resolvers[names['type']] = typefields
+  return resolvers
+}
+
+
+
+function createGoogleDocResolvers(sheet, { names }) {
+  let resolvers = { }
+  for (let col in names.docs) {
+    let { type } = names.docs[col]
+    resolvers[type] = {
+      html: createGoogleDocHtmlResolver(),
+      markdown: createGoogleDocMarkdownResolver(),
+      excerpt: createGoogleDocExcerptResolver(),
+      text: createGoogleDocTextResolver()
+    }
+  }
   return resolvers
 }
 
@@ -176,6 +198,51 @@ function createDateFormatResolver() {
     }
   }
 }
+
+function createGoogleDocHtmlResolver() {
+  return async (parent, args, context,  { returnType, parentType, path }) => {
+    if (!parent["_content"]) return null
+    let doc = decompress(parent["_content"])
+    return (await remark().use(html).process(markdown(doc))).toString()
+  }
+}
+
+function createGoogleDocMarkdownResolver() {
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    if (!parent["_content"]) return null
+    let doc = decompress(parent["_content"])
+    return markdown(doc)
+  }
+}
+
+function createGoogleDocExcerptResolver() {
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    if (!parent["_text"]) return null
+    return excerpt(parent["_text"], { length: args.pruneLength || DEFAULT_LENGTH })
+  } 
+}
+
+function createGoogleDocTextResolver() {
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    return parent["_text"] || null
+  }
+}
+
+function decompress(data) {
+  return JSON.parse(zlib.gunzipSync(Buffer.from(data, 'base64')))
+}
+
+function excerpt(s, options) {
+  if (!s) return null
+  maxlength = options.length || DEFAULT_LENGTH
+  let suffix = options.suffix || ''
+  let n = maxlength - suffix.length
+  if (s.length > maxlength) {
+    return `${s.substring(0, n)}${suffix}`
+  }
+  return s
+}
+
 
 function dateScalarType() {
   return new GraphQLScalarType({

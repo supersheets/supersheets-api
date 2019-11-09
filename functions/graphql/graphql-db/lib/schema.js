@@ -166,6 +166,23 @@ function generateTypeFromSchema(name, schema, { level, names }) {
   return s
 }
 
+function generateGoogleDocTypeFromSchema(name, schema, { level, names }) {
+  level = level || 0
+  let s = `type ${name} {\n`
+  for (let col of schema.columns) {
+    s += `${generateTypeField(col, { level: level+1, names })}\n`
+  }
+  s += `${indent(level+1)}excerpt(\n`
+  s += `${indent(level+2)}pruneLength: Int\n`
+  s += `${indent(level+2)}format: String\n`
+  s += `${indent(level+1)}): String\n`
+  s += `${indent(level+1)}text: String\n`
+  s += `${indent(level+1)}markdown: String\n`
+  s += `${indent(level+1)}html: String\n`
+  s += `}`
+  return s
+}
+
 function generateEnumFromSchema(name, schema, { level }) {
   let s = `enum ${name} {\n`
   for (let col of schema.columns) {
@@ -196,11 +213,12 @@ function generateGoogleDocTypes(docs, { level, names }) {
     let name = names.docs[col]['type']
     let schema = docs[col]
     schema.columns = schema.fields // doc schemas use 'fields' rather than 'columns'
-    s += generateTypeFromSchema(name, schema, { level, names })
+    s += generateGoogleDocTypeFromSchema(name, schema, { level, names })
     s += `\n\n`
   } 
   return s
 }
+
 
 function generateGoogleDocFilterInputs(docs, { level, names }) {
   let s = ''
@@ -442,6 +460,7 @@ module.exports = {
   generateTypeFromSchema,
   generateEnumFromSchema,
   generateTypeField,
-  generateInputField
+  generateInputField,
+  generateGoogleDocTypes
 }
 
