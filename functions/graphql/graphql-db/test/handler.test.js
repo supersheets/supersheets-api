@@ -612,6 +612,49 @@ describe('Image content', () => {
       }
     })
   }, 30 * 1000)
+  it("should generate blurup", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        rows {
+          row {
+            image(
+              edits: {
+                resize: {
+                  width: 200
+                  height: 200
+                  fit: contain
+                }
+                grayscale: true
+              }
+            ) {
+              blurup(
+                width: 800
+                height: 600
+                scale: 0.05
+              )
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          rows: [ { 
+            row: { 
+              image: {
+                "blurup": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='800' height='600' viewBox='0 0 800 600'%3e %3cfilter id='blur' filterUnits='userSpaceOnUse' color-interpolation-filters='sRGB'%3e %3cfeGaussianBlur stdDeviation='20 20' edgeMode='duplicate' /%3e %3cfeComponentTransfer%3e %3cfeFuncA type='discrete' tableValues='1 1' /%3e %3c/feComponentTransfer%3e %3c/filter%3e %3cimage filter='url(%23blur)' xlink:href='data:image/jpeg%3bbase64%2c/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAeACgDASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAABAYAAwcFAf/EADEQAAECBQIBCQkBAAAAAAAAAAECAwAEBQYREiFxIjFBYZGhwtLhBxM0RVFSgYKV4v/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDpUygWuppOu3aKo45zItHwx0Tb9pIGVW1QwPqae15YT5Sr4SAMKMWz0649ITHuphbT%2bglBGDg4zwgGaUpNmTbIdl7ft9xBzgins9Bx9seu0C1ANrboX89rywnW7P6Kc4ykpWlp1Wkk8oBWFDf8mDl1RfQsnqPP2wB87RbZSDpt2ijhItDwxIX5%2bpFaTkkKESAWpJ4uI5CkngoQcl19IwUkjujI2LocaHw4V%2b/pB7d8vtgaZZY4P%2bkBoErNqYmHUAgZSCABg7Ejfti5dQyNyIzpN9Oh1LhkUKUAQSpzc90En2gJUOXSGyep7HhgG6cqO2x2iQiTF4NPfLdPB/8AzEgP/9k=' x='0' y='0' height='100%25' width='100%25'/%3e %3c/svg%3e"
+              }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
 })
 
 function createTestEvent(id, query, variables) {

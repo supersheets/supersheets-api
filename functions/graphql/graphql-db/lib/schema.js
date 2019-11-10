@@ -467,8 +467,19 @@ enum ImageFitEnum {
   outside
 }
 
+enum ImageBlurUpFormatEnum {
+  svg
+  image
+}
+
 type Image {
   src: String
+  blurup(
+    width: Int
+    height: Int
+    scale: Float
+    format: ImageBlurUpFormatEnum
+  ): String
   _original: String
   _url: String
   _mediatype: String 

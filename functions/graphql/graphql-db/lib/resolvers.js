@@ -6,6 +6,7 @@ const remark = require('remark')
 const html = require('remark-html')
 const { markdown } = require('@supersheets/docdown')
 const { getSheetSchemas, generateGraphQLNames } = require('./schema')
+const { createImageUrl, createDataUrl, createBlurredSVGDataUrl } = require('./image')
 const { createQuery } = require('./mongodb')
 const DEFAULT_LENGTH = 128
 
@@ -18,7 +19,7 @@ function createResolvers({ metadata }) {
     Object.assign(resolvers, sheet)
     return resolvers
   }, { Query: { } })
-  return Object.assign(resolvers, createDataTypeResolvers())
+  return Object.assign(resolvers, createDataTypeResolvers(), createImageTypeResolver())
 }
 
 function createSheetResolvers(sheet, { names }) {
@@ -236,17 +237,60 @@ function createImageResolver() {
     let key = path.key
     let image = parent[key]
     if (!image) return null
-    if (args.edits) {
+    return { image, edits: args.edits || null }
+  }
+}
+
+function createImageTypeResolver() {
+  return {
+    Image: {
+      src: createImageSrcResolver(),
+      blurup: createImageBlurUpResolver()
+    }
+  }
+}
+
+function createImageSrcResolver() {
+  return async ({ image, edits }, args, context, { returnType, parentType, path }) => {
+    if (edits) {
       let requestBody = { 
         bucket: image["_bucket"],
         key: image["_key"],
-        edits: args.edits
+        edits
       }
-      image.src = `https://${image["_bucket"]}/${encodeEdits(requestBody)}`
+      return createImageUrl(image["_bucket"], requestBody)
     } else {
-      image.src = image["_url"]
+      return image["_url"]
     }
-    return image
+  }
+}
+
+function createImageBlurUpResolver() {
+  return async ({ image, edits }, args, context, { returnType, parentType, path }) => {
+    console.log('blrup')
+    let request = { 
+      bucket: image["_bucket"], 
+      key: image["_key"],
+      edits: edits || { }
+    }
+    let scale = args.scale || 0.05
+    request.edits.resize = request.edits.resize || { }
+    request.edits.resize.width = args.width || (edits.resize && edits.resize.width) || 800
+    request.edits.resize.height = args.height || (edits.resize && edits.resize.height) || 600
+    request.edits.resize.fit = request.edits.resize.fit || "contain"
+    let thumbnail = JSON.parse(JSON.stringify(request))
+    thumbnail.edits.resize.width = Math.round(thumbnail.edits.resize.width * scale)
+    thumbnail.edits.resize.height = Math.round(thumbnail.edits.resize.height * scale)
+    console.log("blurup", JSON.stringify(thumbnail, null, 2))
+    let data = await createDataUrl(image["_bucket"], thumbnail)
+    console.log("blurup Data", data)
+    if (args.format && args.format == "image") {
+      return data
+    } else {
+      let svg = createBlurredSVGDataUrl(data, { width: request.edits.resize.width, height: request.edits.resize.height })
+      console.log("blurup svg", svg)
+      return svg
+    }
   }
 }
 
