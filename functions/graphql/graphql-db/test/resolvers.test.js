@@ -91,10 +91,10 @@ describe('createSheetFieldResolvers', () => {
     let sheet = { title: "Rows", schema: metadata.schema }
     let names = generateGraphQLNames(sheet)
     let resolvers = createSheetFieldResolvers(sheet, { names })
-    expect(resolvers).toEqual({
+    expect(resolvers).toMatchObject({
       "Rows": {
         "date": expect.anything(),
-        "datetime": expect.anything()
+        "datetime": expect.anything(),
       }
     })
   })
@@ -115,6 +115,17 @@ describe('createSheetFieldResolvers', () => {
       "Posts": {
         "published": expect.anything(),
         "published_at": expect.anything()
+      }
+    })
+  })
+  it ('should create image field resolvers for top-level Row type', async () => {
+    let metadata = getTestMetadata()
+    let sheet = { title: "Rows", schema: metadata.schema }
+    let names = generateGraphQLNames(sheet)
+    let resolvers = createSheetFieldResolvers(sheet, { names })
+    expect(resolvers).toMatchObject({
+      "Rows": {
+        "image": expect.anything()
       }
     })
   })

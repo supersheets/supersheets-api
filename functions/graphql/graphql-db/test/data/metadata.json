@@ -21,7 +21,8 @@
         "list",
         "date",
         "datetime",
-        "googledoc"
+        "googledoc",
+        "image"
       ],
       "schema": {
         "columns": [
@@ -112,6 +113,19 @@
                 "reserved": false
               }
             ]
+          },
+          {
+            "name": "image",
+            "datatype": "ImageUrl",
+            "sample": {
+              "_original": "https://images.unsplash.com/photo-1423347834838-5162bb452ca7",
+              "_url": "https://images.supersheets.io/eyJrZXkiOiJ0ZXN0LzU2NTAxMGU0MWM2OTQ5NDczZGZjYzM0MWFiMTMwM2MwNTE1NDkzMDcucG5nIn0=",
+              "_mediatype": "image/jpeg",
+              "_length": 1994229,
+              "_bucket": "images.supersheets.io",
+              "_key": "test/565010e41c6949473dfcc341ab1303c051549307.png",
+              "_etag": "\"7479486ef7dfa55ec32dc24e2c757701\""
+            }
           }
         ],
         "docs": {
@@ -165,7 +179,7 @@
         },
         "excluded": ["Bad Column Name"]
       },
-      "ncols": 9,
+      "ncols": 10,
       "nrows": 26
     }
   ],
@@ -175,7 +189,7 @@
   "uuid": "84a22fab-92db-4f94-b3b4-99b8700622a5",
   "datauuid": "TEST-DATA-UUID",
   "ncells": 234,
-  "ncols": 9,
+  "ncols": 10,
   "nrows": 26,
   "schema": {
     "columns": [
@@ -266,6 +280,19 @@
             "reserved": false
           }
         ]
+      },
+      {
+        "name": "image",
+        "datatype": "ImageUrl",
+        "sample": {
+          "_original": "https://images.unsplash.com/photo-1423347834838-5162bb452ca7",
+          "_url": "https://images.supersheets.io/eyJrZXkiOiJ0ZXN0LzU2NTAxMGU0MWM2OTQ5NDczZGZjYzM0MWFiMTMwM2MwNTE1NDkzMDcucG5nIn0=",
+          "_mediatype": "image/jpeg",
+          "_length": 1994229,
+          "_bucket": "images.supersheets.io",
+          "_key": "test/565010e41c6949473dfcc341ab1303c051549307.png",
+          "_etag": "\"7479486ef7dfa55ec32dc24e2c757701\""
+        }
       }
     ],
     "docs": {
@@ -318,7 +345,7 @@
       }
     }
   },
-  "updated_at": "2019-11-08T04:51:06.015Z",
+  "updated_at": "2019-11-10T04:56:49.978Z",
   "config": {
     "mode": "UNFORMATTED",
     "datatypes": {
@@ -330,7 +357,10 @@
       "list": "StringList",
       "date": "Date",
       "datetime": "Datetime",
-      "googledoc": "GoogleDoc"
+      "googledoc": "GoogleDoc",
+      "googledoc.title": "String",
+      "googledoc.description": "String",
+      "image": "ImageUrl"
     }
   },
   "updated_by": "google-oauth2|112351329441324368112",

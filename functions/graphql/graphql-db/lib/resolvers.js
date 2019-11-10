@@ -67,6 +67,9 @@ function createSheetFieldResolvers(sheet, { names }) {
       case "Datetime":
         typefields[col.name] = createDatetimeFormatResolver()
         break
+      case "ImageUrl":
+        typefields[col.name] = createImageResolver()
+        break
     }
   }
   resolvers[names['type']] = typefields
@@ -228,6 +231,25 @@ function createGoogleDocTextResolver() {
   }
 }
 
+function createImageResolver() {
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    let key = path.key
+    let image = parent[key]
+    if (!image) return null
+    if (args.edits) {
+      let requestBody = { 
+        bucket: image["_bucket"],
+        key: image["_key"],
+        edits: args.edits
+      }
+      image.src = `https://${image["_bucket"]}/${encodeEdits(requestBody)}`
+    } else {
+      image.src = image["_url"]
+    }
+    return image
+  }
+}
+
 function decompress(data) {
   return JSON.parse(zlib.gunzipSync(Buffer.from(data, 'base64')))
 }
@@ -282,6 +304,9 @@ function datetimeScalarType() {
   })
 }
 
+function encodeEdits(obj) {
+  return Buffer.from(JSON.stringify(obj)).toString('base64')
+}
 
 module.exports = {
   createResolvers,

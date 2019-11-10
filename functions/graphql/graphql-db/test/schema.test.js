@@ -90,6 +90,13 @@ describe('generateTypeField', () => {
     let s = generateTypeField(field, { level: 0, names })
     expect(s).toEqual('content: ContentDoc')
   })
+  it ('should generate a Image field', async () => {
+    let field = { name: "cover_image", datatype: "ImageUrl" }
+    let s = generateTypeField(field, { level: 0 })
+    expect(s).toEqual(`cover_image(
+    edits: ImageEditsInput
+): Image`)
+  })
 })
 
 describe('generateGoogleDocTypes', () => {
@@ -175,6 +182,7 @@ describe('generate', () => {
     let sdl = generateSDL(getTestMetadata())
     let error = null
     try {
+      //console.log(sdl)
       let schema = buildSchema(sdl)
       //console.log(printSchema(schema))
     } catch (err) {
@@ -184,8 +192,6 @@ describe('generate', () => {
     expect(error).toBeFalsy()
   })
 })
-
-
 
 function getTestSheet() {
   return getTestMetadata().sheets[0]

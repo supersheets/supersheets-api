@@ -276,13 +276,14 @@ function generateSortInput(name, { level, names }) {
   return s
 }
 
-
 function generateTypeField(field, { level, names }) {
   let gqlType = convertToGraphQLType(field, { names })
   switch(gqlType) {
     case "Date":
     case "Datetime":
       return generateGraphQLDateField(field, { level, names })
+    case "Image":
+      return generateGraphQLImageField(field, { level, names })
     default:
       return `${indent(level)}${field.name}: ${gqlType}`
   }
@@ -295,6 +296,13 @@ function generateGraphQLDateField({ name, datatype, sample }, { level, names }) 
   s += `${indent(level+1)}difference: String\n`
   s += `${indent(level+1)}locale: String\n`
   s += `${indent(level+1)}zone: String\n`
+  s += `${indent(level)}): ${convertToGraphQLType({ name, datatype, sample }, { names })}`
+  return s
+}
+
+function generateGraphQLImageField({ name, datatype, sample }, { level, names }) {
+  let s = `${indent(level)}${name}(\n`
+  s += `${indent(level+1)}edits: ImageEditsInput\n`
   s += `${indent(level)}): ${convertToGraphQLType({ name, datatype, sample }, { names })}`
   return s
 }
@@ -327,6 +335,8 @@ function convertToGraphQLType({ name, datatype }, { names }) {
       return 'String'
     case "GoogleJSON":
       return 'String'
+    case "ImageUrl":
+      return 'Image'
   }
 }
 
@@ -348,12 +358,14 @@ function convertToQueryOperator({ name, datatype }, { names }) {
       return "StringArrayQueryOperatorInput"
     case "GoogleDoc":
       return `${names.docs[name]['input']}`
-    case "PlainText": 
-      return 'StringQueryOperatorInput'
-    case "Markdown":
-      return 'StringQueryOperatorInput'
-    case "GoogleJSON":
-      return 'StringQueryOperatorInput'
+    case "ImageUrl":
+      return "ImageQueryOperatorInput"
+    // case "PlainText": 
+    //   return 'StringQueryOperatorInput'
+    // case "Markdown":
+    //   return 'StringQueryOperatorInput'
+    // case "GoogleJSON":
+    //   return 'StringQueryOperatorInput'
   }
 }
 
@@ -446,8 +458,103 @@ input DatetimeQueryOperatorInput {
   in: [ Datetime ]
   nin: [ Datetime ]
 }
+
+enum ImageFitEnum {
+  cover
+  contain
+  fill
+  inside
+  outside
+}
+
+type Image {
+  src: String
+  _original: String
+  _url: String
+  _mediatype: String 
+  _size: Int
+}
+
+input ImageQueryOperatorInput {
+  eq: String
+  gt: String
+  gte: String
+  lt: String
+  lte: String
+  in: [String]
+  ne: String
+  nin: [String]
+  regex: String
+  options: String
+}
+
+input ImageEditsInput {
+  resize: ImageResizeOptionsInput
+  flatten: Boolean
+  grayscale: Boolean
+  flip: Boolean
+  flop: Boolean
+  negate: Boolean
+  normalise: Boolean
+  tint: ColorRGBInput
+  smartCrop: ImageCropOptionsInput
+}
+
+input ImageResizeOptionsInput {
+  width: Int
+  height: Int
+  fit: ImageFitEnum
+  background: ColorRGBInput
+}
+
+input ImageCropOptionsInput {
+  faceIndex: Int
+  padding: Int
+}
+
+input ColorRGBInput{
+  r: Int
+  g: Int
+  b: Int
+  alpha: Int
+}
 `
 }
+
+/*
+{
+  "bucket": "images.supersheets.io",
+  "key": "test/00855e679f52f4c85a0c04022b7dd2eb7c5ad185.png",
+  "edits": {
+    "resize": {
+      "width": 300,
+      "height": 200,
+      "fit": "cover",
+      "background": {
+        "r": 255,
+        "g": 0,
+        "b": 0,
+        "alpha": 1
+      }
+    },
+    "flatten": true,
+    "grayscale": true,
+    "flip": true,
+    "flop": true,
+    "negate": true,
+    "normalise": true,
+    "tint": {
+      "r": 255,
+      "g": 0,
+      "b": 255
+    },
+    "smartCrop": {
+      "faceIndex": 2,
+      "padding": 10
+    }
+  }
+}
+*/
 
 module.exports = {
   generateGraphQLNames,

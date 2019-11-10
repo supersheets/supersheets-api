@@ -515,7 +515,6 @@ describe('GoogleDoc content', () => {
     await func.invoke(ctx)
     expect(ctx.response.statusCode).toBe(200)
     let body = JSON.parse(ctx.response.body)
-    console.log(JSON.stringify(body, null, 2))
     expect(body).toEqual({
       data: {
         find: {
@@ -526,6 +525,86 @@ describe('GoogleDoc content', () => {
                 text: "Hello World\nThis is a document\n",
                 markdown: expect.stringMatching(/^# The Gettysburg Address/),
                 html: expect.stringMatching(/^\<h1\>The Gettysburg Address\<\/h1\>/)
+              }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+})
+
+describe('Image content', () => {
+  let func = null
+  beforeEach(async () => {
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  }, 30 * 1000)
+  afterEach(async () => {
+    // await func.invokeTeardown()
+  }, 30 * 1000)
+  it("should get the image src from asset host", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        rows {
+          row {
+            image {
+              src
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          rows: [ { 
+            row: { 
+              image: {
+                "src": "https://images.supersheets.io/eyJrZXkiOiJ0ZXN0LzU2NTAxMGU0MWM2OTQ5NDczZGZjYzM0MWFiMTMwM2MwNTE1NDkzMDcucG5nIn0="
+              }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should pass image edit options", async () => {
+    let query = `{ 
+      find (filter: { letter: { eq: "A" } }) { 
+        rows {
+          row {
+            image(
+              edits: {
+                resize: {
+                  width: 200
+                  height: 200
+                  fit: contain
+                }
+                grayscale: true
+              }
+            ) {
+              src
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        find: {
+          rows: [ { 
+            row: { 
+              image: {
+                "src": "https://images.supersheets.io/eyJidWNrZXQiOiJpbWFnZXMuc3VwZXJzaGVldHMuaW8iLCJrZXkiOiJ0ZXN0LzU2NTAxMGU0MWM2OTQ5NDczZGZjYzM0MWFiMTMwM2MwNTE1NDkzMDcucG5nIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjoyMDAsImhlaWdodCI6MjAwLCJmaXQiOiJjb250YWluIn0sImdyYXlzY2FsZSI6dHJ1ZX19"
               }
             } 
           } ]
@@ -576,7 +655,22 @@ async function createTestMetadata(db, options) {
 
 async function createTestData(db, options) {
   let data = [ 
-    { letter: "A", value: 65, date: new Date("1979-05-16"), datetime: new Date("1979-05-16T21:01:23.000Z"), googledoc: { title: "The Gettysburg Address", "_text": "Hello World\nThis is a document\n", "_content": COMPRESSED_GOOGLE_DOC } },
+    { 
+      letter: "A", 
+      value: 65, 
+      date: new Date("1979-05-16"), 
+      datetime: new Date("1979-05-16T21:01:23.000Z"), 
+      googledoc: { title: "The Gettysburg Address", "_text": "Hello World\nThis is a document\n", "_content": COMPRESSED_GOOGLE_DOC },
+      image: {
+        "_original": "https://images.unsplash.com/photo-1423347834838-5162bb452ca7",
+        "_url": "https://images.supersheets.io/eyJrZXkiOiJ0ZXN0LzU2NTAxMGU0MWM2OTQ5NDczZGZjYzM0MWFiMTMwM2MwNTE1NDkzMDcucG5nIn0=",
+        "_mediatype": "image/jpeg",
+        "_length": 1994229,
+        "_bucket": "images.supersheets.io",
+        "_key": "test/565010e41c6949473dfcc341ab1303c051549307.png",
+        "_etag": "\"7479486ef7dfa55ec32dc24e2c757701\""
+      }
+    },
     { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z"), googledoc: { title: "Song of Solomon", "_text": "Song of Solomon\nThis is a document\n" } },
     { letter: "C", value: 66 },
     { letter: "D", value: 67 },
