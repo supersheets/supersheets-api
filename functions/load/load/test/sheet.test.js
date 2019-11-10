@@ -231,6 +231,11 @@ function createTestCtx({ token }) {
     state: { 
       sheetsapi,
       docsapi
+    },
+    env: {
+      FUNC_S3_IMAGE_BUCKET: process.env.FUNC_S3_IMAGE_BUCKET,
+      FUNC_S3_IMAGE_PREFIX: process.env.FUNC_S3_IMAGE_PREFIX,
+      FUNC_CLOUDFRONT_IMAGE_BASE_URL: process.env.FUNC_CLOUDFRONT_IMAGE_BASE_URL
     }
   }
 }

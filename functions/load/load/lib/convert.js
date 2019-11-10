@@ -48,12 +48,7 @@ function convertValues(cols, docs, datatypes, options) {
 function createConverter(datatypes) {
   let conv = { }
   for (let col in datatypes) {
-    let f = null
-    // if (col.includes('.')) {
-    //   f = getDocValueConv(datatypes[col], col, datatypes)
-    // } else {
-      f = getConv(datatypes[col], col, datatypes)
-    // }
+    let f = getConv(datatypes[col], col, datatypes)
     if (!f) {
       throw new Error(`Unknown type ${datatypes[col]}`)
     }
@@ -85,6 +80,10 @@ function getConv(datatype, col, datatypes) {
     case "GoogleDoc":
       // we just noop because we'll have separate
       // logic that will deal with Google Docs
+      return convertNoop
+    case "ImageUrl":
+      // we just noop because we'll have separate
+      // logic that will deal with Images
       return convertNoop
     default:
       return null
