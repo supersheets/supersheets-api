@@ -7,7 +7,8 @@ const {
   constructSheetSchema,
   constructDocSchemas,
   updateConfig,
-  DOC_RESERVED_FIELDS
+  DOC_RESERVED_FIELDS,
+  constructRelationshipSchemas
 } = require('../lib/schema')
 
 describe('constructSchemna', () => {
@@ -337,23 +338,26 @@ describe('constructSheetSchema', () => {
     "doc1.hello": "String",
     "doc1.key": "Int"
   }
-  let schema = constructSheetSchema(cols, docs, datatypes)
+  let schema = constructSheetSchema(cols, docs, { datatypes })
   let usercolumns = schema.columns.filter(col => !col.reserved)
   let reserved = schema.columns.filter(col => col.reserved)
   expect(usercolumns).toEqual([
     {
       "name": "col1",
       "datatype": "String",
-      "sample": "Hello"
+      "sample": "Hello",
+      "relationship": false
     },
     {
       "name": "col2",
       "datatype": "Int",
-      "sample": 123
+      "sample": 123,
+      "relationship": false
     },
     {
       "name": "doc1",
       "datatype": "GoogleDoc",
+      "relationship": false,
       // "sample":, // GoogleDoc have no samples because they are huge (Google JSON)
       "fields": DOC_RESERVED_FIELDS.concat([ {
         "name": "hello",
@@ -435,3 +439,26 @@ describe('updateConfig', () => {
     })
   })
 })
+
+describe('constructRelationshipSchemas', () => {
+  let config = { 
+    relationships: {
+      "authors": {
+        "sheet": "Authors",
+        "field": "email",
+        "op": "eq"
+      },
+      "tags": {
+        "sheet": "Tags",
+        "field": "id",
+        "op": "in"
+      }
+    }
+  }
+  // relationshipSchemas don't depend on cols or docs
+  let cols = [ ]
+  let docs = [ ]
+  let schema = constructRelationshipSchemas(cols, docs, config)
+  expect(schema).toEqual(config.relationships)
+})
+

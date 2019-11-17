@@ -6,11 +6,12 @@ function isValidColumnName(name) {
 }
 
 function constructDocs(sheetDoc, data) {
-  var cols = [ ]
-  var docs = [ ]
+  let cols = [ ]
+  let docs = [ ]
+  let excluded = [ ]
   if (!data) {
     // totally empty sheet
-    return { cols, docs }
+    return { cols, docs, excluded }
   }
   if (data.length > 0) {
     cols = data[0]
@@ -24,6 +25,10 @@ function constructDocs(sheetDoc, data) {
       };
       for (var j = 0; j < cols.length; j++) {
         let column = cols[j]
+        // if (isValidRelationshipName(column)) {
+        //   let { name } = parseRelationshipName(column)
+        //   doc[name] = data[i][j] // we set the doc name to the authors ruather than 'authors:email:eq'
+        // } else 
         if (isValidColumnName(column)) {
           doc[cols[j]] = data[i][j]
         }
@@ -31,7 +36,7 @@ function constructDocs(sheetDoc, data) {
       docs.push(doc)
     }
   }
-  let excluded = cols.filter(name => !isValidColumnName(name))
+  excluded = cols.filter(name => !isValidColumnName(name))
   cols = cols.filter(name => isValidColumnName(name))
   return { cols, docs, excluded } 
 }

@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { constructDocs } = require('../lib/sheetutil')
+const { constructDocs, isValidRelationshipName } = require('../lib/sheetutil')
 const { convertValues } = require('../lib/convert')
 
 describe('Construct Docs', () => {

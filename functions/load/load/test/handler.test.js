@@ -119,12 +119,20 @@ describe('Load', () => {
   it ('should do a reload with datatypes', async () => {
     await initmeta(db, GOOGLESPREADSHEET_ID, {
       mode: "UNFORMATTED",
-      datatypes: {
-        "question_id": "String",
-        // "question_text": "String", // should default to "String"
-        "created_at": "Datetime",
-        "student_name": "String",
-        "student_response": "Number",
+      "answers": {
+        datatypes: {
+          "question_id": "String",
+          // "question_text": "String", // should default to "String"
+          "created_at": "Datetime",
+          "student_name": "String",
+          "student_response": "Number",
+        }
+      },
+      "questions": {
+        datatypes: {
+          "question_id": "String",
+          "created_at": "Datetime"
+        }
       }
     })
     await initstatus(db, statusuuid)
@@ -181,10 +189,12 @@ describe('Load Spreadsheet with Google Docs', () => {
   it ('should do a load with GoogleDoc datatype', async () => {
     await initdocmeta(db, GOOGLESPREADSHEET_DOCS_ID, {
       mode: "UNFORMATTED",
-      datatypes: {
-        "id": "Number",
-        "writer": "String",
-        "passage": "GoogleDoc",
+      "Passages": {
+        datatypes: {
+          "id": "Number",
+          "writer": "String",
+          "passage": "GoogleDoc",
+        }
       }
     })
     await initdocstatus(db, statusuuid)

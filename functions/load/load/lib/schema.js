@@ -77,16 +77,18 @@ function mergeSheetSchemaDocs(schemas) {
 /**
  * Sheet Level Schema Construction
  */
-function constructSheetSchema(cols, docs, datatypes) {
+function constructSheetSchema(cols, docs, { datatypes, relationships }) {
   let doccols = cols.filter(col => datatypes[col] == "GoogleDoc")
   let docSchemas = constructDocSchemas(doccols, docs, datatypes)
+  let relationshipSchemas = constructRelationshipSchemas(cols, docs, { datatypes, relationships })
   let samples = getSampleColumnValues(cols.filter(col => datatypes[col] != "GoogleDoc"), docs, datatypes)
   let columns = [ ]
   for (let col of cols) {
     let column = {
       name: col,
       datatype: datatypes[col] || "String",
-      sample: samples[col]
+      sample: samples[col],
+      relationship: (relationshipSchemas[col] && true || false)
     }
     if (datatypes[col] == "GoogleDoc" && docSchemas[col]) {
       column.fields = docSchemas[col].fields
@@ -94,7 +96,7 @@ function constructSheetSchema(cols, docs, datatypes) {
     columns.push(column)
   }
   let reserved = createdReservedSchemaColumns(docs[0])
-  return { columns: reserved.concat(columns), docs: docSchemas }
+  return { columns: reserved.concat(columns), docs: docSchemas, relationships: relationshipSchemas }
 }
 
 // This can do a better job in handling the reserved 
@@ -138,6 +140,21 @@ function constructDocSchemas(cols, docs, datatypes) {
   return schemas
 }
 
+function constructRelationshipSchemas(cols, docs, { relationships }) {
+  // relationships is from the user config defined using the front-end
+  // it just so happens to be the exact format the backend needs so we just 
+  // make a copy and it will be a part of the sheet's schema
+  // relationships: {
+  //   "authors": {
+  //     "sheet": "Authors",
+  //     "field": "email",
+  //     "op": "eq"
+  //   }
+  // }
+  if (!relationships) return { }
+  return JSON.parse(JSON.stringify(relationships))
+}
+ 
 function getSampleColumnValues(cols, docs, datatypes) {
   let samples = { }
   for (let name of cols) {
@@ -195,6 +212,22 @@ function updateConfig(metadata) {
   return config
 }
 
+function isValidRelationshipName(name) {
+  if (!name) return false
+  let parts = name.split(':')
+  if (parts.length != 2 || parts.length != 3) return false
+  for (let part of parts) {
+    if (!isValidColumnName(part)) return false
+  }
+  return true
+}
+
+function parseRelationshipName(name) {
+  let n = name.split(':')[0]
+  return { name: n }
+}
+
+
 module.exports = {
   constructSchema,
   mergeSheetSchemaColumns,
@@ -202,5 +235,6 @@ module.exports = {
   constructSheetSchema,
   constructDocSchemas,
   updateConfig,
-  DOC_RESERVED_FIELDS
+  DOC_RESERVED_FIELDS,
+  constructRelationshipSchemas
 }

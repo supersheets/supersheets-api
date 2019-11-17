@@ -23,7 +23,7 @@ describe('loadSheet', () => {
     ctx = createTestCtx({ token })
   })
   it ('should fetch a single sheet', async () => {
-    ctx.state.metadata = createTestMetadata()
+    ctx.state.metadata = createTestMetadata("Passages")
     let { sheet, docs } = await loadSheet(ctx, { title: "Passages" })
     expect(sheet).toMatchObject({
       title: "Passages",
@@ -32,9 +32,9 @@ describe('loadSheet', () => {
       nrows: 3
     })
     expect(docs.length).toEqual(3)
-  })
+  }, 30*1000)
   it ('should load a totally empty sheet', async () => {
-    ctx.state.metadata = createTestMetadata()
+    ctx.state.metadata = createTestMetadata("Empty")
     ctx.state.metadata.id = GOOGLESHEET_PUBLIC_VIEW_ID
     let { sheet, docs } = await loadSheet(ctx, { title: "Empty" })
     expect(sheet).toEqual({
@@ -67,15 +67,17 @@ describe('loadSheet', () => {
             "reserved": true
           }
         ],
-        "docs": {}
+        "docs": {},
+        "relationships": {},
+        "excluded": []
       },
       "ncols": 0,
       "nrows": 0
     })
     expect(docs).toEqual([])
-  })
+  }, 30*1000)
   it ('should load a sheet with columns but no data', async () => {
-    ctx.state.metadata = createTestMetadata()
+    ctx.state.metadata = createTestMetadata("NoData")
     ctx.state.metadata.id = GOOGLESHEET_PUBLIC_VIEW_ID
     let { sheet, docs } = await loadSheet(ctx, { title: "NoData" })
     expect(sheet).toMatchObject({
@@ -125,7 +127,7 @@ describe('loadSheet', () => {
       nrows: 0
     })
     expect(docs).toEqual([])
-  })
+  }, 30*1000)
 })
 
 describe('fetchData', () => {
@@ -137,7 +139,8 @@ describe('fetchData', () => {
     ctx = createTestCtx({ token })
   })
   it ('should fetch sheets and docs data', async () => {
-    let metadata = createTestMetadata()
+    let metadata = createTestMetadata("Passages")
+    metadata = { config: metadata.config['Passages'], mode: metadata.mode, id: metadata.id }
     let sheet = { title: "Passages" }
     let { cols, docs } = await fetchData(ctx, metadata, sheet)
     expect(cols).toEqual([ "id", "writer", "passage" ])
@@ -240,14 +243,16 @@ function createTestCtx({ token }) {
   }
 }
 
-function createTestMetadata() {
+function createTestMetadata(title) {
   return {
     id: GOOGLESHEET_ID,
     config: {
-      datatypes: {
-        "id": "Int",
-        "writer": "String",
-        "passage": "GoogleDoc"
+      [title]: {
+        datatypes: {
+          "id": "Int",
+          "writer": "String",
+          "passage": "GoogleDoc"
+        },
       },
       mode: "UNFORMATTED"
     }

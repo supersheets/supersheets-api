@@ -5,14 +5,16 @@ const { constructSheetSchema } = require('./schema')
 const { convertValues } = require('./convert')
 
 async function loadSheet(ctx, sheet) {
-  let metadata = ctx.state.metadata
-  let datatypes = metadata.config && metadata.config.datatypes || { }
+  //let datatypes = metadata.config && metadata.config.datatypes || { }
+  // we trick the lower levels into thinking that this particular sheet's
+  // config is the entire metadata
+  let metadata = createSheetMetadata(ctx.state.metadata, sheet.title)
   let { cols, docs, excluded } = await fetchData(ctx, metadata, sheet)
-  convertValues(cols, docs, datatypes, {
+  convertValues(cols, docs, metadata.config.datatypes, {
     tz: metadata.tz,
     locale: metadata.locale
   })
-  let schema = constructSheetSchema(cols, docs, datatypes)
+  let schema = constructSheetSchema(cols, docs, metadata.config)
   schema.excluded = excluded
   sheet.cols = cols
   sheet.schema = schema
@@ -40,6 +42,16 @@ async function fetchSheetData(axios, id, sheet, options) {
   }
   let data = (await axios.get(`${id}/values/${encodeURIComponent(sheet.title)}`, { params })).data
   return constructDocs(sheet, data.values)
+}
+
+function createSheetMetadata(metadata, title) {
+  let config = metadata.config && metadata.config[title] || { }
+  config.datatypes = config.datatypes || { }
+  return { 
+    id: metadata.id, 
+    mode: getLoadMode(metadata), 
+    config 
+  }
 }
 
 function getLoadMode(metadata) {
