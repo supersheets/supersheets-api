@@ -2,6 +2,7 @@ const { ApolloServer } = require('apollo-server-lambda')
 const { promisify } = require('util')
 const { generate } = require('./schema')
 const { createResolvers } = require('./resolvers')
+const { createLoader } = require('./dataloader')
 
 async function findMetadata(ctx, next) {
   if (ctx.state.metadata) {
@@ -35,9 +36,10 @@ async function handler(ctx) {
     return ctx.response.httperror(500, `Error fetching schema for id=${metadata.id}: ${err.message}`) 
   }
   let collection = db.collection(metadata.datauuid)
+  let loader = createLoader(collection) // we just create 1 loader which all GraphQL queries can use 
   let handler = null
   try {
-    handler = createApolloHandler(ctx.event, ctx.context, { typeDefs, resolvers, collection, logger: ctx.logger })
+    handler = createApolloHandler(ctx.event, ctx.context, { typeDefs, resolvers, collection, loader, logger: ctx.logger })
   } catch (err) {
     ctx.logger.error(err)
     return ctx.response.httperror(500, `Error initializing GraphQL server: ${err.message}`)
@@ -48,7 +50,7 @@ async function handler(ctx) {
   return
 }
 
-function createApolloHandler(event, context, { typeDefs, resolvers, collection, logger }) {
+function createApolloHandler(event, context, { typeDefs, resolvers, collection, loader, logger }) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
@@ -59,6 +61,7 @@ function createApolloHandler(event, context, { typeDefs, resolvers, collection, 
       functionName: context.functionName,
       collection,
       logger,
+      loader,
       event,
       context,
     })

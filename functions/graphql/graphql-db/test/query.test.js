@@ -23,6 +23,8 @@ let metadata = {
     schema: {
       columns: [
         { name: "_id", datatype: "String" },
+        {"name":"letter","datatype":"String","sample":"A","sheets":["data"]},
+        {"name":"value","datatype":"Int","sample":65,"sheets":["data"]},
         { name: "title", datatype: "String" },
         { name: "content", datatype: "GoogleDoc" },
         { name: "published", datatype: "Datetime" },
@@ -52,7 +54,7 @@ let metadata = {
 describe('Query', () => {
   it ('should exec a Row query', async () => {
     let query = `
-    { find (filter: { letter: { eq: "A" } } ) { 
+    { findPosts (filter: { letter: { eq: "A" } } ) { 
       rows {
         row {
           letter
@@ -74,7 +76,7 @@ describe('Query', () => {
     let data = JSON.parse((await execQuery(handler, query)).body)
     expect(data).toEqual({
       "data": {
-        "find": {
+        "findPosts": {
           "rows": [
             {
               "row": {
@@ -121,6 +123,11 @@ describe('Query', () => {
               "row": {
                 "title": "Hello World"
               }
+            },
+            {
+              "row": {
+                "title": null
+              }
             }
           ]
         }
@@ -141,21 +148,43 @@ async function execQuery(handler, query) {
 function createResolvers() {
   return {
     Query: {
-      find: async (parent, args, context, info) => {
-        // should execute the mongo query 
-        let query = args
-        return query
-      },
-      findOne: async (parent, args, context, info) => {
-        return { letter: 'a', value: 1 }
-      },
+      // find: async (parent, args, context, info) => {
+      //   // should execute the mongo query 
+      //   let query = args
+      //   return query
+      // },
+      // findOne: async (parent, args, context, info) => {
+      //   return { letter: 'a', value: 1 }
+      // },
       findPosts: async (parent, args, context, info) => {
         let query = args
         query["_sheet"] = "Posts"
         return query
+      },
+      findOnePosts: async (parent, args, context, info) => {
+        return { letter: 'a', value: 1 }
       }
     },
-    RowsConnection: {
+    // RowsConnection: {
+    //   pageInfo: async(query) => {
+    //     return {
+    //       hasNextPage: false,
+    //       hasPreviousPage: false,
+    //       startCursor: null,
+    //       endCursor: null
+    //     }
+    //   },
+    //   totalCount: async(query) => {
+    //     return 2
+    //   },
+    //   rows: async (query) => {
+    //     return [ 
+    //       { row: { letter: 'a', value: 1 } },
+    //       { row: { letter: 'a', value: 1 } }
+    //     ]
+    //   }
+    // },
+    PostsConnection: {
       pageInfo: async(query) => {
         return {
           hasNextPage: false,
@@ -168,16 +197,9 @@ function createResolvers() {
         return 2
       },
       rows: async (query) => {
-        return [ 
-          { row: { letter: 'a', value: 1 } },
-          { row: { letter: 'a', value: 1 } }
-        ]
-      }
-    },
-    PostsConnection: {
-      rows: async (query) => {
         return [
-          { row: { title: "Hello World" } }
+          { row: { title: "Hello World", letter: "a", value: 1 } },
+          { row: { letter: "a", value: 1 } }
         ]
       }
     }

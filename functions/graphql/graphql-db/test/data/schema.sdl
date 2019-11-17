@@ -1,0 +1,449 @@
+schema {
+      query: Query
+    }
+    
+    type Query {
+        find(
+            filter: RowsFilterInput
+            limit: Int
+            skip: Int
+            sort: RowsSortInput
+        ): RowsConnection
+    
+        findOne(
+            filter: RowsFilterInput
+            limit: Int
+            skip: Int
+            sort: RowsSortInput
+        ): Rows
+        findPosts(
+            filter: PostsFilterInput
+            limit: Int
+            skip: Int
+            sort: PostsSortInput
+        ): PostsConnection
+    
+        findOnePosts(
+            filter: PostsFilterInput
+            limit: Int
+            skip: Int
+            sort: PostsSortInput
+        ): Posts
+    }
+    
+    type Rows {
+        _id: ID!
+        _sheet: String
+        _row: Int
+        _errors: [String]
+        letter: String
+        value: Int
+        number: Int
+        float: Float
+        boolean: Boolean
+        list: [String]
+        date(
+            formatString: String
+            fromNow: Boolean
+            difference: String
+            locale: String
+            zone: String
+        ): Date
+        datetime(
+            formatString: String
+            fromNow: Boolean
+            difference: String
+            locale: String
+            zone: String
+        ): Datetime
+        posts: [Posts!]
+        googledoc: RowsGoogledocDoc
+        image(
+            edits: ImageEditsInput
+        ): Image
+    }
+    
+    type RowsConnection {
+        rows: [RowsEdge!]
+        totalCount: Int!
+        pageInfo: PageInfo!
+    }
+    
+    type RowsEdge {
+        row: Rows!
+    }
+    
+    enum RowsFieldsEnum {
+        _id
+        _sheet
+        _row
+        _errors
+        letter
+        value
+        number
+        float
+        boolean
+        list
+        date
+        datetime
+        posts
+        googledoc
+        image
+    }
+    
+    input RowsFilterInput {
+        _id: StringQueryOperatorInput
+        _sheet: StringQueryOperatorInput
+        _row: IntQueryOperatorInput
+        _errors: StringArrayQueryOperatorInput
+        letter: StringQueryOperatorInput
+        value: IntQueryOperatorInput
+        number: IntQueryOperatorInput
+        float: FloatQueryOperatorInput
+        boolean: BooleanQueryOperatorInput 
+        list: StringArrayQueryOperatorInput
+        date: DateQueryOperatorInput
+        datetime: DatetimeQueryOperatorInput
+        posts: IntQueryOperatorInput
+        googledoc: RowsGoogledocDocFilterInput
+        image: ImageQueryOperatorInput
+        googledoc____url: StringQueryOperatorInput
+        googledoc____docid: StringQueryOperatorInput
+        googledoc____title: StringQueryOperatorInput
+        googledoc____text: StringQueryOperatorInput
+        googledoc____content: StringQueryOperatorInput
+        googledoc___title: StringQueryOperatorInput
+        googledoc___description: StringQueryOperatorInput
+    }
+    
+    input RowsSortInput {
+        fields: [RowsFieldsEnum]
+        order: [SortOrderEnum]
+    }
+    
+    type RowsGoogledocDoc {
+        _url: String
+        _docid: String
+        _title: String
+        _text: String
+        _content: String
+        title: String
+        description: String
+        excerpt(
+            pruneLength: Int
+            format: String
+        ): String
+        text: String
+        markdown: String
+        html: String
+    }
+    
+    
+    
+    input RowsGoogledocDocFilterInput {
+        _url: StringQueryOperatorInput
+        _docid: StringQueryOperatorInput
+        _title: StringQueryOperatorInput
+        _text: StringQueryOperatorInput
+        _content: StringQueryOperatorInput
+        title: StringQueryOperatorInput
+        description: StringQueryOperatorInput
+    }
+    
+    
+    
+    input RowsGoogledocDocSortInput {
+        fields: [RowsFieldsEnum]
+        order: [SortOrderEnum]
+    }
+    
+    
+    
+    type Posts {
+        _id: ID!
+        _sheet: String
+        _row: Int
+        _errors: [String]
+        letter: String
+        value: Int
+        number: Int
+        float: Float
+        boolean: Boolean
+        list: [String]
+        date(
+            formatString: String
+            fromNow: Boolean
+            difference: String
+            locale: String
+            zone: String
+        ): Date
+        datetime(
+            formatString: String
+            fromNow: Boolean
+            difference: String
+            locale: String
+            zone: String
+        ): Datetime
+        posts: [Posts!]
+        googledoc: PostsGoogledocDoc
+        image(
+            edits: ImageEditsInput
+        ): Image
+    }
+    
+    type PostsConnection {
+        rows: [PostsEdge!]
+        totalCount: Int!
+        pageInfo: PageInfo!
+    }
+    
+    type PostsEdge {
+        row: Posts!
+    }
+    
+    enum PostsFieldsEnum {
+        _id
+        _sheet
+        _row
+        _errors
+        letter
+        value
+        number
+        float
+        boolean
+        list
+        date
+        datetime
+        posts
+        googledoc
+        image
+    }
+    
+    input PostsFilterInput {
+        _id: StringQueryOperatorInput
+        _sheet: StringQueryOperatorInput
+        _row: IntQueryOperatorInput
+        _errors: StringArrayQueryOperatorInput
+        letter: StringQueryOperatorInput
+        value: IntQueryOperatorInput
+        number: IntQueryOperatorInput
+        float: FloatQueryOperatorInput
+        boolean: BooleanQueryOperatorInput 
+        list: StringArrayQueryOperatorInput
+        date: DateQueryOperatorInput
+        datetime: DatetimeQueryOperatorInput
+        posts: IntQueryOperatorInput
+        googledoc: PostsGoogledocDocFilterInput
+        image: ImageQueryOperatorInput
+        googledoc____url: StringQueryOperatorInput
+        googledoc____docid: StringQueryOperatorInput
+        googledoc____title: StringQueryOperatorInput
+        googledoc____text: StringQueryOperatorInput
+        googledoc____content: StringQueryOperatorInput
+        googledoc___title: StringQueryOperatorInput
+        googledoc___description: StringQueryOperatorInput
+    }
+    
+    input PostsSortInput {
+        fields: [PostsFieldsEnum]
+        order: [SortOrderEnum]
+    }
+    
+    type PostsGoogledocDoc {
+        _url: String
+        _docid: String
+        _title: String
+        _text: String
+        _content: String
+        title: String
+        description: String
+        excerpt(
+            pruneLength: Int
+            format: String
+        ): String
+        text: String
+        markdown: String
+        html: String
+    }
+    
+    
+    
+    input PostsGoogledocDocFilterInput {
+        _url: StringQueryOperatorInput
+        _docid: StringQueryOperatorInput
+        _title: StringQueryOperatorInput
+        _text: StringQueryOperatorInput
+        _content: StringQueryOperatorInput
+        title: StringQueryOperatorInput
+        description: StringQueryOperatorInput
+    }
+    
+    
+    
+    input PostsGoogledocDocSortInput {
+        fields: [PostsFieldsEnum]
+        order: [SortOrderEnum]
+    }
+    
+    
+    
+    scalar Date
+    scalar Datetime
+    
+    enum SortOrderEnum {
+      ASC
+      DESC
+    }
+    
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+    
+    input StringArrayQueryOperatorInput {
+      eq: String
+      ne: String
+      in: [String]
+      nin: [String]
+      all: [String]
+      elemMatch: [StringQueryOperatorInput]
+      size: Int
+    }
+    
+    input StringQueryOperatorInput {
+      eq: String
+      gt: String
+      gte: String
+      lt: String
+      lte: String
+      in: [String]
+      ne: String
+      nin: [String]
+      regex: String
+      options: String
+    }
+    
+    input IntQueryOperatorInput {
+      eq: Int
+      gt: Int
+      gte: Int
+      in: [Int]
+      lt: Int
+      lte: Int
+      ne: Int
+      nin: [Int]
+    }
+    
+    input FloatQueryOperatorInput {
+      eq: Float
+      gt: Float
+      gte: Float
+      in: [Float]
+      lt: Float
+      lte: Float
+      ne: Float
+      nin: [Float]
+    }
+    
+    input BooleanQueryOperatorInput {
+      eq: Boolean
+      ne: Boolean
+      in: [ Boolean ]
+      nin: [ Boolean ]
+    }
+    
+    input DateQueryOperatorInput {
+      eq: Date
+      no: Date
+      gt: Date
+      gte: Date
+      lt: Date
+      lte: Date
+      in: [ Date ]
+      nin: [ Date ]
+    }
+    
+    input DatetimeQueryOperatorInput {
+      eq: Datetime
+      no: Datetime
+      gt: Datetime
+      gte: Datetime
+      lt: Datetime
+      lte: Datetime
+      in: [ Datetime ]
+      nin: [ Datetime ]
+    }
+    
+    enum ImageFitEnum {
+      cover
+      contain
+      fill
+      inside
+      outside
+    }
+    
+    enum ImageBlurUpFormatEnum {
+      svg
+      image
+    }
+    
+    type Image {
+      src: String
+      blurup(
+        width: Int
+        height: Int
+        scale: Float
+        format: ImageBlurUpFormatEnum
+      ): String
+      _original: String
+      _url: String
+      _mediatype: String 
+      _size: Int
+    }
+    
+    input ImageQueryOperatorInput {
+      eq: String
+      gt: String
+      gte: String
+      lt: String
+      lte: String
+      in: [String]
+      ne: String
+      nin: [String]
+      regex: String
+      options: String
+    }
+    
+    input ImageEditsInput {
+      resize: ImageResizeOptionsInput
+      flatten: Boolean
+      grayscale: Boolean
+      flip: Boolean
+      flop: Boolean
+      negate: Boolean
+      normalise: Boolean
+      tint: ColorRGBInput
+      smartCrop: ImageCropOptionsInput
+    }
+    
+    input ImageResizeOptionsInput {
+      width: Int
+      height: Int
+      fit: ImageFitEnum
+      background: ColorRGBInput
+    }
+    
+    input ImageCropOptionsInput {
+      faceIndex: Int
+      padding: Int
+    }
+    
+    input ColorRGBInput{
+      r: Int
+      g: Int
+      b: Int
+      alpha: Int
+    }
+    

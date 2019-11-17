@@ -97,6 +97,11 @@ describe('generateTypeField', () => {
     edits: ImageEditsInput
 ): Image`)
   })
+  it ('should generate a Relationship field', async () => {
+    let field = { name: "authors", datatype: "String", relationship: true }
+    let s = generateTypeField(field, { level: 0 })
+    expect(s).toEqual(`authors: [Authors]`)
+  })
 })
 
 describe('generateGoogleDocTypes', () => {
@@ -171,6 +176,7 @@ describe('generate', () => {
     //console.log(sdl)
     let error = null
     try {
+      // console.log(sdl)
       let parsed = gql`${sdl}`
     } catch (err) {
       console.error(err)

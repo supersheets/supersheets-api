@@ -8,6 +8,7 @@ const { markdown } = require('@supersheets/docdown')
 const { getSheetSchemas, generateGraphQLNames } = require('./schema')
 const { createImageUrl, createDataUrl, createBlurredSVGDataUrl } = require('./image')
 const { createQuery } = require('./mongodb')
+
 const DEFAULT_LENGTH = 128
 
 function createResolvers({ metadata }) {
@@ -61,16 +62,23 @@ function createSheetFieldResolvers(sheet, { names }) {
   let typefields = { }
   let columns = sheet.schema.columns
   for (let col of columns) {
-    switch(col.datatype) {
-      case "Date":
-        typefields[col.name] = createDateFormatResolver()
-        break
-      case "Datetime":
-        typefields[col.name] = createDatetimeFormatResolver()
-        break
-      case "ImageUrl":
-        typefields[col.name] = createImageResolver()
-        break
+    if (col.relationship) {
+      let relationship = sheet.schema.relationships && sheet.schema.relationships[col.name]
+      if (relationship) {
+        typefields[col.name] = createRelationshipResolver(relationship)
+      } // how to handle if no relationship schema? Throw?
+    } else {
+      switch(col.datatype) {
+        case "Date":
+          typefields[col.name] = createDateFormatResolver()
+          break
+        case "Datetime":
+          typefields[col.name] = createDatetimeFormatResolver()
+          break
+        case "ImageUrl":
+          typefields[col.name] = createImageResolver()
+          break
+      }
     }
   }
   resolvers[names['type']] = typefields
@@ -267,7 +275,6 @@ function createImageSrcResolver() {
 
 function createImageBlurUpResolver() {
   return async ({ image, edits }, args, context, { returnType, parentType, path }) => {
-    console.log('blrup')
     let request = { 
       bucket: image["_bucket"], 
       key: image["_key"],
@@ -281,16 +288,32 @@ function createImageBlurUpResolver() {
     let thumbnail = JSON.parse(JSON.stringify(request))
     thumbnail.edits.resize.width = Math.round(thumbnail.edits.resize.width * scale)
     thumbnail.edits.resize.height = Math.round(thumbnail.edits.resize.height * scale)
-    console.log("blurup", JSON.stringify(thumbnail, null, 2))
     let data = await createDataUrl(image["_bucket"], thumbnail)
-    console.log("blurup Data", data)
     if (args.format && args.format == "image") {
       return data
     } else {
       let svg = createBlurredSVGDataUrl(data, { width: request.edits.resize.width, height: request.edits.resize.height })
-      console.log("blurup svg", svg)
       return svg
     }
+  }
+}
+
+function createRelationshipResolver(relationship) {
+  // relationship: {
+  //   sheet: "Authors",
+  //   field: "email",
+  //   operator: "eq"
+  // }
+  // val: "danieljyoo@gmail.com"
+  return async (parent, args, context, { returnType, parentType, path }) => {
+    let key = path.key
+    let val = parent[key] 
+    let query = { _sheet: relationship['sheet'] }
+    query[relationship['field']] = { }
+    query[relationship['field']][`$${relationship['operator']}`] = val
+    context.logger.info(`relationship query: ${JSON.stringify(query, null, 2)}`)
+    let res = await context.loader.load(query)
+    return res || [ ]
   }
 }
 
@@ -359,5 +382,6 @@ module.exports = {
   createSheetConnectionResolvers,
   createSheetFieldResolvers,
   createDateFormatResolver,
-  createDatetimeFormatResolver
+  createDatetimeFormatResolver,
+  createRelationshipResolver
 }

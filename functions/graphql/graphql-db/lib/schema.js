@@ -45,11 +45,12 @@ function getSheetSchemas(metadata) {
     schema: sheet.schema,
     options: { }
   } }) || [ ]
-  return [ {
-    title: "Rows",
-    schema: metadata.schema,
-    options: { names: { find: 'find', findOne: 'findOne' } }
-  } ].concat(schemas)
+  // return [ {
+  //   title: "Rows",
+  //   schema: metadata.schema,
+  //   options: { names: { find: 'find', findOne: 'findOne' } }
+  // } ].concat(schemas)
+  return schemas
 }
 
 function generateQuery(sheets, options) {
@@ -307,10 +308,15 @@ function generateGraphQLImageField({ name, datatype, sample }, { level, names })
   return s
 }
 
-function convertToGraphQLType({ name, datatype }, { names }) {
+function convertToGraphQLType({ name, datatype, relationship }, { names }) {
   // kind of hacky. load should actually set the datatype to be ID
   if (name == "_id") {
     return 'ID!'
+  }
+  if (relationship) {
+    // HACK: we assume that the name 'authors' corresponds 
+    // to the sheet name and therefore GraphQL type 'Authors'
+    return `[${capitalize(name)}]`
   }
   switch(datatype) {
     case "String":

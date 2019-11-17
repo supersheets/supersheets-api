@@ -66,6 +66,12 @@
             "sample": "1979-05-16T21:01:23.000Z"
           },
           {
+            "name": "posts",
+            "datatype": "Int",
+            "sample": 65,
+            "relationship": true
+          },
+          {
             "name": "googledoc",
             "datatype": "GoogleDoc",
             "sample": null,
@@ -177,6 +183,14 @@
             ]
           }
         },
+        "relationships": {
+          "posts": {
+            "_name": "posts:value",
+            "sheet": "Posts",
+            "field": "value",
+            "operator": "eq"
+          }
+        },
         "excluded": ["Bad Column Name"]
       },
       "ncols": 10,
@@ -231,6 +245,12 @@
         "name": "datetime",
         "datatype": "Datetime",
         "sample": "1979-05-16T21:01:23.000Z"
+      },
+      {
+        "name": "posts",
+        "datatype": "Int",
+        "sample": 65,
+        "relationship": true
       },
       {
         "name": "googledoc",
@@ -342,6 +362,14 @@
             "reserved": false
           }
         ]
+      }
+    },
+    "relationships": {
+      "posts": {
+        "_name": "posts:value",
+        "sheet": "Posts",
+        "field": "value",
+        "operator": "eq"
       }
     }
   },

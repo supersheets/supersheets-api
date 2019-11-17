@@ -77,7 +77,7 @@ describe('findOne', () => {
   }, 30 * 1000)
   it ('should run a basic findOne query', async () => {
     let query = `{ 
-      findOne { 
+      findOnePosts { 
         letter
       }
     }`
@@ -88,7 +88,7 @@ describe('findOne', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        findOne: {
+        findOnePosts: {
           "letter": "A"
         }
       }
@@ -96,7 +96,7 @@ describe('findOne', () => {
   }, 30 * 1000)
   it ('should run a findOne query with filter', async () => {
     let query = `{ 
-      findOne (filter: { letter: { eq: "B" } } ) { 
+      findOnePosts (filter: { letter: { eq: "B" } } ) { 
         letter
       }
     }`
@@ -106,7 +106,7 @@ describe('findOne', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        findOne: {
+        findOnePosts: {
           "letter": "B"
         }
       }
@@ -125,7 +125,7 @@ describe('find', () => {
   }, 30 * 1000)
   it ('should run a basic find all query', async () => {
     let query = `{ 
-      find { 
+      findPosts { 
         rows {
           row {
             letter 
@@ -140,7 +140,7 @@ describe('find', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           totalCount: 5,
           rows: [
             { row: { "letter": "A" } },
@@ -155,7 +155,7 @@ describe('find', () => {
   }, 30 * 1000)
   it ('should run a find all with filter', async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "B" } }) { 
+      findPosts (filter: { letter: { eq: "B" } }) { 
         rows {
           row {
             letter 
@@ -170,7 +170,7 @@ describe('find', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           totalCount: 1,
           rows: [
             { row: { "letter": "B" } }
@@ -181,7 +181,7 @@ describe('find', () => {
   }, 30 * 1000)
   it("should filter using regex", async () => {
     let query = `{ 
-      find (filter: { googledoc___title: { regex: "^Song", options: "i" } }) { 
+      findPosts (filter: { googledoc___title: { regex: "^Song", options: "i" } }) { 
         rows {
           row {
             googledoc {
@@ -197,7 +197,7 @@ describe('find', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               googledoc: {
@@ -211,7 +211,7 @@ describe('find', () => {
   }, 30 * 1000)
     it ('should match on an in (array) query', async () => {
     let query =  `{ 
-      find (filter: { letter: { in: [ "C", "D" ] } }) { 
+      findPosts (filter: { letter: { in: [ "C", "D" ] } }) { 
         rows {
           row {
             letter
@@ -225,7 +225,7 @@ describe('find', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ {
             row: {
               "letter": "C"
@@ -241,7 +241,7 @@ describe('find', () => {
   })
   it("should sort, limit, and skip", async () => {
     let query = `{ 
-      find (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
+      findPosts (sort: { fields: [ letter ], order: [ DESC ] }, limit: 2, skip: 1) { 
         rows {
           row {
             letter
@@ -255,7 +255,7 @@ describe('find', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ {
             row: { 
               letter: "D"
@@ -283,7 +283,7 @@ describe('date and datetime', () => {
   }, 30 * 1000)
   it("should serialize date and datetime correctly", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             letter
@@ -299,7 +299,7 @@ describe('date and datetime', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               letter: "A",
@@ -313,7 +313,7 @@ describe('date and datetime', () => {
   }, 30 * 1000)
   it("should filter query date and datetime", async () => {
     let query = `{ 
-      find (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:23.000Z" } }) { 
+      findPosts (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:23.000Z" } }) { 
         rows {
           row {
             letter
@@ -329,7 +329,7 @@ describe('date and datetime', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               letter: "A",
@@ -342,7 +342,7 @@ describe('date and datetime', () => {
     })
     // Time just barely missing by a second
     query = `{ 
-      find (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:22.000Z" } }) { 
+      findPosts (filter: { date: { gt: "1979-05-15" }, datetime: { lte: "1979-05-16T21:01:22.000Z" } }) { 
         rows {
           row {
             letter
@@ -358,7 +358,7 @@ describe('date and datetime', () => {
     body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ ]
         }
       }
@@ -366,7 +366,7 @@ describe('date and datetime', () => {
   }, 30 * 1000)
   it("should take date and datetime formatting arguments", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             letter
@@ -382,7 +382,7 @@ describe('date and datetime', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               letter: "A",
@@ -396,7 +396,7 @@ describe('date and datetime', () => {
   }, 30 * 1000)
   it ("should not throw if date and datime are null", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "E" } }) { 
+      findPosts (filter: { letter: { eq: "E" } }) { 
         rows {
           row {
             letter
@@ -412,7 +412,7 @@ describe('date and datetime', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               letter: "E",
@@ -426,7 +426,7 @@ describe('date and datetime', () => {
   }, 30 * 1000)
   it ("should accept timezone", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             letter
@@ -442,7 +442,7 @@ describe('date and datetime', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               letter: "A",
@@ -456,7 +456,7 @@ describe('date and datetime', () => {
   }, 30 * 1000)
   it ("should noop on locale (to be supported later)", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             letter
@@ -472,7 +472,7 @@ describe('date and datetime', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               letter: "A",
@@ -487,7 +487,7 @@ describe('date and datetime', () => {
 })
 
 
-describe('GoogleDoc content', () => {
+describe('GoogleDoc Content', () => {
   let func = null
   beforeEach(async () => {
     func = require('../index.js').func
@@ -498,7 +498,7 @@ describe('GoogleDoc content', () => {
   }, 30 * 1000)
   it("should get the html rendered google doc content", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             googledoc {
@@ -517,7 +517,7 @@ describe('GoogleDoc content', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               googledoc: {
@@ -526,6 +526,125 @@ describe('GoogleDoc content', () => {
                 markdown: expect.stringMatching(/^# The Gettysburg Address/),
                 html: expect.stringMatching(/^\<h1\>The Gettysburg Address\<\/h1\>/)
               }
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+})
+
+describe('Relationships', () => {
+  let func = null
+  beforeEach(async () => {
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  }, 30 * 1000)
+  afterEach(async () => {
+    // await func.invokeTeardown()
+  }, 30 * 1000)
+  it("should get a relationship", async () => {
+    let query = `{ 
+      findPosts (filter: { letter: { eq: "A" } }) { 
+        rows {
+          row {
+            letter
+            value
+            posts {
+              letter
+              value
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        findPosts: {
+          rows: [ { 
+            row: { 
+              letter: "A",
+              value: 65,
+              posts: [ {
+                letter: "C",
+                value: 66
+              } ]
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should query the underlying column value", async () => {
+    let query = `{ 
+      findPosts (filter: { posts: { eq: 66 } }) { 
+        rows {
+          row {
+            letter
+            value
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        findPosts: {
+          rows: [ { 
+            row: { 
+              letter: "A",
+              value: 65,
+            } 
+          } ]
+        }
+      }
+    })
+  }, 30 * 1000)
+  it("should recursive work", async () => {
+    let query = `{ 
+      findPosts (filter: { letter: { eq: "A" } }) { 
+        rows {
+          row {
+            letter
+            value
+            posts {
+              letter
+              value
+              posts {
+                letter
+                value
+              }
+            }
+          }
+        } 
+      }
+    }`
+    let ctx = createTestEvent(SPREADSHEETID, query)
+    await func.invoke(ctx)
+    expect(ctx.response.statusCode).toBe(200)
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toEqual({
+      data: {
+        findPosts: {
+          rows: [ { 
+            row: { 
+              letter: "A",
+              value: 65,
+              posts: [ {
+                letter: "C",
+                value: 66,
+                posts: [ {
+                  letter: "D",
+                  value: 67
+                } ]
+              } ]
             } 
           } ]
         }
@@ -545,7 +664,7 @@ describe('Image content', () => {
   }, 30 * 1000)
   it("should get the image src from asset host", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             image {
@@ -561,7 +680,7 @@ describe('Image content', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               image: {
@@ -575,7 +694,7 @@ describe('Image content', () => {
   }, 30 * 1000)
   it("should pass image edit options", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             image(
@@ -600,7 +719,7 @@ describe('Image content', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               image: {
@@ -614,7 +733,7 @@ describe('Image content', () => {
   }, 30 * 1000)
   it("should generate blurup", async () => {
     let query = `{ 
-      find (filter: { letter: { eq: "A" } }) { 
+      findPosts (filter: { letter: { eq: "A" } }) { 
         rows {
           row {
             image(
@@ -643,7 +762,7 @@ describe('Image content', () => {
     let body = JSON.parse(ctx.response.body)
     expect(body).toEqual({
       data: {
-        find: {
+        findPosts: {
           rows: [ { 
             row: { 
               image: {
@@ -699,11 +818,13 @@ async function createTestMetadata(db, options) {
 async function createTestData(db, options) {
   let data = [ 
     { 
+      _sheet: "Posts",
       letter: "A", 
       value: 65, 
       date: new Date("1979-05-16"), 
       datetime: new Date("1979-05-16T21:01:23.000Z"), 
       googledoc: { title: "The Gettysburg Address", "_text": "Hello World\nThis is a document\n", "_content": COMPRESSED_GOOGLE_DOC },
+      posts: 66,
       image: {
         "_original": "https://images.unsplash.com/photo-1423347834838-5162bb452ca7",
         "_url": "https://images.supersheets.io/eyJrZXkiOiJ0ZXN0LzU2NTAxMGU0MWM2OTQ5NDczZGZjYzM0MWFiMTMwM2MwNTE1NDkzMDcucG5nIn0=",
@@ -714,10 +835,16 @@ async function createTestData(db, options) {
         "_etag": "\"7479486ef7dfa55ec32dc24e2c757701\""
       }
     },
-    { letter: "B", value: 65, date: new Date("2019-07-04"), datetime: new Date("2019-07-04T03:21:00.000Z"), googledoc: { title: "Song of Solomon", "_text": "Song of Solomon\nThis is a document\n" } },
-    { letter: "C", value: 66 },
-    { letter: "D", value: 67 },
-    { letter: "E", value: 68 }
+    { 
+      _sheet: "Posts",
+      letter: "B", 
+      value: 65, 
+      date: new Date("2019-07-04"), 
+      datetime: new Date("2019-07-04T03:21:00.000Z"), 
+      googledoc: { title: "Song of Solomon", "_text": "Song of Solomon\nThis is a document\n" } },
+    { _sheet: "Posts", letter: "C", value: 66, posts: 67 },
+    { _sheet: "Posts", letter: "D", value: 67 },
+    { _sheet: "Posts", letter: "E", value: 68 }
   ]
   let datauuid = options.datauuid || 'DATAUUID'
   await db.collection(datauuid).insertMany(data)

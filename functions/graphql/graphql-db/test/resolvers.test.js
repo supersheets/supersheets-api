@@ -10,8 +10,11 @@ const {
   createSheetConnectionResolvers,
   createSheetFieldResolvers,
   createDateFormatResolver,
-  createDatetimeFormatResolver
+  createDatetimeFormatResolver,
+  createRelationshipResolver
 } = require('../lib/resolvers')
+const { createLoader } = require('../lib/dataloader')
+const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 
 const NOOP = async () => { }
 
@@ -21,22 +24,31 @@ describe('createResolvers', () => {
     let typeDefs = getTestSchema()
     let metadata = getTestMetadata()
     let map = createResolvers({ typeDefs, metadata })
-    expect(map).toMatchObject({
+    expect(map).toEqual({
       'Query': {
-        find: expect.anything(),
-        findOne: expect.anything(),
         findPosts: expect.anything(),
         findOnePosts: expect.anything()
       },
-      'RowsConnection': {
-        rows: expect.anything(),
-        totalCount: expect.anything(),
-        pageInfo: expect.anything()
+      'Posts': {
+        "date": expect.anything(),
+        "datetime": expect.anything(),
+        "image": expect.anything(),
+        "posts": expect.anything()
       },
       'PostsConnection': {
         rows: expect.anything(),
         totalCount: expect.anything(),
         pageInfo: expect.anything()
+      },
+      'PostsGoogledocDoc': {
+        "excerpt": expect.anything(),
+        "html": expect.anything(),
+        "markdown": expect.anything(),
+        "text": expect.anything()
+      },
+      'Image': {
+        src: expect.anything(),
+        blurup: expect.anything()
       },
       'Date': expect.anything(),
       'Datetime': expect.anything()
@@ -155,6 +167,42 @@ describe('Datetime Resolver', () => {
   })
 })
 
+describe('createRelationshipResolver', () => {
+  
+  let loader = null
+  let plugin = new MongoDBPlugin()
+  let client = null
+  let db = null
+  beforeAll(async () => {
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    db = client.db()
+    await initTestData(db, 'TEST-LOADER-COLLECTION')
+    loader = createLoader(db.collection('TEST-LOADER-COLLECTION'))
+  }, 10 * 1000)
+  afterAll(async () => {
+    if (client) {
+      await deleteTestData(db, 'TEST-LOADER-COLLECTION')
+      await client.close()
+      await plugin.teardown()
+    }
+    client = null
+    db = null
+  }, 10 * 1000)
+  it ('should resolve using a loader', async () => {
+    let relationship = { sheet: "Authors", field: "email", operator: "eq" }
+    let resolver = createRelationshipResolver(relationship)
+    let parent = { _sheet: "Posts", authors: "danieljyoo@gmail.com" }
+    let key = "authors"
+    let res = await resolver(parent, { }, { loader, logger: console }, { path: { key } })
+    expect(res).toEqual([ { 
+      _id: expect.anything(),
+      _sheet: 'Authors',
+      email: 'danieljyoo@gmail.com',
+      name: 'Daniel Jhin Yoo' } 
+    ])
+  })
+})
+
 function getTestSchema() {
   return generate(getTestMetadata())
 }
@@ -162,3 +210,19 @@ function getTestSchema() {
 function getTestMetadata() {
   return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'metadata.json')).toString('utf8'))
 }
+
+async function initTestData(db, collection) {
+  collection = collection || TEST_COLLECTION
+  await db.collection(collection).insertMany([ 
+    { _sheet: "Posts", authors: "danieljyoo@gmail.com" }, // { "_sheet": "Authors", "field": "email", "op": "eq", "value": "danieljyoo@gmail.com" },
+    { _sheet: "Posts", authors: "danieljyoo@goalbookapp.com" }, // { "_sheet": "Authors", "field": "email", "op": "eq", "value": "danieljyoo@goalbookapp.com" },
+    { _sheet: "Authors", email: "danieljyoo@gmail.com", name: "Daniel Jhin Yoo" },
+    { _sheet: "Authors", email: "danieljyoo@goalbookapp.com", name: "Daniel Yoo" }
+  ])
+}
+
+async function deleteTestData(db, collection) {
+  collection = collection || TEST_COLLECTION
+  await db.collection(collection).drop()
+}
+
