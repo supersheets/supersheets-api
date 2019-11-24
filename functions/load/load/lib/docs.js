@@ -51,7 +51,18 @@ async function fetchDoc(axios, url) {
   if (!docid) {
     throw new Error(`Invalid Google Doc URL: ${url}`)
   }
-  let doc = (await axios.get(`${docid}`)).data
+  let doc = null
+  try {
+    doc = (await axios.get(`${docid}`)).data
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      let error = err.response.data.error
+      let message = `${error.code} ${error.status}: ${error.message}`
+      throw new Error(message)
+    } else {
+      throw err
+    }
+  }
   let reserved = { '_docid': docid, '_url': url }
   let data = extractData(doc)
   return Object.assign(reserved, data) // ensures that reserved keys sorted first

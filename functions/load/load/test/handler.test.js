@@ -5,9 +5,10 @@ const { findStatus } = require('../lib/status')
 
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
-
 // Supersheets Public View GoogleDoc Test
 const GOOGLESPREADSHEET_DOCS_ID = "1xyhRUvGTAbbOPFPNB-05Xn6rUT60wNUXJxtGY5RWzpU"
+// Does not actually exist
+const NONEXISTANT_GOOGLESHEET_ID = '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2Z'
 
 describe('Error Handling', () => {
   let func = null
@@ -25,10 +26,12 @@ describe('Error Handling', () => {
   it ('should throw error if getting metadata from Mongo', async () => {
     let ctx = createCtx()
     ctx.state.mongodb = mockdb(null, new Error("Error in mongodb"))
-    await func.invoke(ctx)
+    try {
+      await func.invoke(ctx)
+    } catch (err) { }
     expect(ctx.error).toBeTruthy()
     expect(ctx.error.message).toEqual("Error in mongodb")
-  })
+  }, 30 * 1000)
   it ('should throw error fetching a sheet from Google Sheets API', async () => {
     let ctx = createCtx()
     ctx.state.metadata = testmetadata()
@@ -36,9 +39,47 @@ describe('Error Handling', () => {
     ctx.state.mongodb = mockdb(ctx.state.status)
     ctx.state.sheetsapi = mockaxios(null, new Error("Error fetching from Google Sheets"))
     ctx.state.docsapi = mockaxios({ hello: "world" })
-    await func.invoke(ctx)
+    try {
+      await func.invoke(ctx)
+    } catch (err) { }
     expect(ctx.error).toBeTruthy()
     expect(ctx.error.message).toEqual("Error fetching from Google Sheets")
+  }, 30 * 1000)
+})
+
+describe('Load Errors', () => {
+  let func = null
+  let plugin = new MongoDBPlugin()
+  let client = null
+  let db = null
+  let statusuuid = "STATUS-UUID"
+  beforeAll(async () => {
+    client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
+    db = client.db()
+  }, 60 * 1000)
+  afterAll(async () => {
+    await client.close()
+  })
+  beforeEach(async () => {
+    func = require('../index.js').func
+    func.logger.logger.prettify = prettify
+  })
+  afterEach(async () => {
+    await deletemeta(db, GOOGLESPREADSHEET_ID)
+    await deletestatus(db, statusuuid)
+    await func.invokeTeardown()
+  })
+  it ('should throw properly formatted Google API error', async () => {
+    await initstatus(db, statusuuid)
+    let ctx = createCtx(NONEXISTANT_GOOGLESHEET_ID, statusuuid)
+    let error = null
+    try {
+      await func.invoke(ctx)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual("Error fetching spreadsheet '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2Z': 404 NOT_FOUND Requested entity was not found.")
   })
 })
 
@@ -162,6 +203,7 @@ describe('Load', () => {
       2
     ])
   }, 120 * 1000)
+
 })
 
 describe('Load Spreadsheet with Google Docs', () => {

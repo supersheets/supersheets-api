@@ -9,12 +9,16 @@ const axios = require('axios')
 // Supersheets Public GraphQL Test
 // https://docs.google.com/spreadsheets/d/1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI/edit#gid=0
 const GOOGLESPREADSHEET_ID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
-
 //const GOOGLESPREADSHEET_PRIVATE_ID = "1JYT2HbToNeafKuODTW-gdwvJwmZ0MRYCqibRzZOlfJY"
 // Goalbook Private Supersheets Cross Domain Test
 // Added service account email with edit access to this sheet
 // https://docs.google.com/spreadsheets/d/1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM/edit#gid=0
 const GOOGLESPREADSHEET_PRIVATE_ID = "1UWbjiyx0gL9tsbsKoYUeeCoiwdefNyka4Rn00NFX-pM"
+// Does not actually exist
+const NONEXISTANT_GOOGLESHEET_ID = '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2Z'
+// Inaccessible Spreadsheet
+// https://docs.google.com/spreadsheets/d/1RIik3J4AX6oRwZqoGwaF8lrJgLzGE7sTIWI7OF_wtAo/edit
+const INACCESSIBLE_GOOGLESHEET_ID = '1RIik3J4AX6oRwZqoGwaF8lrJgLzGE7sTIWI7OF_wtAo'
 
 const { 
   findStatus,
@@ -202,6 +206,36 @@ describe('fetchAndMergeMetadata', () => {
       id: GOOGLESPREADSHEET_PRIVATE_ID,
       title: 'Goalbook Private Supersheets Cross Domain Test'
     })
+  })
+  it ('should throw if spreadsheet does not exist', async () => {
+    let ctx = createTestCtx({
+      spreadsheetid: NONEXISTANT_GOOGLESHEET_ID
+    })
+    ctx.state.metadata = { "_new": true }
+    ctx.state.sheetsapi = sheetsapi
+    let error = null
+    try {
+      await fetchAndMergeMetadata(ctx)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual("Error fetching spreadsheet '1m4a-PgNeVTn7Q96TaP_cA0cYQg8qsUfmm3l5avK9t2Z': 404 NOT_FOUND Requested entity was not found.")
+  })
+  it ('should throw if user does not have authorization to access', async () => {
+    let ctx = createTestCtx({
+      spreadsheetid: INACCESSIBLE_GOOGLESHEET_ID
+    })
+    ctx.state.metadata = { "_new": true }
+    ctx.state.sheetsapi = sheetsapi
+    let error = null
+    try {
+      await fetchAndMergeMetadata(ctx)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual("Error fetching spreadsheet '1RIik3J4AX6oRwZqoGwaF8lrJgLzGE7sTIWI7OF_wtAo': 403 PERMISSION_DENIED The caller does not have permission")
   })
 })
 

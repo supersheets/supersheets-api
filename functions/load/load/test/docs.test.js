@@ -5,6 +5,8 @@ const { convertToPlainText } = require('./util')
 
 // Supersheets Inaccessible Doc Test
 const INACCESSIBLE_URL = 'https://docs.google.com/document/d/1rdezdce_i3Oj_vpERMA9BLsQcue1yD5jTcneS6LuzN8/edit'
+// 
+const NONEXISTANT_URL = 'https://docs.google.com/document/d/1rdezdce_i3Oj_vpERMA9BLsQcue1yD5jTcneS6LuzN7/edit'
 
 // Supersheets Public Doc Test v2
 const GOOGLEDOC_URL_V2 = 'https://docs.google.com/document/d/1IiMw4_wSJgi2eNocigsUzBoAg6dTTVSRgTr2TI9FnD8/edit'
@@ -88,8 +90,8 @@ describe('fetchDoc', () => {
     expect(data.title).toEqual('The Gettysburg Address')
     expect(data.description).toEqual(`Four score and seven years ago our fathers brought forth on this continent ...`)
     expect(convertToPlainText(data["_content"])).toEqual(`The Gettysburg Address\nFour score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.`)
-  })
-  it ('should throw if given invalid googel doc url', async () => {
+  }, 30 * 1000)
+  it ('should throw if given invalid google doc url', async () => {
     let error = null 
     try {
       await fetchDoc(docsapi, "https://bad.com/url/blah")
@@ -98,7 +100,7 @@ describe('fetchDoc', () => {
     }
     expect(error).toBeTruthy()
     expect(error.message).toEqual(`Invalid Google Doc URL: https://bad.com/url/blah`)
-  })
+  }, 30 * 1000)
   it ('should throw if user does not have access to the doc', async () => {
     let error = null 
     try {
@@ -107,8 +109,18 @@ describe('fetchDoc', () => {
       error = err
     }
     expect(error).toBeTruthy()
-    expect(error.message).toEqual(`Request failed with status code 403`)
-  })
+    expect(error.message).toEqual(`403 PERMISSION_DENIED: The caller does not have permission`)
+  }, 30 * 1000)
+  it ('should throw if the doc id does not actually exists', async () => {
+    let error = null 
+    try {
+      await fetchDoc(docsapi, NONEXISTANT_URL)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeTruthy()
+    expect(error.message).toEqual(`404 NOT_FOUND: Requested entity was not found.`)
+  }, 30 * 1000)
 })
 
 

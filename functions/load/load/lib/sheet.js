@@ -40,7 +40,18 @@ async function fetchSheetData(axios, id, sheet, options) {
     params.valueRenderOption = 'UNFORMATTED_VALUE'
     params.dateTimeRenderOption = 'SERIAL_NUMBER'
   }
-  let data = (await axios.get(`${id}/values/${encodeURIComponent(sheet.title)}`, { params })).data
+  let data = null
+  try {
+    data = (await axios.get(`${id}/values/${encodeURIComponent(sheet.title)}`, { params })).data
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      let error = err.response.data.error
+      let message = `Error fetching sheet '${sheet.title}': ${error.code} ${error.status} ${error.message}`
+      throw new Error(message)
+    } else {
+      throw err
+    }
+  }
   return constructDocs(sheet, data.values)
 }
 

@@ -35,7 +35,18 @@ async function initOrFindMetadata(ctx) {
 
 async function fetchAndMergeMetadata(ctx) {
   let id = ctx.event.body.spreadsheetid
-  let doc = (await ctx.state.sheetsapi.get(id)).data
+  let doc = null
+  try {
+    doc = (await ctx.state.sheetsapi.get(id)).data
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      let error = err.response.data.error
+      let message = `Error fetching spreadsheet '${id}': ${error.code} ${error.status} ${error.message}`
+      throw new Error(message)
+    } else {
+      throw err
+    }
+  }
   let latest = createMetadataFromGoogleSpreadsheet(doc)
   Object.assign(ctx.state.metadata, latest)
 }
