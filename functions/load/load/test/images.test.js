@@ -7,6 +7,7 @@ const jessy = require('jessy')
 // Supersheets Public Doc Test Images v2
 const GOOGLEDOC_URL = 'https://docs.google.com/document/d/1pfrL8KdvYGFrH1huKtcPbNy1qmJMBL_SIy1PZMf-tvw/edit'
 const IMAGE_URL = 'https://images.unsplash.com/photo-1423347834838-5162bb452ca7'
+const AVATAR_IMAGE_URL = 'https://api.adorable.io/avatars/50/jane.doe@supersheets.io.png'
 
 const { fetchImages, isValidUrl, fetchImageUrls, fetchGoogleDocImages } = require('../lib/images')
 const { fetchDoc } = require('../lib/docs')
@@ -54,6 +55,24 @@ describe('fetchImageUrls', () => {
       "_bucket": options.Bucket,
       "_mediatype": "image/jpeg",
       "_length": 1994229,
+      "_key": expect.stringMatching(/^test\/(.*).png/),
+      "_etag": expect.anything()
+    })
+  }, 30 * 1000)
+  it('should upload an author avatar image', async () => {
+    let url = AVATAR_IMAGE_URL
+    let cols = [ "avatar" ]
+    let docs = [ { "avatar": url } ]
+    let metadata = { config: { datatypes: { "avatar": "ImageUrl" } } }
+    await fetchImageUrls(s3, options, metadata, cols, docs)
+    let image = docs[0]['avatar']
+    console.log(image)
+    expect(image).toMatchObject({
+      "_original": AVATAR_IMAGE_URL,
+      "_url": expect.stringMatching(/images.supersheets.io\/(.*)/),
+      "_bucket": options.Bucket,
+      "_mediatype": "image/png",
+      "_length": 3800,
       "_key": expect.stringMatching(/^test\/(.*).png/),
       "_etag": expect.anything()
     })
