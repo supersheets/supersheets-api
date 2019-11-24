@@ -177,7 +177,7 @@ describe('createRelationshipResolver', () => {
     client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
     db = client.db()
     await initTestData(db, 'TEST-LOADER-COLLECTION')
-    loader = createLoader(db.collection('TEST-LOADER-COLLECTION'))
+    loader = createLoader(db.collection('TEST-LOADER-COLLECTION'), { logger: console })
   }, 10 * 1000)
   afterAll(async () => {
     if (client) {

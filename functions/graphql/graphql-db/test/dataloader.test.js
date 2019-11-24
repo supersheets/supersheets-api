@@ -23,7 +23,7 @@ describe('createBatchQueryFn', () => {
     db = null
   }, 10 * 1000)
   it ('should connect to mongodb', async () => {
-    let fn = createBatchQueryFn()
+    let fn = createBatchQueryFn({ logger: console })
     let queries = [ 
       { _sheet: "Sheet1", id: "a" },
       { _sheet: "Sheet1", id: "b" }
@@ -55,6 +55,11 @@ describe('createLoader', () => {
   let client = null
   let db = null
   beforeAll(async () => {
+    // plugin.logger.setLevel('debug')
+    // //plugin.logger.filter('class', ['Db'])
+    // plugin.logger.setCurrentLogger(function(msg, context) {
+    //   console.log(msg);
+    // })
     client = await plugin.createClient(process.env.FUNC_MONGODB_URI)
     db = client.db()
     await initTestData(db, 'TEST-LOADER-COLLECTION')
@@ -69,7 +74,7 @@ describe('createLoader', () => {
     db = null
   }, 10 * 1000)
   it ('should create a loader', async () => {
-    let loader = createLoader(db.collection('TEST-LOADER-COLLECTION'))
+    let loader = createLoader(db.collection('TEST-LOADER-COLLECTION'), { logger: console })
     let queries = [ 
       { _sheet: "Sheet1", id: "a" },
       { _sheet: "Sheet1", id: "b" }

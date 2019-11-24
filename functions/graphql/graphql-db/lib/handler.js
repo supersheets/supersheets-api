@@ -36,7 +36,7 @@ async function handler(ctx) {
     return ctx.response.httperror(500, `Error fetching schema for id=${metadata.id}: ${err.message}`) 
   }
   let collection = db.collection(metadata.datauuid)
-  let loader = createLoader(collection) // we just create 1 loader which all GraphQL queries can use 
+  let loader = createLoader(collection, { logger: ctx.logger }) // we just create 1 loader which all GraphQL queries can use 
   let handler = null
   try {
     handler = createApolloHandler(ctx.event, ctx.context, { typeDefs, resolvers, collection, loader, logger: ctx.logger })

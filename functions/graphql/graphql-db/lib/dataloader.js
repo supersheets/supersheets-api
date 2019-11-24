@@ -1,8 +1,11 @@
 const sift = require('sift').default
 const DataLoader = require('dataloader')
 
-function createBatchQueryFn() {
+function createBatchQueryFn({ logger }) {
   return async (collection, queries) => {
+    if (logger) {
+      logger.info(`dataloader execute batch query ${queries.length} ${JSON.stringify(queries, null, 2)}`)
+    }
     let q = { "$or": queries }
     let results = await collection.find(q).toArray()
     return queries.map(query => results.filter(sift(query)))
@@ -11,8 +14,8 @@ function createBatchQueryFn() {
 
 // authors:email 'danieljyoo@gmail.com'  => { _sheet: 'Authors', email: 'danieljyoo@gmail.com' }
 // tags:name:in [ 'Metadata', 'Test file' ] => { _sheet: 'Tags', name: { $in: [ 'Metadata', 'Test file' ] } }
-function createLoader(collection) {
-  let batchQueryFn = createBatchQueryFn()
+function createLoader(collection, { logger }) {
+  let batchQueryFn = createBatchQueryFn({ logger })
   return new DataLoader(queries => batchQueryFn(collection, queries), {
     cacheKeyFn: query => JSON.stringify(query)
   })
