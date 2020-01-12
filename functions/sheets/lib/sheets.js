@@ -15,7 +15,7 @@ async function getSheetsForOrg(db, user) {
   let query = getQuery(user)
   let options = {
     sort: [ [ 'title', 1 ] ],
-    projection: { id: 1, title: 1, updated_at: 1, uuid: 1, nrows: 1 }
+    projection: { id: 1, title: 1, updated_at: 1, uuid: 1, nrows: 1, updated_by: 1 }
   }
   return await db.collection('spreadsheets').find(query, options).toArray()
 }
@@ -40,13 +40,14 @@ function getQuery(user) {
   return query
 }
 
+// Auth0 stores ids as google-oauth2|112351329441324368112
 function userInfo(ctx) {
   let auth = ctx.state.auth
   if (!auth || !auth.success) {
     return null
   }
   let decoded = ctx.state.auth.decoded
-  let userid = decoded.sub
+  let userid = `google-oauth2|${decoded.sub}`
   let email = decoded.email && decoded.email.toLowerCase() || null
   let org = getOrgFromEmail(email)
   return { userid, email, org }
