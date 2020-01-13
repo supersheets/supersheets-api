@@ -1,0 +1,61 @@
+[
+  {
+    "recordId": "49600040360416080619090765789364521688482235487115804674",
+    "kinesisFirehoseRecordMetadata": {
+      "approximateArrivalTimestamp": 1572383248462
+    },
+    "data": {
+      "messageType": "DATA_MESSAGE",
+      "owner": "233748856986",
+      "logGroup": "/aws/lambda/supersheets-api-v3-find",
+      "logStream": "2019/10/29/[5]ffa1425b48954e0385ce48097a5d6a51",
+      "subscriptionFilters": [
+        "Stat"
+      ],
+      "logEvents": [
+        {
+          "id": "35065317825635742776016542150635784553330142714887143424",
+          "timestamp": 1572383232644,
+          "message": "2019-10-29T21:07:12.626Z\te5acfb39-6c90-46e8-b072-4af3063ca813\tINFO\t{\"src\":\"AsyncFunction:cacheHandler\",\"lifecycle\":\"request\",\"functionName\":\"supersheets-api-v3-find\",\"functionVersion\":\"5\",\"invokedQualifier\":\"PROD\",\"coldstart\":false,\"awsRequestId\":\"e5acfb39-6c90-46e8-b072-4af3063ca813\",\"memoryLimitInMB\":128,\"x-correlation-id\":\"e5acfb39-6c90-46e8-b072-4af3063ca813\",\"time\":1572383232626,\"level\":30,\"level_name\":\"info\",\"msg\":\"STAT\",\"cache\":{\"spreadsheetid\":\"1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo\",\"key\":\"supersheets:sheet:1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo:find\",\"field\":\"W9oEDQVCnXA1UJpPwLnzAzOjtI0=\",\"hit\":true,\"t\":1572383232589,\"elapsed\":37,\"size\":1617}}\n"
+        },
+        {
+          "id": "35065317829226162752979972476423035195226528917349990404",
+          "timestamp": 1572383232805,
+          "message": "2019-10-29T21:07:12.805Z\t461baa95-3f67-4daa-9fbe-deeef1eec250\tINFO\t{\"src\":\"AsyncFunction:cacheHandler\",\"lifecycle\":\"request\",\"functionName\":\"supersheets-api-v3-find\",\"functionVersion\":\"5\",\"invokedQualifier\":\"PROD\",\"coldstart\":false,\"awsRequestId\":\"461baa95-3f67-4daa-9fbe-deeef1eec250\",\"memoryLimitInMB\":128,\"x-correlation-id\":\"461baa95-3f67-4daa-9fbe-deeef1eec250\",\"time\":1572383232805,\"level\":30,\"level_name\":\"info\",\"msg\":\"STAT\",\"cache\":{\"spreadsheetid\":\"1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo\",\"key\":\"supersheets:sheet:1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo:find\",\"field\":\"S6OPbe8kpj0DwMuH1e7NlTXqXQU=\",\"hit\":true,\"t\":1572383232795,\"elapsed\":10,\"size\":1666}}\n"
+        },
+        {
+          "id": "35065317830564207464891809864915178291585430607708815368",
+          "timestamp": 1572383232865,
+          "message": "2019-10-29T21:07:12.865Z\tb8f2c8b1-0ba8-45e2-8222-e81d807bef63\tINFO\t{\"src\":\"AsyncFunction:cacheHandler\",\"lifecycle\":\"request\",\"functionName\":\"supersheets-api-v3-find\",\"functionVersion\":\"5\",\"invokedQualifier\":\"PROD\",\"coldstart\":false,\"awsRequestId\":\"b8f2c8b1-0ba8-45e2-8222-e81d807bef63\",\"memoryLimitInMB\":128,\"x-correlation-id\":\"b8f2c8b1-0ba8-45e2-8222-e81d807bef63\",\"time\":1572383232865,\"level\":30,\"level_name\":\"info\",\"msg\":\"STAT\",\"cache\":{\"spreadsheetid\":\"1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo\",\"key\":\"supersheets:sheet:1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo:find\",\"field\":\"W9oEDQVCnXA1UJpPwLnzAzOjtI0=\",\"hit\":true,\"t\":1572383232848,\"elapsed\":17,\"size\":1617}}\n"
+        },
+        {
+          "id": "35065318000941900781665770666248065894618912513399193612",
+          "timestamp": 1572383240505,
+          "message": "2019-10-29T21:07:20.505Z\t7bf15c86-7da3-4d7d-a1d8-e81253425756\tINFO\t{\"src\":\"AsyncFunction:cacheHandler\",\"lifecycle\":\"request\",\"functionName\":\"supersheets-api-v3-find\",\"functionVersion\":\"5\",\"invokedQualifier\":\"PROD\",\"coldstart\":false,\"awsRequestId\":\"7bf15c86-7da3-4d7d-a1d8-e81253425756\",\"memoryLimitInMB\":128,\"x-correlation-id\":\"7bf15c86-7da3-4d7d-a1d8-e81253425756\",\"time\":1572383240505,\"level\":30,\"level_name\":\"info\",\"msg\":\"STAT\",\"cache\":{\"spreadsheetid\":\"1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo\",\"key\":\"supersheets:sheet:1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo:find\",\"field\":\"8Kus9HBbUinpFsaVwT8Eics5VWg=\",\"hit\":true,\"t\":1572383240492,\"elapsed\":13,\"size\":6818}}\n"
+        }
+      ]
+    }
+  },
+  {
+    "recordId": "49600040360416080619090765789455191124953332675218767874",
+    "kinesisFirehoseRecordMetadata": {
+      "approximateArrivalTimestamp": 1572383248744
+    },
+    "data": {
+      "messageType": "DATA_MESSAGE",
+      "owner": "233748856986",
+      "logGroup": "/aws/lambda/supersheets-api-v3-find",
+      "logStream": "2019/10/29/[5]d1dbfecb614e43be96fce4824d58806e",
+      "subscriptionFilters": [
+        "Stat"
+      ],
+      "logEvents": [
+        {
+          "id": "35065317824743712968075317225017785095632106440596979712",
+          "timestamp": 1572383232604,
+          "message": "2019-10-29T21:07:12.604Z\ta92b9efa-64b5-45f5-bccc-848dad28321f\tINFO\t{\"src\":\"AsyncFunction:cacheHandler\",\"lifecycle\":\"request\",\"functionName\":\"supersheets-api-v3-find\",\"functionVersion\":\"5\",\"invokedQualifier\":\"PROD\",\"coldstart\":false,\"awsRequestId\":\"a92b9efa-64b5-45f5-bccc-848dad28321f\",\"memoryLimitInMB\":128,\"x-correlation-id\":\"a92b9efa-64b5-45f5-bccc-848dad28321f\",\"time\":1572383232604,\"level\":30,\"level_name\":\"info\",\"msg\":\"STAT\",\"cache\":{\"spreadsheetid\":\"1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo\",\"key\":\"supersheets:sheet:1DWu7BBWo1jq-u0ZIXvrMtgGvNvieP7-MznVAf_GQlBo:find\",\"field\":\"S6OPbe8kpj0DwMuH1e7NlTXqXQU=\",\"hit\":true,\"t\":1572383232554,\"elapsed\":50,\"size\":1666}}\n"
+        }
+      ]
+    }
+  }
+]
