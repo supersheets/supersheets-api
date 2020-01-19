@@ -18,7 +18,13 @@ async function deleteHandler(ctx) {
     ctx.response.httperror(404, `Could not find metadata with id ${id}`)
     return
   }
+  console.log(metadata, user)
   if (metadata.created_by_org && metadata.created_by_org != user.org) {
+    ctx.response.httperror(401, 'Unauthorized')
+    return
+  }
+  if (!metadata.created_by_org && metadata.created_by != user.userid) {
+    // if there is no org (gmail.com) then it has to be the author
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
@@ -52,7 +58,7 @@ function userInfo(ctx) {
     return null
   }
   let decoded = ctx.state.auth.decoded
-  let userid = decoded.sub
+  let userid = `google-oauth2|${decoded.sub}`
   let email = decoded.email && decoded.email.toLowerCase() || null
   let org = getOrgFromEmail(email)
   return { userid, email, org }

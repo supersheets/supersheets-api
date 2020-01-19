@@ -2,7 +2,7 @@ require('dotenv').config()
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const prettify = require('@funcmaticjs/pretty-logs')
 const TESTID = "TEST-SPREADSHEET-ID"
-const TOKEN = process.env.AUTH0_TOKEN 
+const TOKEN = process.env.AUTH_TOKEN 
 
 describe('Error Handling', () => {
   let func = null
@@ -88,7 +88,7 @@ describe('Error Handling', () => {
   it ("Should return 500 if mongo error in delete", async () => {
     let ctx = createCtx() 
     ctx.state.mongodb = mockdb(async () => {
-      return { id: TESTID }
+      return { id: TESTID, created_by_org: 'goalbookapp.com' }
     }, async () => {
       throw new Error("Error in delete")
     })
@@ -120,13 +120,6 @@ describe('Function', () => {
   })
   it ("should delete sheet metadata and data", async () => {
     let ctx = createCtx() 
-    ctx.state.auth = {
-      success: true,
-      decoded: {
-        sub: "userid",
-        email: "daniel@myorg.org"
-      }
-    }
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
       statusCode: 200
@@ -141,7 +134,7 @@ describe('Function', () => {
 
 async function createTestData(db) {
   let id = TESTID
-  let meta = { id, hello: "world" }
+  let meta = { id, hello: "world", created_by_org: 'goalbookapp.com' }
   let data = { data: "blah" }
   await db.collection('spreadsheets').updateOne({ id }, { "$set": meta }, { upsert: true })
   await db.collection(id).insertOne(data)
@@ -156,13 +149,15 @@ function createCtx() {
       },
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': TOKEN
+        'Authorization': `Bearer ${TOKEN}`
       }
     },
     env: {
       FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI,
       FUNC_AUTH0_DOMAIN: process.env.FUNC_AUTH0_DOMAIN,
-      FUNC_AUTH0_SKIP_VERIFICATION: 'true'
+      FUNC_AUTH0_SKIP_VERIFICATION: 'true',
+      JWKS_URI: process.env.JWKS_URI,
+      JWKS_SKIP_VERIFICATION: 'true',
     },
     state: { }
   }
