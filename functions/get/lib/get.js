@@ -36,7 +36,7 @@ function userInfo(ctx) {
     return null
   }
   let decoded = ctx.state.auth.decoded
-  let userid = decoded.sub
+  let userid = `google-oauth2|${decoded.sub}`
   let email = decoded.email && decoded.email.toLowerCase() || null
   let org = getOrgFromEmail(email)
   return { userid, email, org }

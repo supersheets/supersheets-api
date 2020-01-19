@@ -3,8 +3,8 @@ const axios = require('axios')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const prettify = require('@funcmaticjs/pretty-logs')
 
-// Goalbook Fist to Five Backend
-const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
+// Supersheets Public GraphQL Test
+const GOOGLESPREADSHEET_ID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
 
 describe('Error Handling', () => {
   let func = null
@@ -104,7 +104,7 @@ function createCtx() {
       },
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': process.env.AUTH0_TOKEN
+        'Authorization': `Bearer ${process.env.AUTH_TOKEN}`
       },
       stageVariables: {
         // FUNC_PARAMETERSTORE_PATH: '/supersheetsio/dev'
@@ -112,7 +112,7 @@ function createCtx() {
         FUNC_PARAMETERSTORE_PATH: '/supersheetsio/staging'
       },
       env: {
-        FUNC_AUTH0_SKIP_VERIFICATION: 'true'
+        JWKS_SKIP_VERIFICATION: 'true'
       }
     }
   }
