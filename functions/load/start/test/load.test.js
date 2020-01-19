@@ -5,7 +5,7 @@ const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
 
-const TOKEN = process.env.AUTH0_TOKEN 
+const TOKEN = process.env.AUTH_TOKEN 
 
 describe('Error Handling', () => {
   let func = null
@@ -248,14 +248,19 @@ describe('Reload', () => {
       }
     })
   })
-  it ('should set the idp token in the payload body', async () => {
+  it ('should set the idp token and user in the payload body', async () => {
     let ctx = createCtx()
     ctx.event.body.token = 'my.google.token' 
     ctx.event.queryStringParameters = { "dryrun": "true" }
     await func.invoke(ctx)
     let payload = JSON.parse(ctx.state.lambdaparams["Payload"])
     expect(JSON.parse(payload.body)).toMatchObject({
-      token: 'my.google.token'
+      token: 'my.google.token',
+      user: {
+        userid: 'google-oauth2|107764139004828737326',
+        email: 'danieljyoo@goalbookapp.com',
+        org: 'goalbookapp.com'
+      }
     })
   })
   it ('should invoke the loader lambda', async () => {
@@ -279,7 +284,7 @@ function createCtx() {
         spreadsheetid: GOOGLESPREADSHEET_ID
       },
       headers: {
-        'Authorization': TOKEN
+        'Authorization': `Bearer ${TOKEN}`
       },
       body: { }
     },
@@ -288,7 +293,9 @@ function createCtx() {
       GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY,
       FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI,
       FUNC_AUTH0_DOMAIN: process.env.FUNC_AUTH0_DOMAIN,
-      FUNC_AUTH0_SKIP_VERIFICATION: 'true'
+      FUNC_AUTH0_SKIP_VERIFICATION: 'true',
+      JWKS_URI: process.env.JWKS_URI,
+      JWKS_SKIP_VERIFICATION: 'true'
     },
     state: { }
   }
