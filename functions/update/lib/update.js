@@ -24,6 +24,11 @@ async function updateHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
+  if (!metadata.created_by_org && metadata.created_by != user.userid) {
+    // if there is no org (gmail.com) then it has to be the author
+    ctx.response.httperror(401, 'Unauthorized')
+    return
+  }
   try {
     Object.assign(metadata, body)
     // TODO, we do not update updated_at* fields because
@@ -45,7 +50,7 @@ function userInfo(ctx) {
     return null
   }
   let decoded = ctx.state.auth.decoded
-  let userid = decoded.sub
+  let userid = `google-oauth2|${decoded.sub}`
   let email = decoded.email && decoded.email.toLowerCase() || null
   let org = getOrgFromEmail(email)
   return { userid, email, org }

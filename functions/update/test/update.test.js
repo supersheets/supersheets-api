@@ -7,8 +7,8 @@ const { updateHandler, saveMetadata } = require('../lib/update')
 // Goalbook Fist to Five Backend
 const GOOGLESPREADSHEET_ID = "1liBHwxOdE7nTonL1Cv-5hzy8UGBeLpx0mufIq5dR8-U"
 
-// supersheets.auth0.com | danieljyoo@goalbookapp.com
-const TOKEN = process.env.AUTH0_TOKEN 
+// danieljyoo@goalbookapp.com
+const TOKEN = process.env.AUTH_TOKEN 
 
 describe('Error Handling', () => {
   let func = null
@@ -123,7 +123,9 @@ function createCtx() {
       GOOGLESHEETS_API_KEY: process.env.GOOGLESHEETS_API_KEY,
       FUNC_MONGODB_URI: process.env.FUNC_MONGODB_URI,
       FUNC_AUTH0_DOMAIN: process.env.FUNC_AUTH0_DOMAIN,
-      FUNC_AUTH0_SKIP_VERIFICATION: 'true'
+      FUNC_AUTH0_SKIP_VERIFICATION: 'true',
+      JWKS_URI: process.env.JWKS_URI,
+      JWKS_SKIP_VERIFICATION: 'true'
     }
   }
 }
@@ -134,7 +136,8 @@ async function deleteMetadata(db, id) {
 
 async function createTestMetadata(db, id) {
   let metadata = {
-    id
+    id,
+    created_by_org: 'goalbookapp.com'
   }
   return await saveMetadata(db, metadata)
 }
