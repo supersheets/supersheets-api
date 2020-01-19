@@ -3,8 +3,10 @@ const axios = require('axios')
 const MongoDBPlugin = require('@funcmaticjs/mongodb-plugin')
 const prettify = require('@funcmaticjs/pretty-logs')
 
-// Supersheets Public GraphQL Test
+// Supersheets Public GraphQL Test (funcmatic.com)
 const GOOGLESPREADSHEET_ID = "1hCmRdgeWAnPEEzK-GHKdJDNjRZdhUHaKQKJ2IX7fTVI"
+// My Supersheet DB (gmail.com)
+const GOOGLESPREADSHEET_NOORG = "1vZlTrkGDRvNwzw6M8bAowEuWGPIweo7P-ik7VfSiI84" 
 
 describe('Error Handling', () => {
   let func = null
@@ -18,6 +20,18 @@ describe('Error Handling', () => {
   it ("should return 401 Unauthorized if there if user is unauthenticated", async () => {
     let ctx = createCtx() 
     delete ctx.event.headers['Authorization']
+    await func.invoke(ctx)
+    expect(ctx.response).toMatchObject({
+      statusCode: 401
+    })
+    let body = JSON.parse(ctx.response.body)
+    expect(body).toMatchObject({
+      errorMessage: "Unauthorized"
+    })
+  })
+  it ("should return 401 Unauthorized if the user is gmail.com but not owner of sheet", async () => {
+    let ctx = createCtx() 
+    ctx.event.pathParameters.spreadsheetid = GOOGLESPREADSHEET_NOORG
     await func.invoke(ctx)
     expect(ctx.response).toMatchObject({
       statusCode: 401

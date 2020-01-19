@@ -22,6 +22,11 @@ async function getHandler(ctx) {
     ctx.response.httperror(401, 'Unauthorized')
     return
   }
+  if (!metadata.created_by_org && metadata.created_by != user.userid) {
+    // if there is no org (gmail.com) then it has to be the author
+    ctx.response.httperror(401, 'Unauthorized')
+    return
+  }
   ctx.response.json(metadata)
   return
 }
