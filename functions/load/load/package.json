@@ -30,7 +30,7 @@
     "@supersheets/docimages": "0.0.2",
     "@supersheets/docmatter": "0.0.6",
     "aws-param-store": "^3.1.0",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "jessy": "^2.0.2",
     "jsonpath-plus": "^0.20.1",
     "luxon": "^1.21.2",
