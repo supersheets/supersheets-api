@@ -28,7 +28,7 @@
     "@funcmaticjs/redis-plugin": "0.0.1",
     "@funcmaticjs/response-plugin": "~1.1.1",
     "@funcmaticjs/stagevars-plugin": "0.0.1",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "node-gzip": "^1.1.2"
   },
   "devDependencies": {
