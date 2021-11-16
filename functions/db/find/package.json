@@ -32,7 +32,7 @@
   "devDependencies": {
     "@funcmaticjs/package": "0.0.2",
     "@funcmaticjs/pretty-logs": "0.0.3",
-    "aws-sdk": "^2.506.0",
+    "aws-sdk": "^2.814.0",
     "dotenv": "^8.0.0",
     "jest": "^24.8.0"
   },
