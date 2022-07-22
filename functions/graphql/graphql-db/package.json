@@ -28,7 +28,7 @@
     "@supersheets/docdown": "0.0.3",
     "apollo-server-lambda": "^2.9.9",
     "dataloader": "^1.4.0",
-    "file-type": "^12.4.0",
+    "file-type": "^16.5.4",
     "graphql": "^14.5.8",
     "luxon": "^1.21.2",
     "mini-svg-data-uri": "^1.1.3",
